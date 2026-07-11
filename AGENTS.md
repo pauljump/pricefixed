@@ -31,6 +31,9 @@ Pull, then diff `price_history` for each `source_id` between the latest snapshot
 **"Keep the database fresh."**
 Put `python3 scrape.py` on a cron (or a GitHub Action) daily. Each run appends to `price_history`, so the longer it runs, the more valuable the history becomes.
 
+**"Compile more of the city."**
+Point yourself at [`FEEDS.md`](FEEDS.md) (the full source map, tiered by leverage) and [`COMPILE.md`](COMPILE.md) (the method). Work platforms first — one platform adapter is many landlords. `python3 new_adapter.py <name>` scaffolds a new adapter file for you.
+
 **"Add a new landlord."**
 1. Find the landlord's own availability feed (their site's XHR call, an API, or a static JSON). Landlord-direct only, never a login-walled aggregator.
 2. Create `pricefixed/adapters/<name>.py`: subclass `SourceAdapter`, set `name` and `description`, implement `pull()` to return a list of dicts using the fields in `pricefixed/core.py` (`LISTING_FIELDS`). Only `source_id` is required; everything else is best-effort.

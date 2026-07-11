@@ -1,10 +1,10 @@
 # pricefixed
 
-**Open tools to pull every apartment's real price and history out of the walled gardens. Point Claude or Codex at them and build.**
+**Open tools to pull every apartment's price and history out of the walled gardens, and a standardized public record of every NYC building. Point Claude or Codex at them and build.**
 
 The rent number on your lease was not set by a person. It was set by software. Landlords across the country feed their vacancies into shared pricing algorithms like RealPage's YieldStar, and those algorithms quietly raise rents in lockstep across competitors. The Department of Justice sued over it and called it what it is: price-fixing.
 
-You cannot fight an algorithm you cannot see. So the answer is transparency across everything, in the open, owned by no one. That is what this is.
+You cannot audit an algorithm without the data it feeds on, and almost none of that data is public or standardized. So that is where this starts: pulling it into the open, owned by no one, for anyone to build on. To be clear about what this is today: it is the data layer, not the detector. Exposing the pricing algorithm itself is the destination (see the roadmap below), not a claim about what ships today.
 
 `pricefixed` starts with the hard part every real-estate project starts with: getting the data. It gives those tools away.
 
@@ -70,9 +70,13 @@ Run it on a cron and `price_history` becomes something no listing site will sell
 
 You do not have to write the glue. Clone the repo, hand it to Claude or Codex, and say *"pull all sources nightly and give me every 1-bedroom under $3,000 that dropped its price this week."* The tools are the primitive. The inventory is yours to shape. See [`AGENTS.md`](AGENTS.md) for how any LLM should drive this repo.
 
+The bigger move: point your agent at the source map ([`FEEDS.md`](FEEDS.md)) and the compile method ([`COMPILE.md`](COMPILE.md)), and it builds new adapters row by row. The nine below are reference implementations. Compiling the rest is a crank anyone, human or AI, can turn.
+
 ## Sources
 
 Nine live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
+
+Nine landlords is the start, not the goal. The goal is every apartment in the city, then every city. Getting there means taking the walls down one at a time and keeping them down as they go back up. That fight is the project.
 
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
@@ -103,6 +107,12 @@ python3 build_record.py                              # everything (large; it's a
 ```
 
 Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership). Coming: ACRIS sales, violations, 311, evictions, certificates of occupancy, rent-stabilization status, and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+
+## Prior art, and how this is different
+
+NYC already has open-data heroes, and this is not trying to replace them. JustFix's [NYCDB](https://github.com/nycdb/nycdb) loads dozens of housing datasets into Postgres, and [Who Owns What](https://whoownswhat.justfix.org) maps landlord portfolios. Use them. They are excellent, and the public-record layer here stands on the same city datasets they do.
+
+The difference is the join. `pricefixed` fuses that public record with **live listing feeds and their price history over time** in one standardized, per-building shape, dependency-free and built to be driven by an AI agent. The live asking-rent layer, snapshotted so the history is not thrown away, is the part nobody else maintains.
 
 ## Contributing
 
