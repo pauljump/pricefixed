@@ -2,6 +2,7 @@
 A single JSON call over a NYC bounding box + move-in window returns every available unit;
 we keep NY-state rows. Per-unit furnished/unfurnished pricing is preserved in raw_json."""
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from urllib.parse import urlencode
@@ -14,7 +15,9 @@ class AvalonBayAdapter(SourceAdapter):
     description = "AvalonBay Communities — proprietary API (NYC metro, NY units only)"
 
     API_URL = "https://apis.avalonbay.com/search/units"
-    API_KEY = "dBC7Zs9At52EMirrcwn48ayie0H3JLWX9QGi22jM"
+    # AvalonBay's own public client-side key, embedded in their website's JavaScript and
+    # sent by every visitor's browser. Not a private credential. Override via env if it rotates.
+    API_KEY = os.environ.get("AVALONBAY_API_KEY", "dBC7Zs9At52EMirrcwn48ayie0H3JLWX9QGi22jM")
 
     # NYC bounding box: top-left (NW) to bottom-right (SE)
     TOP_LEFT     = "40.9176,-74.2591"

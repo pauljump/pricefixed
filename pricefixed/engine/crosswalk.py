@@ -22,8 +22,8 @@ Two passes populate the crosswalk, and they compose:
 
 PAD ships as a flat file (pad.zip -> bobaadr.txt) rather than a SoQL endpoint, so the
 PAD pass downloads + caches the public archive and filters client-side by zip (the
-same scoping lever `where` gives the PLUTO pass). Method adapted from an internal
-(all-addresses-per-BBL + house-number-range expansion).
+same scoping lever `where` gives the PLUTO pass). Method: all addresses per BBL, with
+house-number ranges expanded.
 
 No third-party dependencies. Python 3.9+ standard library only.
 """
@@ -392,17 +392,20 @@ def _demo(db_record="record.db", db_listings="listings.db"):
 
     # 1) Pick real listings with clean, unit-free address strings. tfcornerstone keeps
     #    the unit in its own column, so its `address` is exactly what PLUTO stores.
-    listings = lconn.execute(
-        """
-        SELECT source, address, unit_number, borough, zipcode
-        FROM listings
-        WHERE address IS NOT NULL AND zipcode IS NOT NULL AND zipcode != ''
-          AND source = 'tfcornerstone'
-        GROUP BY address            -- one row per distinct building address
-        ORDER BY zipcode
-        LIMIT 12
-        """
-    ).fetchall()
+    try:
+        listings = lconn.execute(
+            """
+            SELECT source, address, unit_number, borough, zipcode
+            FROM listings
+            WHERE address IS NOT NULL AND zipcode IS NOT NULL AND zipcode != ''
+              AND source = 'tfcornerstone'
+            GROUP BY address            -- one row per distinct building address
+            ORDER BY zipcode
+            LIMIT 12
+            """
+        ).fetchall()
+    except sqlite3.OperationalError:
+        listings = []            # fresh clone: listings.db has no listings table yet
     if not listings:
         print("  no listings found — run:  python3 scrape.py --source tfcornerstone")
         return
