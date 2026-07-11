@@ -29,11 +29,24 @@ def main():
                     help="cap rows fetched per source (sample instead of all of NYC)")
     ap.add_argument("--list", action="store_true", help="list available sources and exit")
     ap.add_argument("--status", action="store_true", help="show counts and exit")
+    ap.add_argument("--crosswalk", action="store_true",
+                    help="build the address->BBL crosswalk from PLUTO and run the live "
+                         "listing->BBL->building-facts join demo (see pricefixed/engine)")
     args = ap.parse_args()
 
     if args.list:
         for name, cls in sorted(RECORD_SOURCES.items()):
             print(f"  {name:18} {cls.description}")
+        return
+
+    if args.crosswalk:
+        # The join keystone: normalize listing + PLUTO addresses to the same string,
+        # look up which BBL an address belongs to, and attach a live listing to its
+        # building's public record. See pricefixed/engine/crosswalk.py.
+        from pricefixed.engine.crosswalk import _self_test, _demo
+        print("normalize_address self-tests:")
+        _self_test()
+        _demo(db_record=args.db)
         return
 
     conn = init_record_db(args.db)

@@ -64,6 +64,12 @@ class SecureCafeAdapter(SourceAdapter):
         # 9300 Realty
         {"label": "9300 Realty Portfolio", "subdomain": "centpropny", "slug": "century-property-management-ny",
          "address": "", "hood": "", "boro": "Manhattan"},
+        # Gateway — Battery Park City (verified live 2026-07-11)
+        {"label": "Gateway", "subdomain": "gatewayny", "slug": "gateway-3",
+         "address": "395 South End Avenue", "hood": "Battery Park City", "boro": "Manhattan"},
+        # Oriana — Sutton Place / Midtown East (verified live 2026-07-11)
+        {"label": "Oriana", "subdomain": "oriananyc", "slug": "oriana",
+         "address": "420 East 54th Street", "hood": "Sutton Place", "boro": "Manhattan"},
     ]
 
     def _fetch_portal(self, portal):

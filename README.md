@@ -81,19 +81,20 @@ Nine landlords is the start, not the goal. The goal is every apartment in the ci
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 9/9 live, checked 2026-07-11
+**Feed status** — 9/10 live, checked 2026-07-11
 
 | source | status | listings | note |
 |---|---|---|---|
-| `avalonbay` | 🟢 live | 250 |  |
-| `durst` | 🟢 live | 25 |  |
-| `glenwood` | 🟢 live | 27 |  |
+| `appfolio` | 🟢 live | 23 |  |
+| `avalonbay` | 🟢 live | 247 |  |
+| `glenwood` | 🟢 live | 18 |  |
 | `nooklyn` | 🟢 live | 1531 |  |
-| `ogdencap` | 🟢 live | 52 |  |
-| `securecafe` | 🟢 live | 253 |  |
+| `ogdencap` | 🟢 live | 51 |  |
+| `securecafe` | 🟢 live | 325 |  |
 | `stonehenge` | 🟢 live | 78 |  |
-| `stuytown` | 🟢 live | 331 |  |
+| `stuytown` | 🟢 live | 329 |  |
 | `tfcornerstone` | 🟢 live | 124 |  |
+| `durst` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
 
 ## The public record
