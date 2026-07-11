@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""
+pricefixed record layer — build a canonical record of every NYC apartment building
+and its public history, pulled fresh from NYC Open Data into a local SQLite file.
+
+    python build_record.py                       # pull every source
+    python build_record.py --source pluto
+    python build_record.py --source pluto --limit 500   # sample instead of all of NYC
+    python build_record.py --list                # show available sources
+    python build_record.py --status              # counts in the current db
+    python build_record.py --db mine.db          # write somewhere else (default: ./record.db)
+
+The output is a plain SQLite database (tables: buildings, building_events,
+record_source_log). Point Codex / Claude at it and build whatever you want.
+
+NYC-wide these datasets are millions of rows — use --limit to sample.
+"""
+import argparse
+import sys
+
+from pricefixed.record import RECORD_SOURCES, init_record_db
+
+
+def main():
+    ap = argparse.ArgumentParser(description="Build the NYC building public-record db.")
+    ap.add_argument("--source", help="pull only this source (default: all)")
+    ap.add_argument("--db", default="record.db", help="output SQLite path (default: record.db)")
+    ap.add_argument("--limit", type=int, default=None,
+                    help="cap rows fetched per source (sample instead of all of NYC)")
+    ap.add_argument("--list", action="store_true", help="list available sources and exit")
+    ap.add_argument("--status", action="store_true", help="show counts and exit")
+    args = ap.parse_args()
+
+    if args.list:
+        for name, cls in sorted(RECORD_SOURCES.items()):
+            print(f"  {name:18} {cls.description}")
+        return
+
+    conn = init_record_db(args.db)
+
+    if args.status:
+        print("  buildings by source-log:")
+        for name, n in conn.execute(
+            "SELECT source, SUM(rows) FROM record_source_log GROUP BY source ORDER BY 2 DESC"
+        ):
+            print(f"    {name:18} {n} rows pulled")
+        bld = conn.execute("SELECT COUNT(*) FROM buildings").fetchone()[0]
+        ev = conn.execute("SELECT COUNT(*) FROM building_events").fetchone()[0]
+        print(f"  {'buildings':20} {bld}")
+        print(f"  {'building_events':20} {ev}")
+        for etype, n in conn.execute(
+            "SELECT event_type, COUNT(*) FROM building_events GROUP BY event_type ORDER BY 2 DESC"
+        ):
+            print(f"    events[{etype}]      {n}")
+        return
+
+    if args.source:
+        if args.source not in RECORD_SOURCES:
+            sys.exit(f"unknown source '{args.source}'. try --list")
+        sources = [args.source]
+    else:
+        sources = list(RECORD_SOURCES)
+
+    grand = 0
+    for name in sources:
+        try:
+            grand += RECORD_SOURCES[name]().run(conn, limit=args.limit)
+        except Exception as e:  # noqa: BLE001 — one broken source shouldn't kill the run
+            print(f"  {name}: FAILED — {e}")
+    bld = conn.execute("SELECT COUNT(*) FROM buildings").fetchone()[0]
+    ev = conn.execute("SELECT COUNT(*) FROM building_events").fetchone()[0]
+    print(f"\ndone. {bld} buildings, {ev} events in {args.db} ({grand} rows this run)")
+
+
+if __name__ == "__main__":
+    main()

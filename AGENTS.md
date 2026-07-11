@@ -41,6 +41,14 @@ See `CONTRIBUTING.md` and any existing adapter for the exact shape.
 **"Check what is still working."**
 `python3 healthcheck.py` runs every source and reports which are green and which broke. It exits nonzero if any feed is down, so it can drive an alert.
 
+## The public record layer (`build_record.py`)
+
+Separate from the live-listing feeds, `build_record.py` builds a canonical record of every NYC building from NYC Open Data (Socrata). Same shape as `scrape.py`: `--list`, `--status`, `--source <name>`, plus `--limit N` to sample instead of pulling all of NYC.
+
+- Output db: `record.db`, two tables. `buildings` (one row per BBL: address, year_built, units, building_class, owner_name, rollup counts) and `building_events` (the history timeline: `bbl, event_type, event_date, source, amount, party, detail`).
+- Sources live in `pricefixed/record/`, each a `RecordSource` subclass (see `pricefixed/record/core.py`), registered in `pricefixed/record/__init__.py`. Adding one mirrors adding an adapter: find the NYC Open Data dataset id, verify its real field keys by pulling `--limit 2`, map to the schema, register.
+- This layer is public record only. It never contains rent data — that is out of scope here by design.
+
 ## Rules of the road
 
 - **Landlord-direct only.** Targets are public availability feeds landlords publish to lease their units. Do not add sources that require an account, defeat an access control, or belong to an aggregator (Zillow, StreetEasy, RentHop). That is both the ethic and the legal line.

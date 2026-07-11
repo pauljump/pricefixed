@@ -92,6 +92,18 @@ The full map of what is out there, tiered by how hard it is to pull and by what 
 | `tfcornerstone` | 🟢 live | 124 |  |
 <!-- FEED-STATUS:END -->
 
+## The public record
+
+Live listings are only half of it. `pricefixed` also builds a standardized record of every NYC building and its public history, pulled fresh from [NYC Open Data](https://data.cityofnewyork.us). `build_record.py` assembles a `buildings` table (one row per lot, keyed by BBL: address, year built, units, class, owner) and a `building_events` timeline (permits, sales, violations, each with a date and a source). No rent data. All public record.
+
+```bash
+python3 build_record.py --list
+python3 build_record.py --source pluto --limit 500   # sample a source
+python3 build_record.py                              # everything (large; it's all of nyc)
+```
+
+Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership). Coming: ACRIS sales, violations, 311, evictions, certificates of occupancy, rent-stabilization status, and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+
 ## Contributing
 
 A new source is about 30 lines: subclass `SourceAdapter`, implement `pull()` to return listing dicts, register it. See any file in [`pricefixed/adapters/`](pricefixed/adapters/) and [`CONTRIBUTING.md`](CONTRIBUTING.md). PRs welcome.

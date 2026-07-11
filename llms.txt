@@ -14,5 +14,6 @@ Python 3.9+ standard library only. Run `python3 scrape.py` to pull every source 
 
 - [FEEDS.md](FEEDS.md): the registry of NYC apartment data sources, tiered by difficulty and by what each exposes
 - [pricefixed/core.py](pricefixed/core.py): the framework, SQLite schema, and the `LISTING_FIELDS` an adapter returns
-- [scrape.py](scrape.py): the CLI (`--list`, `--status`, `--source`)
-- [healthcheck.py](healthcheck.py): runs every source and reports which feeds are live
+- [scrape.py](scrape.py): the live-listings CLI (`--list`, `--status`, `--source`)
+- [build_record.py](build_record.py): builds the canonical NYC building record + history from NYC Open Data (`--list`, `--source`, `--limit`)
+- [healthcheck.py](healthcheck.py): runs every feed and reports which are live
