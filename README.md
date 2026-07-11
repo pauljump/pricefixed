@@ -44,11 +44,14 @@ No dependencies. Python 3.9+ standard library only.
 
 ```
 $ python3 scrape.py --source stuytown
-  334 listings (334 new, 0 updated) in 0.5s
+  331 listings (331 new, 0 updated) in 0.5s
 $ python3 scrape.py --status
-  stuytown         334 active
-  tfcornerstone    124 active
-  TOTAL            458 active
+  nooklyn         1531 active
+  avalonbay        250 active
+  stuytown         331 active
+  securecafe       253 active
+  ...
+  TOTAL           2632 active
 ```
 
 ## The data
@@ -69,20 +72,22 @@ You do not have to write the glue. Clone the repo, hand it to Claude or Codex, a
 
 ## Sources
 
-Starting set, all live, all landlord-direct:
-
-- **stuytown** — Beam Living (StuyTown, Peter Cooper Village, Kips Bay, Parker Towers, 8 Spruce)
-- **tfcornerstone** — TF Cornerstone luxury portfolio
-- **nooklyn** — broker marketplace, the no-fee and small-landlord inventory the big feeds miss
+Nine live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
 
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 3/3 live, checked 2026-07-11
+**Feed status** — 9/9 live, checked 2026-07-11
 
 | source | status | listings | note |
 |---|---|---|---|
+| `avalonbay` | 🟢 live | 250 |  |
+| `durst` | 🟢 live | 25 |  |
+| `glenwood` | 🟢 live | 27 |  |
 | `nooklyn` | 🟢 live | 1531 |  |
+| `ogdencap` | 🟢 live | 52 |  |
+| `securecafe` | 🟢 live | 253 |  |
+| `stonehenge` | 🟢 live | 78 |  |
 | `stuytown` | 🟢 live | 331 |  |
 | `tfcornerstone` | 🟢 live | 124 |  |
 <!-- FEED-STATUS:END -->
@@ -90,6 +95,10 @@ The full map of what is out there, tiered by how hard it is to pull and by what 
 ## Contributing
 
 A new source is about 30 lines: subclass `SourceAdapter`, implement `pull()` to return listing dicts, register it. See any file in [`pricefixed/adapters/`](pricefixed/adapters/) and [`CONTRIBUTING.md`](CONTRIBUTING.md). PRs welcome.
+
+## Get involved
+
+No permission needed, no process to learn. Star it if you want it to exist. Open an [issue](../../issues) to report a broken feed or request a landlord. Send a PR to add a source. The fastest way to reach me is on X, [@paulljump](https://x.com/paulljump). Follow along and jump in when you feel like it.
 
 ## Please scrape responsibly
 

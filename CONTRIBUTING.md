@@ -1,10 +1,22 @@
 # Contributing
 
+This is a solo, founder-led project, run in the open. You do not need permission to help,
+and there is no process to learn. Pick whichever of these fits:
+
+- **Star and follow** if you want it to exist. That is the signal that keeps it going.
+- **Report a broken feed** by opening an [issue](../../issues) — sites change constantly, and
+  a heads-up that one stopped working is genuinely useful.
+- **Request a landlord** you want covered: open an issue with the landlord and their listings URL.
+- **Send a pull request** to add a source (see below) or fix one. Small, focused PRs get merged fast.
+- **Questions or ideas:** the fastest way to reach me is X — [@paulljump](https://x.com/paulljump).
+
+No contribution is too small, and none is expected. Follow along and jump in when you feel like it.
+
+## Add a source
+
 A new source is about 30 lines. The framework handles HTTP, retries, the database,
 price-history snapshots, and marking gone listings inactive — an adapter just returns
 listing dicts.
-
-## Add a source
 
 1. Create `pricefixed/adapters/yourlandlord.py`:
 
