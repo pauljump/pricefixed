@@ -109,7 +109,7 @@ python3 build_record.py --source pluto --limit 500   # sample a source
 python3 build_record.py                              # everything (large; it's all of nyc)
 ```
 
-Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), and **ACRIS sales** (recorded deeds, dollar amount + date). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Coming: violations, 311, evictions, certificates of occupancy, rent-stabilization status, and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), **ACRIS sales** (recorded deeds, dollar amount + date), **HPD violations** and **complaints**, **DOB complaints**, and **certificates of occupancy**. A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Coming: 311, evictions, rent-stabilization status, and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
 
 ## Prior art, and how this is different
 

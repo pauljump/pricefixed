@@ -31,7 +31,8 @@ BUILDING_COLUMNS = [
     "bbl", "borough", "block", "lot", "address", "zipcode", "year_built",
     "units_res", "units_total", "building_class", "owner_name",
     "owner_business_address", "permits", "permit_last", "violations",
-    "viol_last", "sales", "sales_last",
+    "viol_last", "sales", "sales_last", "complaints", "complaints_last",
+    "dob_complaints", "dob_complaints_last", "cofos", "cofo_last",
 ]
 
 
@@ -102,6 +103,12 @@ def init_record_db(path):
             viol_last              TEXT,
             sales                  INTEGER,
             sales_last             TEXT,
+            complaints             INTEGER,
+            complaints_last        TEXT,
+            dob_complaints         INTEGER,
+            dob_complaints_last    TEXT,
+            cofos                  INTEGER,
+            cofo_last              TEXT,
             first_seen             TEXT NOT NULL,
             last_seen              TEXT NOT NULL
         );
@@ -137,6 +144,15 @@ def init_record_db(path):
         );
         """
     )
+    # The buildings spine is deliberately extensible: a source may enrich a column
+    # a pre-existing db predates. `CREATE TABLE IF NOT EXISTS` won't add columns to
+    # a table that already exists, so bring any older db up to the current spine by
+    # adding whatever BUILDING_COLUMNS it's missing (SQLite is dynamically typed, so
+    # a typeless ADD COLUMN holds both the integer counts and the text dates fine).
+    existing = {row[1] for row in conn.execute("PRAGMA table_info(buildings)")}
+    for col in BUILDING_COLUMNS:
+        if col != "bbl" and col not in existing:
+            conn.execute(f"ALTER TABLE buildings ADD COLUMN {col}")
     conn.commit()
     return conn
 
