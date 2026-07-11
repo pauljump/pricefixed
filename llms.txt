@@ -1,0 +1,18 @@
+# pricefixed
+
+> Open, dependency-free tools to pull apartment listings and price history straight from landlord-direct feeds into a local SQLite database. Built to be handed to an AI agent. NYC first. A transparency project against algorithmic rent price-fixing.
+
+Python 3.9+ standard library only. Run `python3 scrape.py` to pull every source into `listings.db`. Every pull snapshots price and lease terms so history is preserved.
+
+## Start here
+
+- [AGENTS.md](AGENTS.md): how an AI agent should drive this repo, the data model, and common tasks
+- [README.md](README.md): what this is and why it exists
+- [CONTRIBUTING.md](CONTRIBUTING.md): how to add a new landlord source in ~30 lines
+
+## Reference
+
+- [FEEDS.md](FEEDS.md): the registry of NYC apartment data sources, tiered by difficulty and by what each exposes
+- [pricefixed/core.py](pricefixed/core.py): the framework, SQLite schema, and the `LISTING_FIELDS` an adapter returns
+- [scrape.py](scrape.py): the CLI (`--list`, `--status`, `--source`)
+- [healthcheck.py](healthcheck.py): runs every source and reports which feeds are live

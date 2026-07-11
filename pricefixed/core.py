@@ -1,5 +1,5 @@
 """
-unwalled.core — the shared machinery every scraper plugs into.
+pricefixed.core — the shared machinery every scraper plugs into.
 
 An adapter's only job is to return a list of listing dicts from one landlord/source.
 Everything else — HTTP, retries, the SQLite schema, upserts, price-history snapshots,

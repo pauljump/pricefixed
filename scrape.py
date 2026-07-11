@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-unwalled — pull apartment listings from landlord-direct sources into a local SQLite file.
+pricefixed — pull apartment listings from landlord-direct sources into a local SQLite file.
 
     python scrape.py                 # pull every source
     python scrape.py --source nooklyn
@@ -14,8 +14,8 @@ Point Codex / Claude at it and build whatever you want.
 import argparse
 import sys
 
-from unwalled.core import init_db
-from unwalled.adapters import ADAPTERS
+from pricefixed.core import init_db
+from pricefixed.adapters import ADAPTERS
 
 
 def main():

@@ -6,7 +6,7 @@ listing dicts.
 
 ## Add a source
 
-1. Create `unwalled/adapters/yourlandlord.py`:
+1. Create `pricefixed/adapters/yourlandlord.py`:
 
 ```python
 from ..core import SourceAdapter, fetch
@@ -32,7 +32,7 @@ class YourLandlordAdapter(SourceAdapter):
         return out
 ```
 
-2. Register it in `unwalled/adapters/__init__.py`.
+2. Register it in `pricefixed/adapters/__init__.py`.
 3. Test: `python3 scrape.py --source yourlandlord --db /tmp/test.db`
 4. Open a PR.
 

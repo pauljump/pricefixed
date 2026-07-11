@@ -1,28 +1,40 @@
-# unwalled
+# pricefixed
 
-**Open scraping tools for apartment listings. Point Codex or Claude at them and build whatever inventory you want.**
+**Open tools to pull every apartment's real price and history out of the walled gardens. Point Claude or Codex at them and build.**
 
-It's 2026 and there's still no single source of truth for every apartment and its history. It's all locked in walled gardens you have to scrape just to see. Zillow, StreetEasy, and the rest are paid by landlords and brokers — they are not on your side.
+The rent number on your lease was not set by a person. It was set by software. Landlords across the country feed their vacancies into shared pricing algorithms like RealPage's YieldStar, and those algorithms quietly raise rents in lockstep across competitors. The Department of Justice sued over it and called it what it is: price-fixing.
 
-So this is the one that should already exist. In the open.
+You cannot fight an algorithm you cannot see. So the answer is transparency across everything, in the open, owned by no one. That is what this is.
+
+`pricefixed` starts with the hard part every real-estate project starts with: getting the data. It gives those tools away.
 
 ---
 
 ## The idea
 
-Every real-estate product starts in the same place: **scraping**. The data is the wall. `unwalled` tears the wall down and gives the tools away.
+The data is the wall. Zillow and StreetEasy are paid by landlords and brokers, so the real prices and the real history stay locked behind them. `pricefixed` pulls it straight from the source instead.
 
-- A tiny, dependency-free framework for pulling apartment listings from **landlord-direct sources** — the feeds landlords publish themselves to lease their units.
-- Every pull snapshots price and lease terms, so you keep **the history the walled gardens throw away**.
-- Output is a plain **SQLite** file. No account, no API key, no lock-in. Point an AI agent at it and build.
+- A tiny, dependency-free framework for pulling listings from **landlord-direct feeds**, the availability data landlords publish themselves to lease their own units.
+- Every pull snapshots price and lease terms, so you keep **the history the listing sites throw away**.
+- Output is a plain **SQLite** file. No account, no key, no lock-in. Point an AI agent at it and build whatever you want.
 
-Scraping gets a bad name. But how do you think the big real-estate companies got their data in the first place? Scraping. They'll just block you if you try to snag it back.
+Scraping gets a bad name. But it is how the big real-estate companies got their data in the first place. They just block you when you try to get it back.
+
+## Where this is going
+
+Three steps, in order:
+
+1. **The feeds.** Maintained, dependency-free scrapers for landlord-direct sources. NYC first, because it is the hardest and the most walled. This is what ships today.
+2. **The inventory.** A published, open dataset of what those feeds return over time, so nobody has to run the scrapers to get the history.
+3. **The algorithms.** Reverse-engineering how landlord pricing software actually sets your rent, in public, so the thing setting the price can finally be seen.
+
+Contributors are welcome. This is going to be big and I am happy to go it alone, but you are welcome along.
 
 ## Quickstart
 
 ```bash
-git clone https://github.com/pauljump/unwalled
-cd unwalled
+git clone https://github.com/pauljump/pricefixed
+cd pricefixed
 python3 scrape.py            # pull every source into ./listings.db
 python3 scrape.py --list     # see available sources
 python3 scrape.py --status   # counts in your db
@@ -45,39 +57,43 @@ One SQLite database, three tables:
 
 | table | what |
 |---|---|
-| `listings` | current inventory — address, unit, beds/baths, price, sqft, lease terms, geo, raw source JSON |
-| `price_history` | one snapshot per listing per pull — recover every price and lease-term change over time |
+| `listings` | current inventory: address, unit, beds/baths, price, sqft, lease terms, geo, raw source JSON |
+| `price_history` | one snapshot per listing per pull, so you can recover every price and lease-term change over time |
 | `pull_log` | when each source was pulled and how much moved |
 
 Run it on a cron and `price_history` becomes something no listing site will sell you: the real trajectory of what every unit actually asked, over time.
 
 ## Point your agent at it
 
-The whole point is that you don't have to write the glue. Clone the repo, hand it to Codex or Claude, and say *"pull all sources nightly and give me every 1-bedroom under $3,000 that dropped its price this week."* The tools are the primitive; the inventory is yours to shape.
+You do not have to write the glue. Clone the repo, hand it to Claude or Codex, and say *"pull all sources nightly and give me every 1-bedroom under $3,000 that dropped its price this week."* The tools are the primitive. The inventory is yours to shape. See [`AGENTS.md`](AGENTS.md) for how any LLM should drive this repo.
 
 ## Sources
 
-Starting set (all live, all landlord-direct):
+Starting set, all live, all landlord-direct:
 
 - **stuytown** — Beam Living (StuyTown, Peter Cooper Village, Kips Bay, Parker Towers, 8 Spruce)
 - **tfcornerstone** — TF Cornerstone luxury portfolio
-- **nooklyn** — broker marketplace (the no-fee / small-landlord inventory the big feeds miss)
+- **nooklyn** — broker marketplace, the no-fee and small-landlord inventory the big feeds miss
 
-The roadmap is **hundreds** of NYC sources — the full registry, tiered by difficulty, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. NYC first, other cities fast behind it.
+The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
-## Why this exists
+<!-- FEED-STATUS:START -->
+**Feed status** — 3/3 live, checked 2026-07-11
 
-Landlords now use pricing algorithms that quietly coordinate rents across competitors. The DOJ sued over it as price-fixing. The only real defense tenants have is transparency across everything — so that's what this is.
-
-If the market's price is set by a shared algorithm, the counter is a shared, open dataset. That's the whole thesis.
+| source | status | listings | note |
+|---|---|---|---|
+| `nooklyn` | 🟢 live | 1531 |  |
+| `stuytown` | 🟢 live | 331 |  |
+| `tfcornerstone` | 🟢 live | 124 |  |
+<!-- FEED-STATUS:END -->
 
 ## Contributing
 
-A new source is ~30 lines: subclass `SourceAdapter`, implement `pull()` to return listing dicts, register it. See any file in [`unwalled/adapters/`](unwalled/adapters/) and [`CONTRIBUTING.md`](CONTRIBUTING.md). PRs welcome. This is going to be massive and I'm happy to go it alone, but you're welcome along.
+A new source is about 30 lines: subclass `SourceAdapter`, implement `pull()` to return listing dicts, register it. See any file in [`pricefixed/adapters/`](pricefixed/adapters/) and [`CONTRIBUTING.md`](CONTRIBUTING.md). PRs welcome.
 
 ## Please scrape responsibly
 
-Targets are **landlord-direct availability feeds** — public data landlords publish to lease their apartments, not walled gardens behind a login. Keep it that way: honor rate limits (the adapters are gentle by default), don't hammer, don't touch anything that requires an account or defeats an access control. This is a transparency project, not a denial-of-service one.
+Targets are **landlord-direct availability feeds**: public data landlords publish to lease their apartments, not walled gardens behind a login. Keep it that way. Honor rate limits, the adapters are gentle by default, do not hammer, and do not touch anything that requires an account or defeats an access control. This is a transparency project, not a denial-of-service one.
 
 ## License
 
