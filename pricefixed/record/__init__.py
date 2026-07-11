@@ -5,9 +5,12 @@ from .acris_sales import AcrisSalesSource
 from .cofo import CofoSource
 from .dob_complaints import DobComplaintsSource
 from .dob_permits import DobPermitsSource
+from .evictions import EvictionsSource
 from .hpd_complaints import HpdComplaintsSource
 from .hpd_registrations import HpdRegistrationsSource
+from .litigation import HpdLitigationSource
 from .pluto import PlutoSource
+from .service_requests_311 import ServiceRequests311Source
 from .violations import HpdViolationsSource
 
 RECORD_SOURCES = {
@@ -17,10 +20,13 @@ RECORD_SOURCES = {
         CofoSource,
         DobComplaintsSource,
         DobPermitsSource,
+        EvictionsSource,
         HpdComplaintsSource,
         HpdRegistrationsSource,
-        HpdViolationsSource,
+        HpdLitigationSource,
         PlutoSource,
+        ServiceRequests311Source,
+        HpdViolationsSource,
     )
 }
 
