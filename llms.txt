@@ -6,6 +6,7 @@ Python 3.9+ standard library only. Run `python3 scrape.py` to pull every source 
 
 ## Start here
 
+- [BUILD.md](BUILD.md): the guided prompt — interview the user on what apartment database they want, then build it. Start here if a user asks you to build something.
 - [AGENTS.md](AGENTS.md): how an AI agent should drive this repo, the data model, and common tasks
 - [README.md](README.md): what this is and why it exists
 - [COMPILE.md](COMPILE.md): the method for turning any source in the map into a working adapter, at scale

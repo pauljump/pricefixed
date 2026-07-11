@@ -8,6 +8,6 @@ This package is the join. `crosswalk` normalizes a street address the same way o
 both sides so a live listing can attach to its building's public record — the move
 the walled gardens make impossible.
 """
-from .crosswalk import normalize_address, build_crosswalk, bbl_for_address
+from .crosswalk import normalize_address, build_crosswalk, build_crosswalk_pad, bbl_for_address
 
-__all__ = ["normalize_address", "build_crosswalk", "bbl_for_address"]
+__all__ = ["normalize_address", "build_crosswalk", "build_crosswalk_pad", "bbl_for_address"]

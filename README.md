@@ -68,33 +68,35 @@ Run it on a cron and `price_history` becomes something no listing site will sell
 
 ## Point your agent at it
 
-You do not have to write the glue. Clone the repo, hand it to Claude or Codex, and say *"pull all sources nightly and give me every 1-bedroom under $3,000 that dropped its price this week."* The tools are the primitive. The inventory is yours to shape. See [`AGENTS.md`](AGENTS.md) for how any LLM should drive this repo.
+**The fastest start:** hand this repo to Claude or Codex and say *"read [`BUILD.md`](BUILD.md) and help me build an apartment database."* It asks you what you want — current inventory, price history, the full public record per building, or all of it — and then builds exactly that from the feeds and data here. That guided prompt is the front door.
 
-The bigger move: point your agent at the source map ([`FEEDS.md`](FEEDS.md)) and the compile method ([`COMPILE.md`](COMPILE.md)), and it builds new adapters row by row. The nine below are reference implementations. Compiling the rest is a crank anyone, human or AI, can turn.
+You do not have to write the glue. The tools are the primitive; the inventory is yours to shape. Ask for *"every 1-bedroom under $3,000 that dropped its price this week"* and it composes the feeds, the history, and the building record to answer. See [`AGENTS.md`](AGENTS.md) for how any LLM should drive this repo.
+
+The bigger move: point your agent at the source map ([`FEEDS.md`](FEEDS.md)) and the compile method ([`COMPILE.md`](COMPILE.md)), and it builds new adapters row by row. The ten below are reference implementations. Compiling the rest is a crank anyone, human or AI, can turn.
 
 ## Sources
 
-Nine live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
+Ten live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), AppFolio operators (`appfolio`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
 
-Nine landlords is the start, not the goal. The goal is every apartment in the city, then every city. Getting there means taking the walls down one at a time and keeping them down as they go back up. That fight is the project.
+Ten landlords is the start, not the goal. The goal is every apartment in the city, then every city. Getting there means taking the walls down one at a time and keeping them down as they go back up. That fight is the project.
 
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 9/10 live, checked 2026-07-11
+**Feed status** — 10/10 live, checked 2026-07-11
 
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 23 |  |
 | `avalonbay` | 🟢 live | 247 |  |
-| `glenwood` | 🟢 live | 18 |  |
+| `durst` | 🟢 live | 25 |  |
+| `glenwood` | 🟢 live | 26 |  |
 | `nooklyn` | 🟢 live | 1531 |  |
 | `ogdencap` | 🟢 live | 51 |  |
-| `securecafe` | 🟢 live | 325 |  |
+| `securecafe` | 🟢 live | 326 |  |
 | `stonehenge` | 🟢 live | 78 |  |
-| `stuytown` | 🟢 live | 329 |  |
+| `stuytown` | 🟢 live | 328 |  |
 | `tfcornerstone` | 🟢 live | 124 |  |
-| `durst` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
 
 ## The public record
@@ -107,7 +109,7 @@ python3 build_record.py --source pluto --limit 500   # sample a source
 python3 build_record.py                              # everything (large; it's all of nyc)
 ```
 
-Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership). Coming: ACRIS sales, violations, 311, evictions, certificates of occupancy, rent-stabilization status, and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), and **ACRIS sales** (recorded deeds, dollar amount + date). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Coming: violations, 311, evictions, certificates of occupancy, rent-stabilization status, and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
 
 ## Prior art, and how this is different
 

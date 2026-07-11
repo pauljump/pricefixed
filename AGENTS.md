@@ -2,6 +2,8 @@
 
 This repo is built to be handed to an LLM (Claude, Codex, or any coding agent). This file is the instruction sheet. If you are an agent, read this first.
 
+**If the user asked you to build an apartment database, go to [`BUILD.md`](BUILD.md)** — it is the guided prompt: interview them on what they want, then build it. This file (AGENTS.md) is the deeper reference on the data model and commands.
+
 ## What this repo does
 
 It pulls apartment listings straight from landlord-direct feeds and writes them to a local SQLite database (`listings.db`), keeping a price-history snapshot on every pull. No dependencies, Python 3.9+ standard library only.

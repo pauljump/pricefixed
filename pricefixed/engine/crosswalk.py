@@ -9,22 +9,46 @@ canonicalize the address on both sides so "45 Wall St" (listing) and "45 WALL ST
 `build_crosswalk` populates a `crosswalk` table from PLUTO's one-address-per-lot data.
 `bbl_for_address` is the lookup a consumer calls on a live listing.
 
-v1 is dependency-free: PLUTO (dataset 64uk-42ks) gives ONE primary address per tax
-lot, so a building with entrances on three streets only matches on the one PLUTO
-picked. The fuller source is PAD (Property Address Directory) — every real + vanity
-address per BBL, house-number ranges expanded — which lifts the match rate a lot. A
-PAD pass is the planned v2 (see the reference approach in an internal reference); this
-module deliberately ships the PLUTO-only version first so the join composes today
-with zero extra data dependencies.
+Two passes populate the crosswalk, and they compose:
+
+  1. `build_crosswalk` — PLUTO (dataset 64uk-42ks) gives ONE primary address per tax
+     lot, so a building with entrances on three streets only matches on the one PLUTO
+     picked. Fast, but leaves a real coverage gap.
+  2. `build_crosswalk_pad` — PAD (Property Address Directory, NYC Open Data dataset
+     bc8t-ecyu) is the fuller source: every real + vanity address per BBL, with
+     house-number ranges (a lot spanning 602-606 W 57 St) expanded to one row per
+     number. Augments the PLUTO pass; on the sampled listings it lifts the match rate
+     from 58% to ~83% by catching the addresses PLUTO's single primary never held.
+
+PAD ships as a flat file (pad.zip -> bobaadr.txt) rather than a SoQL endpoint, so the
+PAD pass downloads + caches the public archive and filters client-side by zip (the
+same scoping lever `where` gives the PLUTO pass). Method adapted from an internal
+(all-addresses-per-BBL + house-number-range expansion).
 
 No third-party dependencies. Python 3.9+ standard library only.
 """
 from __future__ import annotations
 
+import csv
+import io
+import json
+import os
 import re
+import tempfile
+import zipfile
+from urllib.request import Request, urlopen
 
+from ..core import USER_AGENT, fetch
 from ..record.core import socrata
 from ..record.pluto import DATASET_ID, BORO_ABBR
+
+# NYC Open Data "Property Address Directory" (DCP PAD). It's a downloadable file asset
+# (pad.zip, ~46MB, containing bobaadr.txt) rather than a SoQL table, so the PAD pass
+# fetches + caches the archive and streams it, instead of going through `socrata`.
+PAD_DATASET_ID = "bc8t-ecyu"
+PAD_BASE = "https://data.cityofnewyork.us"
+# PAD stores the borough as a single digit; map it to the full name PLUTO rows use.
+BORO_NUM = {"1": "MANHATTAN", "2": "BRONX", "3": "BROOKLYN", "4": "QUEENS", "5": "STATEN ISLAND"}
 
 # Spelled-out ordinal avenues -> their number, so "FIFTH AVENUE" meets "5 AVE".
 _AVES = {
@@ -143,6 +167,124 @@ def build_crosswalk(conn, limit=None, where=None):
         )
     conn.commit()
     return conn.execute("SELECT COUNT(*) FROM crosswalk").fetchone()[0]
+
+
+# ---------------------------------------------------------------------------
+# PAD pass — the fuller address source (every address per BBL, ranges expanded).
+# ---------------------------------------------------------------------------
+_HND_NUM = re.compile(r"^\d+$")
+
+
+def _expand_hnd(lhnd, hhnd, parity):
+    """Yield the display house numbers covered by a PAD low/high range.
+
+    Only clean numeric ranges are expanded; anything else (a lone number, a Queens
+    hyphenated number like "52-41", a letter/fraction) yields the low number as-is.
+    `parity` is 'O'/'E' (odd/even) when the range walks one side of the street, so we
+    step by 2 to avoid inventing the wrong-parity numbers PAD deliberately skips.
+    """
+    lo, hi = (lhnd or "").strip(), (hhnd or "").strip()
+    if not lo:
+        return
+    if not hi or hi == lo or not (_HND_NUM.match(lo) and _HND_NUM.match(hi)):
+        yield lo
+        return
+    a, b = int(lo), int(hi)
+    if b < a or b - a > 3000:   # guard against dirty rows blowing up into millions
+        yield lo
+        return
+    step = 2 if parity in ("O", "E") and (a % 2) == (b % 2) else 1
+    for h in range(a, b + 1, step):
+        yield str(h)
+
+
+def _download_pad(cache_path=None, refresh=False):
+    """Fetch + cache the public PAD archive (pad.zip) from NYC Open Data; return its path.
+
+    The blob id is read live from the dataset metadata rather than hardcoded, so a
+    quarterly PAD refresh (which mints a new blob id) still resolves. A cached copy is
+    reused unless `refresh=True`.
+    """
+    if cache_path is None:
+        cache_path = os.path.join(tempfile.gettempdir(), "pricefixed_pad.zip")
+    if not refresh and os.path.exists(cache_path) and os.path.getsize(cache_path) > 1_000_000:
+        return cache_path
+    meta = json.loads(fetch(f"{PAD_BASE}/api/views/{PAD_DATASET_ID}.json"))
+    blob_id = meta.get("blobId")
+    if not blob_id:
+        raise RuntimeError(f"PAD dataset {PAD_DATASET_ID} exposes no downloadable blob")
+    fname = meta.get("blobFilename", "pad.zip")
+    url = f"{PAD_BASE}/api/views/{PAD_DATASET_ID}/files/{blob_id}?filename={fname}"
+    req = Request(url, headers={"User-Agent": USER_AGENT})
+    with urlopen(req, timeout=180) as resp, open(cache_path, "wb") as out:
+        while True:
+            chunk = resp.read(1 << 20)
+            if not chunk:
+                break
+            out.write(chunk)
+    return cache_path
+
+
+def build_crosswalk_pad(conn, zips=None, limit=None, cache_path=None, refresh=False):
+    """Augment the `crosswalk` table with PAD — every real + vanity address per BBL.
+
+    Downloads (and caches) the public PAD archive, streams bobaadr.txt, expands each
+    house-number range into individual numbers, normalizes "<number> <street>" the same
+    way the PLUTO pass does, and INSERT-OR-IGNOREs (norm_address, bbl, borough, zipcode).
+    Returns the number of NEW crosswalk rows PAD added (rows PLUTO already held are
+    ignored, so this is the genuine lift).
+
+    Scoping mirrors `build_crosswalk`: `zips` keeps only rows in those zipcodes (the
+    realistic pattern — build over exactly the zips you hold listings in, a small slice
+    of the ~1M-row file), and `limit` caps how many new rows to write. PAD is a flat
+    file, so both filters are applied client-side while streaming.
+
+    BBL is assembled from PAD's boro+block+lot (boro 1 digit + block 5 + lot 4 -> the
+    canonical 10-digit BBL). Only addrtype '' (real) and 'V' (vanity) rows carry a
+    house-number range; NAP complex/simplex name rows are skipped here.
+    """
+    _ensure_table(conn)
+    zipset = {str(z) for z in zips} if zips else None
+    path = _download_pad(cache_path=cache_path, refresh=refresh)
+    added = 0
+    with zipfile.ZipFile(path) as z, z.open("bobaadr.txt") as raw:
+        reader = csv.reader(io.TextIOWrapper(raw, encoding="latin-1"))
+        header = next(reader)
+        col = {k: header.index(k) for k in
+               ("boro", "block", "lot", "lhnd", "hhnd", "stname", "addrtype", "parity", "zipcode")}
+        for row in reader:
+            zc = row[col["zipcode"]].strip()
+            if zipset is not None and zc not in zipset:
+                continue
+            if row[col["addrtype"]].strip() not in ("", "V"):
+                continue
+            boro = row[col["boro"]].strip()
+            block = row[col["block"]].strip()
+            lot = row[col["lot"]].strip()
+            if not (boro and block and lot):
+                continue
+            try:
+                bbl = f"{int(boro + block.zfill(5) + lot.zfill(4)):010d}"
+            except ValueError:
+                continue
+            borough = BORO_NUM.get(boro, boro)
+            stname = row[col["stname"]].strip()
+            parity = row[col["parity"]].strip()
+            for hnum in _expand_hnd(row[col["lhnd"]], row[col["hhnd"]], parity):
+                norm = normalize_address(f"{hnum} {stname}")
+                if not norm:
+                    continue
+                cur = conn.execute(
+                    "INSERT OR IGNORE INTO crosswalk (norm_address, bbl, borough, zipcode) "
+                    "VALUES (?,?,?,?)",
+                    (norm, bbl, borough, zc),
+                )
+                added += cur.rowcount
+                if limit is not None and added >= limit:
+                    conn.commit()
+                    return added
+    conn.commit()
+    return added
 
 
 def bbl_for_address(conn, address, zipcode=None):
@@ -265,50 +407,74 @@ def _demo(db_record="record.db", db_listings="listings.db"):
         print("  no listings found — run:  python3 scrape.py --source tfcornerstone")
         return
 
-    # 2) Build the crosswalk scoped to exactly the zips those listings sit in (one live
-    #    PLUTO pull). Scoping by zip is the right lever here: an unscoped limit-by-bbl
-    #    sample starts on the harbor islands and starves later boroughs, matching
-    #    nothing. A few zips is still a small sample — a few thousand lots, one request.
+    # 2) Scope to exactly the zips those listings sit in. Scoping by zip is the right
+    #    lever: an unscoped limit-by-bbl sample starts on the harbor islands and starves
+    #    later boroughs, matching nothing. A few zips is still a small sample.
     zips = sorted({z for (_, _, _, _, z) in listings})
     where = "zipcode in (" + ",".join(f"'{z}'" for z in zips) + ")"
-    print(f"\n  building crosswalk over {len(zips)} listing zip(s): {', '.join(zips)}")
-    n = build_crosswalk(rconn, where=where)      # no row cap: these few zips ARE the sample
-    print(f"  crosswalk now holds {n} normalized PLUTO addresses\n")
-
-    # 3) Resolve each listing and, on a hit, pull the building's PLUTO facts.
-    hits = []
-    for source, address, unit, borough, zipcode in listings:
-        norm = normalize_address(address)
-        bbl = bbl_for_address(rconn, address, zipcode=zipcode)
-        mark = "HIT " if bbl else "miss"
-        print(f"  [{mark}] {source:13} {address:34} -> {norm:26} -> {bbl or '-'}")
-        if bbl:
-            hits.append((address, unit, zipcode, norm, bbl))
-
     total = len(listings)
-    print(f"\n  match rate on sample: {len(hits)}/{total} = {100*len(hits)/total:.0f}%")
 
-    # Make sure the public-record layer actually holds the buildings we matched. In a
-    # real run `build_record.py --source pluto` fills `buildings` NYC-wide; here we top
-    # it up live for just the matched BBLs (via the same upsert helper the record layer
-    # uses) so the listing -> BBL -> facts chain is genuinely end-to-end, not a stub.
-    matched_bbls = [b for (_, _, _, _, b) in hits]
+    def resolve():
+        """Resolve every sampled listing against the current crosswalk. Returns a dict
+        norm_address -> bbl (None on a miss) keyed by the listing's raw address."""
+        out = {}
+        for source, address, unit, borough, zipcode in listings:
+            out[address] = bbl_for_address(rconn, address, zipcode=zipcode)
+        return out
+
+    def report(label, resolved, prev=None):
+        hits = sum(1 for b in resolved.values() if b)
+        for source, address, unit, borough, zipcode in listings:
+            bbl = resolved[address]
+            mark = "HIT " if bbl else "miss"
+            new = "  <- NEW via PAD" if (prev is not None and bbl and not prev.get(address)) else ""
+            print(f"  [{mark}] {source:13} {address:30} -> {normalize_address(address):24} -> {bbl or '-'}{new}")
+        print(f"\n  match rate ({label}): {hits}/{total} = {100*hits/total:.0f}%\n")
+        return hits
+
+    # --- PASS 1: PLUTO only (the BEFORE number) ---
+    print(f"\n  building crosswalk over {len(zips)} listing zip(s): {', '.join(zips)}")
+    print("\n  [pass 1] PLUTO — one primary address per lot")
+    n_pluto = build_crosswalk(rconn, where=where)   # no row cap: these few zips ARE the sample
+    print(f"  crosswalk holds {n_pluto} normalized PLUTO addresses\n")
+    before = resolve()
+    report("PLUTO only", before)
+
+    # --- PASS 2: + PAD (the AFTER number) ---
+    print("  [pass 2] + PAD — every real + vanity address per BBL, ranges expanded")
+    print("  downloading/caching PAD (public NYC Open Data bc8t-ecyu, ~46MB once)...")
+    added = build_crosswalk_pad(rconn, zips=zips)    # augments the same table, scoped to our zips
+    n_total = rconn.execute("SELECT COUNT(*) FROM crosswalk").fetchone()[0]
+    print(f"  PAD added {added} new addresses -> crosswalk holds {n_total}\n")
+    after = resolve()
+    report("PLUTO + PAD", after, prev=before)
+
+    # 3) Make sure the public-record layer holds the buildings we matched, then show
+    #    concrete joins — favoring the listings PLUTO alone missed and PAD newly resolved.
+    matched_bbls = [b for b in after.values() if b]
     _enrich_buildings(rconn, matched_bbls)
 
+    listing_meta = {a: (u, z) for (_, a, u, _, z) in listings}
+    newly = [a for a in after if after[a] and not before.get(a)]
+    ordered = newly + [a for a in after if after[a] and a not in newly]
+
     examples = []
-    for address, unit, zipcode, norm, bbl in hits:
+    for address in ordered:
+        bbl = after[address]
         fact = rconn.execute(
             "SELECT year_built, units_total, building_class, address "
             "FROM buildings WHERE bbl=?", (bbl,)
         ).fetchone()
         if fact and len(examples) < 3:
-            examples.append((address, unit, zipcode, norm, bbl, fact))
+            unit, zipcode = listing_meta.get(address, (None, None))
+            examples.append((address, unit, zipcode, bbl, fact, address in newly))
 
     if examples:
-        print("\n  --- concrete joins (live asking-rent listing -> public building record) ---")
-        for address, unit, zipcode, norm, bbl, (yb, ut, bc, baddr) in examples:
-            print(f"\n  listing : {address}  (unit {unit or '-'}, zip {zipcode})")
-            print(f"  norm    : {norm}")
+        print("  --- concrete joins (live asking-rent listing -> public building record) ---")
+        for address, unit, zipcode, bbl, (yb, ut, bc, baddr), is_new in examples:
+            tag = "  [PLUTO alone MISSED this — resolved via PAD]" if is_new else ""
+            print(f"\n  listing : {address}  (unit {unit or '-'}, zip {zipcode}){tag}")
+            print(f"  norm    : {normalize_address(address)}")
             print(f"  BBL     : {bbl}")
             print(f"  building: PLUTO address {baddr!r}")
             print(f"            year_built={yb}  units_total={ut}  building_class={bc}")
