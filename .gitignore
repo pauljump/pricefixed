@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+.venv/
+venv/
+
+# internal launch notes, not for publication
+NEXT.md
