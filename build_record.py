@@ -32,6 +32,9 @@ def main():
     ap.add_argument("--crosswalk", action="store_true",
                     help="build the address->BBL crosswalk from PLUTO and run the live "
                          "listing->BBL->building-facts join demo (see pricefixed/engine)")
+    ap.add_argument("--portfolios", action="store_true",
+                    help="cluster buildings into landlord portfolios by shared HPD "
+                         "business address (Who-Owns-What) and print the top landlords")
     args = ap.parse_args()
 
     if args.list:
@@ -47,6 +50,14 @@ def main():
         print("normalize_address self-tests:")
         _self_test()
         _demo(db_record=args.db)
+        return
+
+    if args.portfolios:
+        # Who-Owns-What: cluster single-purpose LLCs sharing an HPD business address
+        # into landlord portfolios and roll up their combined accountability record.
+        # See pricefixed/engine/portfolios.py.
+        from pricefixed.engine.portfolios import _demo
+        _demo(db_path=args.db)
         return
 
     conn = init_record_db(args.db)

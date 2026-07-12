@@ -1,5 +1,7 @@
 # pricefixed
 
+[![feed status](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml/badge.svg)](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml)
+
 **Open tools to pull every apartment's price and history out of the walled gardens, and a standardized public record of every NYC building. Point Claude or Codex at them and build.**
 
 The rent number on your lease was not set by a person. It was set by software. Landlords across the country feed their vacancies into shared pricing algorithms like RealPage's YieldStar, and those algorithms quietly raise rents in lockstep across competitors. The Department of Justice sued over it and called it what it is: price-fixing.
@@ -109,7 +111,12 @@ python3 build_record.py --source pluto --limit 500   # sample a source
 python3 build_record.py                              # everything (large; it's all of nyc)
 ```
 
-Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), **ACRIS sales** (recorded deeds), **HPD violations** and **complaints**, **DOB complaints**, **certificates of occupancy**, **evictions**, **housing litigation**, and **311** (housing complaints). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Coming: rent-stabilization status and Who-Owns-What LLC portfolios. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), **ACRIS sales** (recorded deeds), **HPD violations** and **complaints**, **DOB complaints**, **certificates of occupancy**, **evictions**, **housing litigation**, **311** (housing complaints), and **rent-stabilization** status (DHCR-derived unit counts from the taxbills.nyc scrape — a 2017 snapshot, tagged with its vintage so it's never mistaken for a live signal). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+
+Two engine passes turn the raw record into something you can act on:
+
+- **Who owns what** (`python build_record.py --portfolios`) clusters buildings into landlord portfolios by shared HPD-registered business address — the way single-purpose LLCs get unmasked into "this landlord owns 154 buildings, and here is their combined violation, eviction, and complaint record."
+- **Dedupe** (`python scrape.py --dedupe`) collapses the same physical unit surfaced by more than one feed into one canonical listing, so a compiled inventory counts each apartment once.
 
 ## Prior art, and how this is different
 

@@ -10,6 +10,7 @@ from .hpd_complaints import HpdComplaintsSource
 from .hpd_registrations import HpdRegistrationsSource
 from .litigation import HpdLitigationSource
 from .pluto import PlutoSource
+from .rent_stabilization import RentStabilizationSource
 from .service_requests_311 import ServiceRequests311Source
 from .violations import HpdViolationsSource
 
@@ -25,6 +26,7 @@ RECORD_SOURCES = {
         HpdRegistrationsSource,
         HpdLitigationSource,
         PlutoSource,
+        RentStabilizationSource,
         ServiceRequests311Source,
         HpdViolationsSource,
     )

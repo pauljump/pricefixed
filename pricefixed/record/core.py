@@ -35,6 +35,7 @@ BUILDING_COLUMNS = [
     "dob_complaints", "dob_complaints_last", "cofos", "cofo_last",
     "evictions", "eviction_last", "litigations", "litigation_last",
     "sr311", "sr311_open", "sr311_last",
+    "rent_stab_units", "rent_stab_status", "rent_stab_year",
 ]
 
 
@@ -118,6 +119,9 @@ def init_record_db(path):
             sr311                  INTEGER,
             sr311_open             INTEGER,
             sr311_last             TEXT,
+            rent_stab_units        INTEGER,
+            rent_stab_status       TEXT,
+            rent_stab_year         INTEGER,
             first_seen             TEXT NOT NULL,
             last_seen              TEXT NOT NULL
         );

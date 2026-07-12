@@ -77,6 +77,19 @@ _DIRECTIONAL = [
     (r"\bEAST\b", "E"), (r"\bWEST\b", "W"), (r"\bNORTH\b", "N"), (r"\bSOUTH\b", "S"),
 ]
 
+# Word folds where a listing's spelling differs from PLUTO's own convention but should
+# converge on one token. Verified live against dataset 64uk-42ks (2026-07):
+#   SAINT -> ST   PLUTO writes "ST NICHOLAS AVENUE" / "ST MARKS PLACE", never "SAINT ...".
+#   FT    -> FORT PLUTO itself is inconsistent — the SAME street shows up as both
+#                 "FORT HAMILTON PARKWAY" and "FT HAMILTON PARKWAY" rows. Folding both
+#                 sides (source ingest AND listing lookup both call normalize_address)
+#                 to one spelling merges what would otherwise be a coin-flip miss.
+#   PLZ   -> PLAZA PLUTO never abbreviates Plaza ("16 RICHMAN PLAZA", "QUEENS PLAZA
+#                 SOUTH") — only listings do.
+_WORD_FOLD = [
+    (r"\bSAINT\b", "ST"), (r"\bFT\b", "FORT"), (r"\bPLZ\b", "PLAZA"),
+]
+
 # Trailing unit/apt portion: everything from the first unit keyword (or a `#`) to the
 # end of the string. `#` gets its own arm because there's no word boundary before it.
 _UNIT_TAIL = re.compile(r"\b(APARTMENT|APT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM)\b.*$|#.*$")
@@ -84,15 +97,27 @@ _UNIT_TAIL = re.compile(r"\b(APARTMENT|APT|UNIT|STE|SUITE|FL|FLOOR|RM|ROOM)\b.*$
 # Ordinal suffix on a number: 26TH -> 26, 3RD -> 3.
 _ORDINAL = re.compile(r"(\d+)(ST|ND|RD|TH)\b")
 
+# A bare trailing unit number with NO keyword ("4-75 48th Avenue 205" — the "205" is an
+# apartment number that rode along with no "APT"/"#" to flag it, so _UNIT_TAIL never saw
+# it). Only strip a trailing number when it directly follows a recognized street-type
+# word, so we never eat a legitimate numbered street ("200 W 26 ST" ends on the suffix
+# word "ST", not a number) or a Queens hyphenated house number ("104-60 QUEENS BLVD" —
+# the hyphen is at the START of the string, this pattern only fires at the END). The
+# optional single trailing letter catches "3B"/"12F"-style bare units too.
+_SUFFIX_WORDS = "ST|AVE|BLVD|PL|RD|DR|LN|TERR|PKWY|CT|SQ|HWY|TPKE|PLAZA|CIRCLE|PARK|WALK|ROW"
+_BARE_UNIT_TAIL = re.compile(r"\b(" + _SUFFIX_WORDS + r")\s+\d+[A-Z]?$")
+
 
 def normalize_address(s):
     """Canonicalize a NYC street address for matching. Returns "" if the input can't
     be turned into a plausible house-number + street (so callers can skip it).
 
     The rules, in order: uppercase; drop commas/periods; strip listing-title junk;
-    fold spelled-out ordinal avenues (FIFTH->5) and directionals (WEST->W); standardize
-    street-type suffixes (STREET->ST); strip the unit/apt tail; drop ordinal suffixes
-    on numbers (26TH->26); collapse whitespace.
+    fold spelled-out ordinal avenues (FIFTH->5), directionals (WEST->W), and spelling
+    variants (SAINT->ST, FT->FORT, PLZ->PLAZA); standardize street-type suffixes
+    (STREET->ST); strip the unit/apt tail (keyword-flagged, e.g. "APT 6B"); drop
+    ordinal suffixes on numbers (26TH->26); drop a bare trailing unit number that had
+    no keyword to flag it (e.g. the "205" in "48th Avenue 205"); collapse whitespace.
 
     A valid result starts with a digit (a house number) and contains a letter (a street
     name) — this rejects bare units, PO boxes, and empty rows.
@@ -107,10 +132,13 @@ def normalize_address(s):
         a = re.sub(r"\b" + word + r"\b", num, a)
     for pat, rep in _DIRECTIONAL:
         a = re.sub(pat, rep, a)
+    for pat, rep in _WORD_FOLD:
+        a = re.sub(pat, rep, a)
     for long, short in _SUFFIX:
         a = a.replace(long, short)
     a = _UNIT_TAIL.sub("", a)                # cut "APARTMENT 1816", "APT 6B", "#613", ...
     a = _ORDINAL.sub(r"\1", a)               # "26TH" -> "26"
+    a = _BARE_UNIT_TAIL.sub(r"\1", a)        # cut a keyword-less trailing unit: "AVE 205" -> "AVE"
     a = re.sub(r"\s+", " ", a).strip()
     if len(a) < 5 or not a[0].isdigit() or not re.search(r"[A-Z]", a):
         return ""
@@ -324,7 +352,7 @@ def _self_test():
         ("200 WEST 26 STREET",            "200 W 26 ST"),
         ("104-60 Queens Blvd",            "104-60 QUEENS BLVD"),
         ("51-27 QUEENS BLVD.",            "51-27 QUEENS BLVD"),
-        ("4-75 48th Avenue 205",          "4-75 48 AVE 205"),   # trailing bare unit survives (no keyword) — a known miss source
+        ("4-75 48th Avenue 205",          "4-75 48 AVE"),       # FIXED: bare trailing unit (no keyword) now dropped
         ("343 Gold Street Apartment 1816","343 GOLD ST"),
         ("250 West 50th St",              "250 W 50 ST"),
         ("1 Fifth Avenue, Apt 12B",       "1 5 AVE"),
@@ -333,6 +361,31 @@ def _self_test():
         ("36 East 3rd Street #5",         "36 E 3 ST"),
         ("",                              ""),
         ("Apt 4B",                        ""),                  # no house number -> rejected
+
+        # --- non-regressions: things the bare-trailing-unit strip must NOT eat ---
+        ("200 W 26th St",                 "200 W 26 ST"),       # numbered street survives (ends on "ST", not a number)
+        ("200 W 26 ST",                   "200 W 26 ST"),       # already-abbreviated numbered street, same guard
+        ("60 West 23rd Street",           "60 W 23 ST"),        # numbered street via ordinal fold, no suffix eaten
+        ("137-58 45th Avenue",            "137-58 45 AVE"),     # Queens hyphenated house number, no trailing unit to strip
+        ("104-60 Queens Blvd 4B",         "104-60 QUEENS BLVD"),# hyphen house number AND a bare trailing unit together
+        ("30 W 63 ST",                    "30 W 63 ST"),        # bare numbered street with no ordinal suffix at all
+
+        # --- new fixes: word folds (SAINT->ST, FT->FORT, PLZ->PLAZA) ---
+        ("100 Saint Nicholas Avenue",     "100 ST NICHOLAS AVE"),
+        ("10 Ft Hamilton Pkwy",           "10 FORT HAMILTON PKWY"),
+        ("10 Fort Hamilton Parkway",      "10 FORT HAMILTON PKWY"),  # both spellings converge
+        ("16 Richman Plz",                "16 RICHMAN PLAZA"),
+        ("16 Richman Plaza",              "16 RICHMAN PLAZA"),
+
+        # --- lettered avenues (already worked via the generic suffix rule; locked here) ---
+        ("622 Avenue B",                  "622 AVE B"),
+        ("622 AVENUE B, Apt 4",           "622 AVE B"),
+
+        # --- apostrophes in street names survive untouched ---
+        ("324 O'Gorman Avenue",           "324 O'GORMAN AVE"),
+
+        # --- double space (a real PLUTO data quirk, e.g. "VICTORY  BLVD") collapses ---
+        ("2475 Victory  Blvd",            "2475 VICTORY BLVD"),
     ]
     passed = 0
     for raw, want in cases:

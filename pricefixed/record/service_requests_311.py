@@ -20,8 +20,9 @@ unique_key, bbl, incident_address, incident_zip, complaint_type, descriptor, sta
 import sqlite3
 
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from ..engine.crosswalk import bbl_for_address, build_crosswalk
 from .core import RecordSource, socrata, upsert_building, add_events
+# bbl_for_address / build_crosswalk are imported lazily inside the methods below — a
+# module-level import deadlocks the engine<->record circular import (see dob_complaints).
 
 DATASET_ID = "erm2-nwe9"
 
@@ -46,6 +47,7 @@ class ServiceRequests311Source(RecordSource):
     def _ensure_crosswalk(self, conn, zips):
         """Build crosswalk coverage (via PLUTO) for zips not already held, so the
         incident_address fallback is a genuine match rather than an empty-table miss."""
+        from ..engine.crosswalk import build_crosswalk
         try:
             have = {z for (z,) in conn.execute(
                 "SELECT DISTINCT zipcode FROM crosswalk WHERE zipcode IS NOT NULL")}
@@ -57,6 +59,7 @@ class ServiceRequests311Source(RecordSource):
             build_crosswalk(conn, where=where)
 
     def pull(self, conn, limit=None):
+        from ..engine.crosswalk import bbl_for_address
         rows = socrata(DATASET_ID, select=self.SELECT, where=HOUSING_WHERE,
                        order="created_date DESC", limit=limit)
 

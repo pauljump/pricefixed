@@ -1,0 +1,67 @@
+name: healthcheck
+
+# Keeps the feed-status table in README.md honest without a human running
+# `python3 healthcheck.py` by hand. Runs on a daily cron, on demand, and on
+# every push to main (so a merged adapter fix shows up immediately).
+#
+# The tricky part: healthcheck.py exits nonzero when a feed is down, and we
+# WANT that nonzero exit to fail the run (red X = visible alert). But we also
+# want the refreshed README committed even when a feed is down — otherwise a
+# broken feed would freeze the table at its last "everything was fine" state,
+# which is the opposite of what this repo is for. So: run the check, stash
+# its exit code, commit the README if it changed, THEN fail the job using the
+# stashed code. Commit happens either way; failure visibility happens either way.
+
+on:
+  schedule:
+    - cron: "17 11 * * *"  # daily, ~06:17 America/New_York (11:17 UTC)
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: write  # needed so the bot can push the README refresh back to main
+
+jobs:
+  healthcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # No pip install step on purpose — pricefixed is standard-library only.
+
+      - name: Run healthcheck.py (capture exit code, don't fail the step)
+        id: healthcheck
+        run: |
+          set +e
+          python3 healthcheck.py
+          echo "code=$?" >> "$GITHUB_OUTPUT"
+          set -e
+
+      - name: Commit refreshed README if the feed table changed
+        run: |
+          git config user.name "pricefixed-bot"
+          git config user.email "actions@users.noreply.github.com"
+          # Scope the guard to README specifically: healthcheck.py only rewrites
+          # README, so a dirty tree for any other reason must not reach `git commit`
+          # with nothing staged (which would exit nonzero and fail the step).
+          if ! git diff --quiet README.md; then
+            git add README.md
+            git commit -m "chore: refresh feed status [skip ci]"
+            git push
+          else
+            echo "README unchanged, nothing to commit."
+          fi
+
+      - name: Fail the run if any feed came back down
+        # Runs after the commit above so a down feed still shows red in the
+        # Actions tab, but never blocks the README refresh from landing.
+        # Default to 1 if the code output ever went unwritten — fail closed, so a
+        # broken harness surfaces red rather than masking a down feed as green.
+        run: exit "${{ steps.healthcheck.outputs.code || '1' }}"

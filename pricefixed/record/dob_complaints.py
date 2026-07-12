@@ -15,8 +15,11 @@ disposition_code, inspection_date."""
 import sqlite3
 
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from ..engine.crosswalk import bbl_for_address, build_crosswalk
 from .core import RecordSource, socrata, upsert_building, add_events
+# NOTE: bbl_for_address / build_crosswalk are imported lazily inside the methods that
+# use them. A module-level import here would deadlock: engine/__init__ eagerly imports
+# crosswalk, which imports record.core, which runs record/__init__, which imports this
+# module — pulling engine.crosswalk back before it has finished defining those names.
 
 DATASET_ID = "eabe-havv"
 
@@ -45,6 +48,7 @@ class DobComplaintsSource(RecordSource):
         (via PLUTO) only the zips we don't already hold — one scoped SoQL query, the same
         zip-scoped pattern the engine's demo uses — so the resolve rate reflects a genuine
         address->BBL match, not an empty table."""
+        from ..engine.crosswalk import build_crosswalk
         try:
             have = {z for (z,) in conn.execute(
                 "SELECT DISTINCT zipcode FROM crosswalk WHERE zipcode IS NOT NULL")}
@@ -56,6 +60,7 @@ class DobComplaintsSource(RecordSource):
             build_crosswalk(conn, where=where)
 
     def pull(self, conn, limit=None):
+        from ..engine.crosswalk import bbl_for_address
         rows = socrata(DATASET_ID, select=self.SELECT, order="date_entered DESC", limit=limit)
         self._ensure_crosswalk(conn, {r.get("zip_code") for r in rows})
 

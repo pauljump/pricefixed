@@ -24,6 +24,9 @@ def main():
     ap.add_argument("--db", default="listings.db", help="output SQLite path (default: listings.db)")
     ap.add_argument("--list", action="store_true", help="list available sources and exit")
     ap.add_argument("--status", action="store_true", help="show counts and exit")
+    ap.add_argument("--dedupe", action="store_true",
+                    help="collapse listings into distinct physical units across sources "
+                         "(writes the unit_dedup table + canonical_listings view) and exit")
     args = ap.parse_args()
 
     if args.list:
@@ -40,6 +43,16 @@ def main():
             print(f"  {name:16} {n} active")
         total = conn.execute("SELECT COUNT(*) FROM listings WHERE status='active'").fetchone()[0]
         print(f"  {'TOTAL':16} {total} active")
+        return
+
+    if args.dedupe:
+        # Entity-resolution: the same physical unit can surface in more than one feed
+        # (a landlord-direct listing also carried by the broker marketplace). Collapse
+        # them to one canonical row per unit. See pricefixed/engine/dedupe.py.
+        from pricefixed.engine.dedupe import build_units
+        stats = build_units(conn)
+        print(f"dedupe: {stats['raw_listings']} listings -> {stats['distinct_units']} units "
+              f"({stats['duplicate_units']} with 2+ listings mapped)")
         return
 
     if args.source:

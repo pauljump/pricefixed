@@ -21,8 +21,9 @@ residential_commercial_ind (Residential/Commercial), ejectment, eviction_possess
 import sqlite3
 
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from ..engine.crosswalk import bbl_for_address, build_crosswalk
 from .core import RecordSource, socrata, upsert_building, add_events
+# bbl_for_address / build_crosswalk are imported lazily inside the methods below — a
+# module-level import deadlocks the engine<->record circular import (see dob_complaints).
 
 DATASET_ID = "6z8x-wfk4"
 
@@ -47,6 +48,7 @@ class EvictionsSource(RecordSource):
         (via PLUTO) only the zips we don't already hold — one scoped SoQL query, the same
         zip-scoped pattern DOB complaints uses — so the resolve rate reflects a genuine
         address->BBL match, not an empty table."""
+        from ..engine.crosswalk import build_crosswalk
         try:
             have = {z for (z,) in conn.execute(
                 "SELECT DISTINCT zipcode FROM crosswalk WHERE zipcode IS NOT NULL")}
@@ -58,6 +60,7 @@ class EvictionsSource(RecordSource):
             build_crosswalk(conn, where=where)
 
     def pull(self, conn, limit=None):
+        from ..engine.crosswalk import bbl_for_address
         rows = socrata(DATASET_ID, select=self.SELECT, order="executed_date DESC", limit=limit)
         self._ensure_crosswalk(conn, {r.get("eviction_zip") for r in rows})
 
