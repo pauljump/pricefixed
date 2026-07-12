@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Your rent was set by software. pricefixed is the open data to see how.</title>
-<meta name="description" content="Open, dependency-free tools that pull apartment prices and history out of the walled gardens. 10 live NYC landlord-direct feeds, one SQLite file, MIT. Point your agent at it and build.">
+<meta name="description" content="Open, dependency-free tools that pull apartment prices and history out of the walled gardens. 12 live NYC feeds, one SQLite file, MIT. Point your agent at it and build.">
 <meta property="og:title" content="The rent number on your lease was not set by a person. It was set by software.">
-<meta property="og:description" content="pricefixed: open tools that pull apartment prices and history out of the walled gardens. 10 live NYC feeds, 2,692 listings, one SQLite file, MIT. Point Claude or Codex at it and build.">
+<meta property="og:description" content="pricefixed: open tools that pull apartment prices and history out of the walled gardens. 12 live NYC feeds, 6,401 listings, one SQLite file, MIT. Point Claude or Codex at it and build.">
 <meta property="og:url" content="https://pricefixed.polyfeeds.dev">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://pricefixed.polyfeeds.dev/og.png">
@@ -109,13 +109,15 @@ footer a{color:var(--ink2)}
 <section id="inside" style="padding-top:28px">
   <div class="wrap">
     <div class="tiles">
-      <div class="tile"><div class="label">Live feeds</div><div class="value">10</div><div class="sub">landlord-direct adapters, 36 more mapped</div></div>
-      <div class="tile"><div class="label">Active listings right now</div><div class="value">2,692</div><div class="sub">straight from the source, no portal</div></div>
-      <div class="tile"><div class="label">Price snapshots kept</div><div class="value">4,555</div><div class="sub">the history listing sites throw away</div></div>
+      <div class="tile"><div class="label">Live feeds</div><div class="value">12</div><div class="sub">10 landlord-direct + 2 brokerage backends</div></div>
+      <div class="tile"><div class="label">Active listings right now</div><div class="value">6,401</div><div class="sub">straight from the source, no portal</div></div>
+      <div class="tile"><div class="label">Price snapshots kept</div><div class="value">8,264</div><div class="sub">the history listing sites throw away</div></div>
       <div class="tile"><div class="label">Buildings on record</div><div class="value">3,197</div><div class="sub">owners, portfolios, rent stabilization</div></div>
     </div>
     <div class="term"><span class="p">$</span> python3 scrape.py --status
+  elliman          <span class="n">2344</span> active
   nooklyn          <span class="n">1526</span> active
+  corcoran         <span class="n">1365</span> active
   stuytown          <span class="n">317</span> active
   securecafe        <span class="n">270</span> active
   avalonbay         <span class="n">250</span> active
@@ -125,7 +127,7 @@ footer a{color:var(--ink2)}
   glenwood           <span class="n">27</span> active
   durst              <span class="n">25</span> active
   appfolio           <span class="n">23</span> active
-  <span class="t">TOTAL            2692 active</span>  <span class="c"># live output, not a mock</span></div>
+  <span class="t">TOTAL            6401 active</span>  <span class="c"># live output, not a mock</span></div>
   </div>
 </section>
 
@@ -150,7 +152,7 @@ footer a{color:var(--ink2)}
       <div class="card">
         <div class="k">the feeds</div>
         <h3>Scrapers that stay simple</h3>
-        <p>10 reference adapters for NYC landlord-direct sources, each about 30 lines, Python standard library only. <code>FEEDS.md</code> maps 36 more, verified and ready to build.</p>
+        <p>12 reference adapters, from single landlords to the Corcoran and Elliman backends that carry MLS-syndicated listings from the whole broker market. Python standard library only. <code>FEEDS.md</code> maps the rest.</p>
       </div>
       <div class="card">
         <div class="k">the history</div>
@@ -184,7 +186,7 @@ footer a{color:var(--ink2)}
       <div class="node hot">listings.db · price_history · record.db</div><div class="arrow">→</div>
       <div class="node">your agent</div>
     </div>
-    <p class="prose" style="margin-top:24px">The bigger move: the 10 adapters are reference implementations. Point your agent at the source map and the compile method, and it builds new adapters row by row. Compiling the rest is a crank anyone, human or AI, can turn.</p>
+    <p class="prose" style="margin-top:24px">The bigger move: the 12 adapters are reference implementations. Point your agent at the source map and the compile method, and it builds new adapters row by row. Compiling the rest is a crank anyone, human or AI, can turn.</p>
   </div>
 </section>
 
