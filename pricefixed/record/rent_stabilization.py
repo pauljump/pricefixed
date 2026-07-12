@@ -84,7 +84,7 @@ class RentStabilizationSource(RecordSource):
         "+ J-51/421-a abatement proxy — see module docstring for vintage caveat"
     )
 
-    def pull(self, conn, limit=None):
+    def pull(self, conn, limit=None, boro=None):
         try:
             text = fetch(CSV_URL)
         except Exception as e:  # noqa: BLE001 — fail loud, never fabricate a row
@@ -112,6 +112,10 @@ class RentStabilizationSource(RecordSource):
                 break
             bbl = (row.get("ucbbl") or "").strip()
             if len(bbl) != 10 or not bbl.isdigit():
+                continue
+            # The taxbills CSV is one flat file (no server-side filter), so borough scope
+            # is a client-side prefix filter on the BBL's leading digit.
+            if boro and not bbl.startswith(str(boro)):
                 continue
 
             stab = _int(row.get(UNIT_COUNT_COL))

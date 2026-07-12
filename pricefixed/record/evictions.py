@@ -21,7 +21,7 @@ residential_commercial_ind (Residential/Commercial), ejectment, eviction_possess
 import sqlite3
 
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause
 # bbl_for_address / build_crosswalk are imported lazily inside the methods below — a
 # module-level import deadlocks the engine<->record circular import (see dob_complaints).
 
@@ -59,9 +59,13 @@ class EvictionsSource(RecordSource):
             where = "zipcode in (" + ",".join(f"'{z}'" for z in missing) + ")"
             build_crosswalk(conn, where=where)
 
-    def pull(self, conn, limit=None):
+    def pull(self, conn, limit=None, boro=None):
         from ..engine.crosswalk import bbl_for_address
-        rows = socrata(DATASET_ID, select=self.SELECT, order="executed_date DESC", limit=limit)
+        # This dataset spells the borough as a full name ("BRONX"). Scope server-side;
+        # the crosswalk build below is unaffected (it keys off the returned rows' zips).
+        where = boro_clause(boro, "borough", "name")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
+                       order="executed_date DESC", limit=limit)
         self._ensure_crosswalk(conn, {r.get("eviction_zip") for r in rows})
 
         events = []

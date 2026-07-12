@@ -59,7 +59,7 @@ class DobComplaintsSource(RecordSource):
             where = "zipcode in (" + ",".join(f"'{z}'" for z in missing) + ")"
             build_crosswalk(conn, where=where)
 
-    def pull(self, conn, limit=None):
+    def pull(self, conn, limit=None, boro=None):
         from ..engine.crosswalk import bbl_for_address
         rows = socrata(DATASET_ID, select=self.SELECT, order="date_entered DESC", limit=limit)
         self._ensure_crosswalk(conn, {r.get("zip_code") for r in rows})
@@ -76,6 +76,11 @@ class DobComplaintsSource(RecordSource):
             address = f"{house} {street}"
             bbl = bbl_for_address(conn, address, zipcode=r.get("zip_code"))
             if not bbl:
+                continue
+            # This dataset is address-only (no borough/BBL column), so borough scope is a
+            # post-resolve filter on the BBL's leading digit. Note the pull is still
+            # NYC-wide, so pair a scoped run with --limit to keep it bounded.
+            if boro and not bbl.startswith(str(boro)):
                 continue
             resolved += 1
             date = iso_date(r.get("date_entered"))

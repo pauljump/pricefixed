@@ -12,7 +12,7 @@ to building the BBL from borough(name)+block+lot. Verified keys (2026-07): bbl, 
 (full name), block, lot, received_date (ISO like "2026-07-11T00:04:10.000"),
 major_category / minor_category / problem_code (the condition), complaint_status."""
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause
 
 DATASET_ID = "ygpa-z7cr"
 
@@ -47,8 +47,11 @@ class HpdComplaintsSource(RecordSource):
 
     SELECT = "bbl,borough,block,lot,received_date,major_category,minor_category,problem_code,complaint_status"
 
-    def pull(self, conn, limit=None):
-        rows = socrata(DATASET_ID, select=self.SELECT, order="received_date DESC", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # This dataset spells the borough as a full name ("BRONX"). Scope server-side.
+        where = boro_clause(boro, "borough", "name")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
+                       order="received_date DESC", limit=limit)
         events = []
         # Aggregate per building: total complaints seen this pull + latest date.
         agg: dict[str, dict] = {}

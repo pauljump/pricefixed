@@ -15,7 +15,7 @@ novissueddate + inspectiondate (ISO like "2011-07-21T00:00:00.000"), violationst
 (Open/Close). novissueddate is frequently null on older rows, so we order by — and fall
 back to — inspectiondate for the event date."""
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause
 
 DATASET_ID = "wvxf-dwi5"
 
@@ -47,8 +47,11 @@ class HpdViolationsSource(RecordSource):
 
     SELECT = "boroid,block,lot,class,novdescription,novissueddate,inspectiondate,violationstatus"
 
-    def pull(self, conn, limit=None):
-        rows = socrata(DATASET_ID, select=self.SELECT, order="inspectiondate DESC", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # This dataset spells the borough as a numeric boroid ("1".."5"). Scope server-side.
+        where = boro_clause(boro, "boroid", "code")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
+                       order="inspectiondate DESC", limit=limit)
         events = []
         # Aggregate per building: total violations seen this pull + latest date.
         agg: dict[str, dict] = {}

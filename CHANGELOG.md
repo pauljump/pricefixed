@@ -13,6 +13,25 @@ Roadmap, in order (see the README for the full thesis):
   run the scrapers to get the history.
 - **Algorithm transparency.** Public analysis of how landlord pricing software sets rent.
 
+## [0.3.0] - 2026-07-11
+
+Borough scoping — the record composes over one geography.
+
+### Added
+- **`build_record.py --boro`** (MN/BX/BK/QN/SI or 1–5): scopes every record source to a
+  single borough, threaded through `RecordSource.run/pull` via new `core.py` helpers
+  (`parse_boro`, `boro_clause`, `and_where`). This is what lets a *complete* record — owners
+  AND violations AND evictions — land on the same BBLs, instead of thin all-NYC samples that
+  never overlap. Most sources scope server-side on their native borough column (boroid /
+  borough name / 2-letter / ACRIS numeric); the two address-only or flat-file sources
+  (dob_complaints, rent_stabilization) scope by a BBL-prefix filter. Verified per source:
+  every written BBL falls in the requested borough.
+
+### Why it matters
+- The Who-Owns-What portfolio rollup now shows a landlord's real combined violation / eviction /
+  complaint record, because a one-borough build populates ownership and accountability on the
+  same buildings.
+
 ## [0.2.0] - 2026-07-11
 
 Phase 1: the record stops being a pile of feeds and starts composing into answers.

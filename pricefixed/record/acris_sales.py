@@ -21,7 +21,7 @@ Verified sale doc_types present: DEED (3.6M), DEEDO (30k) are the arm's-length s
 deeds; the rest (DEED COR / DEED, LE / DEED, TS ...) are corrections/life-estates/etc.
 """
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause, and_where
 
 MASTER_DATASET = "bnx9-e6tj"
 LEGALS_DATASET = "8h5j-fqxa"
@@ -67,7 +67,11 @@ class AcrisSalesSource(RecordSource):
     MASTER_SELECT = "document_id,doc_type,document_amt,document_date,recorded_datetime"
     LEGALS_SELECT = "document_id,borough,block,lot,unit,property_type"
 
-    def pull(self, conn, limit=None):
+    def pull(self, conn, limit=None, boro=None):
+        # The borough column ("1".."5") lives on the LEGALS dataset, not the Master.
+        # So we scope the legals pull server-side and leave the master (document) pull
+        # unscoped — the join then keeps only deeds that touch a lot in this borough.
+        legals_boro = boro_clause(boro, "borough", "code")
         # 1. Pull the most recent sale deeds from Master (filtered to sale doc_types).
         in_types = ",".join(f"'{t}'" for t in SALE_DOC_TYPES)
         masters = socrata(
@@ -96,7 +100,7 @@ class AcrisSalesSource(RecordSource):
             chunk = ids[i:i + 200]
             in_ids = ",".join(f"'{x}'" for x in chunk)
             rows = socrata(LEGALS_DATASET, select=self.LEGALS_SELECT,
-                           where=f"document_id in ({in_ids})")
+                           where=and_where(f"document_id in ({in_ids})", legals_boro))
             for r in rows:
                 legals_by_doc.setdefault(r.get("document_id"), []).append(r)
 

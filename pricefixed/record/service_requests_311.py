@@ -20,7 +20,7 @@ unique_key, bbl, incident_address, incident_zip, complaint_type, descriptor, sta
 import sqlite3
 
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, and_where
 # bbl_for_address / build_crosswalk are imported lazily inside the methods below — a
 # module-level import deadlocks the engine<->record circular import (see dob_complaints).
 
@@ -58,9 +58,13 @@ class ServiceRequests311Source(RecordSource):
             where = "zipcode in (" + ",".join(f"'{z}'" for z in missing) + ")"
             build_crosswalk(conn, where=where)
 
-    def pull(self, conn, limit=None):
+    def pull(self, conn, limit=None, boro=None):
         from ..engine.crosswalk import bbl_for_address
-        rows = socrata(DATASET_ID, select=self.SELECT, where=HOUSING_WHERE,
+        # This dataset has no borough column, but its `bbl` field starts with the borough
+        # digit, so scope on that prefix (AND-ed onto the housing slice). Rows lacking a
+        # bbl are dropped in scoped mode, which is fine here.
+        where = and_where(HOUSING_WHERE, f"starts_with(bbl,'{boro}')" if boro else None)
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
                        order="created_date DESC", limit=limit)
 
         # Only build crosswalk for the zips of rows that actually LACK a bbl — most rows

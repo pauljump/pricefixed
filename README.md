@@ -108,14 +108,17 @@ Live listings are only half of it. `pricefixed` also builds a standardized recor
 ```bash
 python3 build_record.py --list
 python3 build_record.py --source pluto --limit 500   # sample a source
+python3 build_record.py --boro BX --limit 20000      # one borough, every source, joined
 python3 build_record.py                              # everything (large; it's all of nyc)
 ```
+
+`--boro` (MN/BX/BK/QN/SI) is the one that makes the record *compose*: it scopes every source to a single borough, so ownership and violations and evictions all land on the **same buildings** instead of thin all-NYC samples that never overlap. Build one borough and the landlord portfolios below light up with real numbers.
 
 Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), **ACRIS sales** (recorded deeds), **HPD violations** and **complaints**, **DOB complaints**, **certificates of occupancy**, **evictions**, **housing litigation**, **311** (housing complaints), and **rent-stabilization** status (DHCR-derived unit counts from the taxbills.nyc scrape — a 2017 snapshot, tagged with its vintage so it's never mistaken for a live signal). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
 
 Two engine passes turn the raw record into something you can act on:
 
-- **Who owns what** (`python build_record.py --portfolios`) clusters buildings into landlord portfolios by shared HPD-registered business address — the way single-purpose LLCs get unmasked into "this landlord owns 154 buildings, and here is their combined violation, eviction, and complaint record."
+- **Who owns what** (`python build_record.py --portfolios`) clusters buildings into landlord portfolios by shared HPD-registered business address, unmasking the single-purpose LLCs. Build one borough and it's concrete: in the Bronx, one registered business address ties together **96 buildings spread across 25 separate LLCs — 700 HPD violations, 77 evictions, and 250 complaints between them.** That's a real row from `--boro BX`, not a mock-up.
 - **Dedupe** (`python scrape.py --dedupe`) collapses the same physical unit surfaced by more than one feed into one canonical listing, so a compiled inventory counts each apartment once.
 
 ## Prior art, and how this is different

@@ -8,7 +8,7 @@ Verified field keys (2026-07): borough (2-letter, e.g. BX), block, lot, address,
 zipcode, yearbuilt, unitsres, unitstotal, bldgclass, ownername, bbl (a float-string
 like "2054800111.00000000", normalized to a 10-char BBL below)."""
 from ..core import fetch  # noqa: F401 — kept for parity; socrata uses it internally
-from .core import RecordSource, socrata, upsert_building
+from .core import RecordSource, socrata, upsert_building, boro_clause
 
 DATASET_ID = "64uk-42ks"
 
@@ -38,8 +38,11 @@ class PlutoSource(RecordSource):
     SELECT = ("bbl,borough,block,lot,address,zipcode,yearbuilt,"
               "unitsres,unitstotal,bldgclass,ownername")
 
-    def pull(self, conn, limit=None):
-        rows = socrata(DATASET_ID, select=self.SELECT, order="bbl", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # PLUTO spells the borough as a 2-letter abbr (BX). Scope server-side so a
+        # single-borough build pulls only that borough's lots.
+        where = boro_clause(boro, "borough", "abbr")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where, order="bbl", limit=limit)
         n = 0
         for r in rows:
             bbl = normalize_bbl(r.get("bbl"))

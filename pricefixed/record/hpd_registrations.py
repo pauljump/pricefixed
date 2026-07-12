@@ -11,7 +11,7 @@ This registrations dataset has no BBL field, so we build it from boroid(1) + blo
 lot; contacts -> registrationid, type, corporationname, businesshousenumber,
 businessstreetname, businessapartment, businesscity, businessstate, businesszip."""
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building
+from .core import RecordSource, socrata, upsert_building, boro_clause
 
 REG_DATASET = "tesw-yqqr"
 CONTACT_DATASET = "feu5-w2e2"
@@ -57,8 +57,12 @@ class HpdRegistrationsSource(RecordSource):
 
     REG_SELECT = "registrationid,boroid,block,lot"
 
-    def pull(self, conn, limit=None):
-        regs = socrata(REG_DATASET, select=self.REG_SELECT, order="registrationid", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # Registrations spells the borough as a numeric boroid ("1".."5"). Scope the
+        # registrations pull server-side; contacts are then fetched by registrationid.
+        where = boro_clause(boro, "boroid", "code")
+        regs = socrata(REG_DATASET, select=self.REG_SELECT, where=where,
+                       order="registrationid", limit=limit)
         # registrationid -> bbl, and the set of ids we need contacts for.
         reg_bbl: dict[str, str] = {}
         for r in regs:

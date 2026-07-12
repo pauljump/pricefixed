@@ -14,7 +14,7 @@ boroid (numeric "1".."5"), block, lot, casetype (Heat and Hot Water / Tenant Act
 Comprehensive / ...), casestatus (OPEN/CLOSED), casejudgement (YES/NO), respondent,
 caseopendate (ISO like "2023-04-20T00:00:00.000")."""
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause
 
 DATASET_ID = "59kj-x8nc"
 
@@ -47,8 +47,11 @@ class HpdLitigationSource(RecordSource):
 
     SELECT = "bbl,boroid,block,lot,casetype,casestatus,caseopendate"
 
-    def pull(self, conn, limit=None):
-        rows = socrata(DATASET_ID, select=self.SELECT, order="caseopendate DESC", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # This dataset spells the borough as a numeric boroid ("1".."5"). Scope server-side.
+        where = boro_clause(boro, "boroid", "code")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
+                       order="caseopendate DESC", limit=limit)
         events = []
         # Aggregate per building: total cases seen this pull + latest date.
         agg: dict[str, dict] = {}

@@ -19,6 +19,7 @@ import argparse
 import sys
 
 from pricefixed.record import RECORD_SOURCES, init_record_db
+from pricefixed.record.core import parse_boro
 
 
 def main():
@@ -27,6 +28,10 @@ def main():
     ap.add_argument("--db", default="record.db", help="output SQLite path (default: record.db)")
     ap.add_argument("--limit", type=int, default=None,
                     help="cap rows fetched per source (sample instead of all of NYC)")
+    ap.add_argument("--boro", default=None,
+                    help="scope every source to one borough (MN/BX/BK/QN/SI or 1-5) so a "
+                         "COMPLETE record — owners AND violations AND evictions — lands on "
+                         "the same buildings, instead of a thin all-NYC sample that never overlaps")
     ap.add_argument("--list", action="store_true", help="list available sources and exit")
     ap.add_argument("--status", action="store_true", help="show counts and exit")
     ap.add_argument("--crosswalk", action="store_true",
@@ -36,6 +41,12 @@ def main():
                     help="cluster buildings into landlord portfolios by shared HPD "
                          "business address (Who-Owns-What) and print the top landlords")
     args = ap.parse_args()
+
+    # Fail fast on a bad --boro before any network work (clean CLI error, not a traceback).
+    try:
+        boro = parse_boro(args.boro)
+    except ValueError as e:
+        sys.exit(f"  {e}")
 
     if args.list:
         for name, cls in sorted(RECORD_SOURCES.items()):
@@ -85,10 +96,14 @@ def main():
     else:
         sources = list(RECORD_SOURCES)
 
+    if boro:
+        from pricefixed.record.core import BOROUGHS
+        print(f"  scope: {BOROUGHS[boro][1]} only (borough {boro})")
+
     grand = 0
     for name in sources:
         try:
-            grand += RECORD_SOURCES[name]().run(conn, limit=args.limit)
+            grand += RECORD_SOURCES[name]().run(conn, limit=args.limit, boro=boro)
         except Exception as e:  # noqa: BLE001 — one broken source shouldn't kill the run
             print(f"  {name}: FAILED — {e}")
     bld = conn.execute("SELECT COUNT(*) FROM buildings").fetchone()[0]

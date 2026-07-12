@@ -8,7 +8,7 @@ This dataset has no BBL field, so we build it: borough-code(1) + block(5, zero-p
 + lot(4, zero-padded). Verified keys (2026-07): borough (full name), block, lot,
 issuance_date (MM/DD/YYYY), job_type, permit_type, work_type."""
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause
 
 DATASET_ID = "ipu4-2q9a"
 
@@ -43,8 +43,11 @@ class DobPermitsSource(RecordSource):
 
     SELECT = "borough,block,lot,issuance_date,filing_date,job_type,permit_type,work_type"
 
-    def pull(self, conn, limit=None):
-        rows = socrata(DATASET_ID, select=self.SELECT, order="issuance_date DESC", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # This dataset spells the borough as a full name ("BRONX"). Scope server-side.
+        where = boro_clause(boro, "borough", "name")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
+                       order="issuance_date DESC", limit=limit)
         events = []
         # Aggregate per building: total permits seen this pull + latest date.
         agg: dict[str, dict] = {}

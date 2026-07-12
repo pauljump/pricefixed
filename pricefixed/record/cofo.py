@@ -13,7 +13,7 @@ to building the BBL from borough(name)+block+lot. Verified keys (2026-07): bbl, 
 (full name), block, lot, c_o_issue_date (ISO like "2021-04-08T00:00:00.000"), issue_type
 (Final/Temporary), job_type (A1/NB/...)."""
 from ..core import fetch  # noqa: F401 — parity with adapter style
-from .core import RecordSource, socrata, upsert_building, add_events
+from .core import RecordSource, socrata, upsert_building, add_events, boro_clause
 
 DATASET_ID = "bs8b-p36w"
 
@@ -48,8 +48,11 @@ class CofoSource(RecordSource):
 
     SELECT = "bbl,borough,block,lot,c_o_issue_date,issue_type,job_type"
 
-    def pull(self, conn, limit=None):
-        rows = socrata(DATASET_ID, select=self.SELECT, order="c_o_issue_date DESC", limit=limit)
+    def pull(self, conn, limit=None, boro=None):
+        # This dataset spells the borough as a full name ("BRONX"). Scope server-side.
+        where = boro_clause(boro, "borough", "name")
+        rows = socrata(DATASET_ID, select=self.SELECT, where=where,
+                       order="c_o_issue_date DESC", limit=limit)
         events = []
         # Aggregate per building: total certificates seen this pull + latest date.
         agg: dict[str, dict] = {}

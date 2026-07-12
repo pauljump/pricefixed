@@ -77,6 +77,62 @@ def socrata(dataset_id, where=None, select=None, order=None, limit=None,
     return rows
 
 
+# ---------------------------------------------------------------------------
+# Borough scoping. The BBL's first digit IS the borough, so scoping every source
+# to one borough is what lets a *complete* record be built over one geography
+# (owners AND violations AND evictions all landing on the same BBLs) instead of
+# a thin all-NYC sample where nothing overlaps. Each NYC dataset names the borough
+# differently — a numeric boroid, a full name, a 2-letter abbr, or the BBL prefix —
+# so a source translates the canonical 1–5 code into whichever form it needs.
+# ---------------------------------------------------------------------------
+BOROUGHS = {
+    1: ("MN", "MANHATTAN"),
+    2: ("BX", "BRONX"),
+    3: ("BK", "BROOKLYN"),
+    4: ("QN", "QUEENS"),
+    5: ("SI", "STATEN ISLAND"),
+}
+
+_BORO_ALIAS = {}
+for _code, (_abbr, _name) in BOROUGHS.items():
+    for _k in (str(_code), _abbr, _name):
+        _BORO_ALIAS[_k] = _code
+_BORO_ALIAS.update({"NY": 1, "NEW YORK": 1, "KINGS": 3, "RICHMOND": 5})
+
+
+def parse_boro(s):
+    """Parse a user-supplied borough (MN/BX/BK/QN/SI, a full name, or 1–5) to its
+    canonical 1–5 code. None stays None (no scope). Raises ValueError on garbage."""
+    if s is None:
+        return None
+    key = str(s).strip().upper()
+    if key not in _BORO_ALIAS:
+        raise ValueError(
+            f"unknown borough {s!r} — use one of MN/BX/BK/QN/SI, a full borough name, or 1–5"
+        )
+    return _BORO_ALIAS[key]
+
+
+def boro_clause(boro, column, form="code"):
+    """A SoQL `where` fragment scoping `column` to a borough, or None when boro is None.
+
+    `form` picks how this dataset spells the borough:
+      'code' -> "2"   (boroid / ACRIS numeric borough)
+      'abbr' -> "BX"  (PLUTO 2-letter)
+      'name' -> "BRONX" (HPD/DOB full name)
+    """
+    if not boro:
+        return None
+    val = {"code": str(boro), "abbr": BOROUGHS[boro][0], "name": BOROUGHS[boro][1]}[form]
+    return f"{column}='{val}'"
+
+
+def and_where(*clauses):
+    """Join non-empty SoQL clauses with AND, or return None if there are none."""
+    kept = [c for c in clauses if c]
+    return " AND ".join(kept) if kept else None
+
+
 def init_record_db(path):
     """Open (creating if needed) the public-record database and return the connection."""
     conn = sqlite3.connect(str(path), timeout=30)
@@ -223,14 +279,17 @@ class RecordSource(ABC):
     description: str = ""
 
     @abstractmethod
-    def pull(self, conn, limit=None) -> int:
-        """Fetch from the source and write to the db. Return rows processed."""
+    def pull(self, conn, limit=None, boro=None) -> int:
+        """Fetch from the source and write to the db. Return rows processed.
+
+        `boro` is a canonical 1–5 borough code (or None for all of NYC); a source
+        translates it into its own dataset's borough column via `boro_clause`."""
         ...
 
-    def run(self, conn, limit=None) -> int:
+    def run(self, conn, limit=None, boro=None) -> int:
         print(f"\n{'=' * 60}\n  {self.name} — {self.description}\n{'=' * 60}")
         t0 = time.monotonic()
-        rows = self.pull(conn, limit=limit)
+        rows = self.pull(conn, limit=limit, boro=boro)
         dt = time.monotonic() - t0
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         conn.execute(
