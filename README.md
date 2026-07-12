@@ -93,8 +93,8 @@ The full map of what is out there, tiered by how hard it is to pull and by what 
 | `avalonbay` | 🟢 live | 243 |  |
 | `durst` | 🟢 live | 25 |  |
 | `glenwood` | 🟢 live | 26 |  |
-| `nooklyn` | 🟢 live | 1526 |  |
-| `ogdencap` | 🟢 live | 50 |  |
+| `nooklyn` | 🟢 live | 1527 |  |
+| `ogdencap` | 🟢 live | 49 |  |
 | `stonehenge` | 🟢 live | 78 |  |
 | `stuytown` | 🟢 live | 317 |  |
 | `tfcornerstone` | 🟢 live | 124 |  |
