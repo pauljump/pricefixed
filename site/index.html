@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Your rent was set by software. pricefixed is the open data to see how.</title>
+<meta name="description" content="Open, dependency-free tools that pull apartment prices and history out of the walled gardens. 10 live NYC landlord-direct feeds, one SQLite file, MIT. Point your agent at it and build.">
+<meta property="og:title" content="The rent number on your lease was not set by a person. It was set by software.">
+<meta property="og:description" content="pricefixed: open tools that pull apartment prices and history out of the walled gardens. 10 live NYC feeds, 2,692 listings, one SQLite file, MIT. Point Claude or Codex at it and build.">
+<meta property="og:url" content="https://pricefixed.polyfeeds.dev">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://pricefixed.polyfeeds.dev/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pricefixed.polyfeeds.dev/og.png">
+<style>
+:root{
+  --page:#0d0d0d; --surface:#161715; --surface2:#1d1f1c;
+  --ink:#ffffff; --ink2:#c3c2b7; --muted:#8a8881;
+  --accent:#4ade80; --accent-dim:#2f9e57;
+  --border:rgba(255,255,255,0.10);
+  --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.eyebrow{font-family:var(--mono);font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.eyebrow .dot{color:var(--accent)}
+section{padding:60px 0}
+
+.hero{padding:96px 0 36px}
+.hero h1{font-size:clamp(31px,5.4vw,52px);font-weight:700;line-height:1.14;letter-spacing:-.02em;margin:18px 0 22px;max-width:780px}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero p.lede{font-size:clamp(16.5px,2.3vw,19.5px);color:var(--ink2);max-width:680px}
+.hero p.lede strong{color:var(--ink)}
+.cta{margin-top:30px;display:flex;gap:14px;flex-wrap:wrap}
+.btn{display:inline-block;padding:13px 22px;border-radius:8px;font-weight:600;font-size:15px;border:1px solid var(--border);color:var(--ink);background:var(--surface)}
+.btn.go{background:var(--accent);color:#07130b;border-color:var(--accent)}
+.btn:hover{text-decoration:none;filter:brightness(1.1)}
+
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-top:8px}
+.tile{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 20px 16px}
+.tile .label{font-size:13px;color:var(--muted);margin-bottom:6px}
+.tile .value{font-size:31px;font-weight:600;letter-spacing:-.01em}
+.tile .sub{font-size:13px;color:var(--ink2);margin-top:4px}
+
+.term{background:#0a0c0a;border:1px solid var(--border);border-radius:12px;padding:22px 24px;font-family:var(--mono);font-size:13.5px;line-height:1.75;color:var(--ink2);overflow-x:auto;margin-top:26px;white-space:pre}
+.term .p{color:var(--accent)}
+.term .n{color:var(--ink)}
+.term .t{color:var(--accent)}
+.term .c{color:var(--muted)}
+
+h2{font-size:clamp(23px,3.4vw,31px);font-weight:700;letter-spacing:-.015em;line-height:1.22;margin:14px 0 10px}
+.sechead p{color:var(--ink2);max-width:670px}
+.prose{color:var(--ink2);font-size:15.5px;max-width:670px}
+.prose p+p{margin-top:12px}
+.prose strong{color:var(--ink)}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:26px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:22px}
+.card .k{font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.card h3{font-size:17px;font-weight:650;margin-bottom:8px}
+.card p{font-size:14px;color:var(--ink2)}
+.card p code{font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+
+.flow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:28px;font-family:var(--mono);font-size:13px}
+.flow .node{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:9px 14px;color:var(--ink2)}
+.flow .node.hot{border-color:var(--accent-dim);color:var(--accent)}
+.flow .arrow{color:var(--muted)}
+
+.steps{margin-top:26px;display:grid;gap:0;max-width:680px}
+.step{display:flex;gap:18px;padding:18px 0;border-top:1px solid var(--border)}
+.step:last-child{border-bottom:1px solid var(--border)}
+.step .num{font-family:var(--mono);color:var(--accent);font-size:14px;padding-top:2px}
+.step h3{font-size:16.5px;font-weight:650}
+.step p{font-size:14.5px;color:var(--ink2);margin-top:3px}
+.step .now{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#07130b;background:var(--accent);border-radius:5px;padding:2px 7px;margin-left:8px;vertical-align:2px}
+
+.steel{border-left:3px solid var(--accent-dim);padding:14px 20px;color:var(--muted);font-size:14.5px;margin-top:26px;max-width:680px}
+.steel strong{color:var(--ink2)}
+
+.ask{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-top:24px;max-width:680px}
+.ask .q{font-family:var(--mono);font-size:14px;color:var(--ink)}
+.ask .q::before{content:"> ";color:var(--accent)}
+.ask .a{font-size:13.5px;color:var(--muted);margin-top:8px}
+
+footer{border-top:1px solid var(--border);padding:34px 0 60px;color:var(--muted);font-size:14px;margin-top:40px}
+footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{color:var(--ink2)}
+</style>
+</head>
+<body>
+
+<div class="hero wrap">
+  <div class="eyebrow">pricefixed <span class="dot">·</span> open tools <span class="dot">·</span> rent transparency <span class="dot">·</span> nyc first</div>
+  <h1>The rent number on your lease was not set by a person. <em>It was set by software.</em></h1>
+  <p class="lede">Landlords across the country feed their vacancies into shared pricing algorithms, and those algorithms raise rents in lockstep across competitors. The Department of Justice sued over it and called it what it is: <strong>price-fixing</strong>.</p>
+  <p class="lede" style="margin-top:14px">You cannot audit an algorithm without the data it feeds on, and almost none of that data is public. So this starts where every real answer starts: pulling the data into the open, owned by no one, for anyone to build on.</p>
+  <div class="cta">
+    <a class="btn go" href="https://github.com/pauljump/pricefixed">Get the tools on GitHub</a>
+    <a class="btn" href="#inside">What's inside</a>
+  </div>
+</div>
+
+<section id="inside" style="padding-top:28px">
+  <div class="wrap">
+    <div class="tiles">
+      <div class="tile"><div class="label">Live feeds</div><div class="value">10</div><div class="sub">landlord-direct adapters, 36 more mapped</div></div>
+      <div class="tile"><div class="label">Active listings right now</div><div class="value">2,692</div><div class="sub">straight from the source, no portal</div></div>
+      <div class="tile"><div class="label">Price snapshots kept</div><div class="value">4,555</div><div class="sub">the history listing sites throw away</div></div>
+      <div class="tile"><div class="label">Buildings on record</div><div class="value">3,197</div><div class="sub">owners, portfolios, rent stabilization</div></div>
+    </div>
+    <div class="term"><span class="p">$</span> python3 scrape.py --status
+  nooklyn          <span class="n">1526</span> active
+  stuytown          <span class="n">317</span> active
+  securecafe        <span class="n">270</span> active
+  avalonbay         <span class="n">250</span> active
+  tfcornerstone     <span class="n">124</span> active
+  stonehenge         <span class="n">78</span> active
+  ogdencap           <span class="n">52</span> active
+  glenwood           <span class="n">27</span> active
+  durst              <span class="n">25</span> active
+  appfolio           <span class="n">23</span> active
+  <span class="t">TOTAL            2692 active</span>  <span class="c"># live output, not a mock</span></div>
+  </div>
+</section>
+
+<section style="padding-top:4px">
+  <div class="wrap sechead">
+    <div class="eyebrow">the wall</div>
+    <h2>The data is the wall.</h2>
+  </div>
+  <div class="wrap prose">
+    <p>Zillow and StreetEasy are paid by landlords and brokers, so the real prices and the real history stay locked behind them. But there is a crack in the wall: <strong>landlords have to publish their availability to lease their own units.</strong> Those landlord-direct feeds are public by necessity.</p>
+    <p>pricefixed reads them, snapshots every price and lease term on every pull, and writes it all to a plain SQLite file. No account, no key, no lock-in. The portals show you today's ask and throw the rest away. Run this on a cron and you keep what they discard: <strong>the real trajectory of what every unit asked, over time.</strong></p>
+  </div>
+</section>
+
+<section style="padding-top:12px">
+  <div class="wrap sechead">
+    <div class="eyebrow">what ships today</div>
+    <h2>Three primitives, one SQLite file.</h2>
+  </div>
+  <div class="wrap">
+    <div class="cards">
+      <div class="card">
+        <div class="k">the feeds</div>
+        <h3>Scrapers that stay simple</h3>
+        <p>10 reference adapters for NYC landlord-direct sources, each about 30 lines, Python standard library only. <code>FEEDS.md</code> maps 36 more, verified and ready to build.</p>
+      </div>
+      <div class="card">
+        <div class="k">the history</div>
+        <h3>Snapshots the sites discard</h3>
+        <p>Every pull writes one row per listing to <code>price_history</code>. Price drops, lease-term changes, delistings: recoverable forever, sellable by no one.</p>
+      </div>
+      <div class="card">
+        <div class="k">the record</div>
+        <h3>One record per building</h3>
+        <p>A standardized public record composed from city data: who owns it, which portfolio it belongs to, whether it is rent stabilized. 3,197 buildings so far.</p>
+      </div>
+    </div>
+    <div class="steel">Straight about what this is today: <strong>the data layer, not the detector.</strong> The history is 14 pulls young and compounds from here. Exposing the pricing algorithms is the destination, and you do not get there without this floor.</div>
+  </div>
+</section>
+
+<section style="padding-top:12px">
+  <div class="wrap sechead">
+    <div class="eyebrow">point your agent at it</div>
+    <h2>You do not have to write the glue.</h2>
+    <p>Clone the repo, hand it to Claude or Codex, and say <strong style="color:var(--ink)">"read BUILD.md and help me build an apartment database."</strong> It asks what you want and builds exactly that from the feeds and the record.</p>
+  </div>
+  <div class="wrap">
+    <div class="ask">
+      <div class="q">every 1-bedroom under $3,000 that dropped its price this week</div>
+      <div class="a">Your agent composes the feeds, the history, and the building record to answer. The tools are the primitive. The inventory is yours to shape.</div>
+    </div>
+    <div class="flow">
+      <div class="node">landlord feeds</div><div class="arrow">→</div>
+      <div class="node">scrape.py</div><div class="arrow">→</div>
+      <div class="node hot">listings.db · price_history · record.db</div><div class="arrow">→</div>
+      <div class="node">your agent</div>
+    </div>
+    <p class="prose" style="margin-top:24px">The bigger move: the 10 adapters are reference implementations. Point your agent at the source map and the compile method, and it builds new adapters row by row. Compiling the rest is a crank anyone, human or AI, can turn.</p>
+  </div>
+</section>
+
+<section style="padding-top:12px">
+  <div class="wrap sechead">
+    <div class="eyebrow">where this goes</div>
+    <h2>Three steps, in order.</h2>
+  </div>
+  <div class="wrap">
+    <div class="steps">
+      <div class="step"><div class="num">01</div><div><h3>The feeds<span class="now">ships today</span></h3><p>Maintained, dependency-free scrapers for landlord-direct sources. NYC first, because it is the hardest and the most walled.</p></div></div>
+      <div class="step"><div class="num">02</div><div><h3>The inventory</h3><p>A published, open dataset of what the feeds return over time, so nobody has to run the scrapers to get the history.</p></div></div>
+      <div class="step"><div class="num">03</div><div><h3>The algorithms</h3><p>Reverse-engineering how landlord pricing software actually sets your rent, in public, so the thing setting the price can finally be seen.</p></div></div>
+    </div>
+    <div class="steel"><strong>On scraping:</strong> it has a bad name, and it is also how every big real-estate company got its data in the first place. They just block you when you try to get it back. These tools read what landlords publish to lease their own units, at gentle rates, from public pages.</div>
+  </div>
+</section>
+
+<section style="padding-top:12px">
+  <div class="wrap sechead">
+    <h2>MIT. No account. No key.</h2>
+    <p>Clone it, run one command, and the wall starts coming down one SQLite file at a time.</p>
+  </div>
+  <div class="wrap">
+    <div class="term" style="margin-top:18px"><span class="p">$</span> git clone https://github.com/pauljump/pricefixed
+<span class="p">$</span> cd pricefixed && python3 scrape.py  <span class="c"># pull every source into ./listings.db</span></div>
+    <div class="cta" style="margin-top:26px">
+      <a class="btn go" href="https://github.com/pauljump/pricefixed">github.com/pauljump/pricefixed</a>
+      <a class="btn" href="https://github.com/pauljump/pricefixed/blob/main/BUILD.md">Read BUILD.md</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div>pricefixed · open tools for rent transparency · MIT</div>
+    <div><a href="https://github.com/pauljump/pricefixed">GitHub</a> · <a href="https://x.com/paulljump">@paulljump</a> · <a href="https://str.polyfeeds.dev">more receipts</a></div>
+  </div>
+</footer>
+
+<script>
+// ── pulse analytics ──
+(function(){if(window.__pulse)return;window.__pulse=1;if(location.hostname==="localhost")return;var I="https://pulse.polyfeeds.dev/api/ingest";function s(e,x){try{var b=JSON.stringify(Object.assign({event:e,path:location.pathname,referrer:document.referrer||undefined,screen:innerWidth+"x"+innerHeight},x||{}));if(navigator.sendBeacon){navigator.sendBeacon(I,new Blob([b],{type:"text/plain"}))}else{fetch(I,{method:"POST",headers:{"Content-Type":"text/plain"},keepalive:true,body:b})}}catch(e){}}s("page_view");var t=Date.now();function d(){s("page_dwell",{dwellMs:Date.now()-t})}addEventListener("pagehide",d);document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")d()})})();
+</script>
+</body>
+</html>

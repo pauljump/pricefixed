@@ -1,0 +1,15 @@
+# pricefixed
+
+Open, dependency-free tools that pull apartment prices and history out of the
+walled gardens, plus a standardized public record of NYC buildings. Output is
+plain SQLite. MIT.
+
+This page (pricefixed.polyfeeds.dev) is the launch page. The project lives at:
+
+- Repo: https://github.com/pauljump/pricefixed
+- Start here as an agent: https://github.com/pauljump/pricefixed/blob/main/AGENTS.md
+- Guided build prompt: https://github.com/pauljump/pricefixed/blob/main/BUILD.md
+- Source map (build a new adapter): https://github.com/pauljump/pricefixed/blob/main/FEEDS.md
+- Adapter method: https://github.com/pauljump/pricefixed/blob/main/COMPILE.md
+
+Fastest start: clone the repo and run `python3 scrape.py`. Python 3.9+ stdlib only.

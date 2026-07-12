@@ -1,6 +1,6 @@
 # pricefixed
 
-[![feed status](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml/badge.svg)](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml)
+[![feed status](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml/badge.svg)](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml) · **launch page: [pricefixed.polyfeeds.dev](https://pricefixed.polyfeeds.dev)**
 
 **Open tools to pull every apartment's price and history out of the walled gardens, and a standardized public record of every NYC building. Point Claude or Codex at them and build.**
 
