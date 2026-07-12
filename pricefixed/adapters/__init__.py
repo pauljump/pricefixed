@@ -4,6 +4,7 @@ from .appfolio import AppFolioAdapter
 from .avalonbay import AvalonBayAdapter
 from .corcoran import CorcoranSource
 from .durst import DurstAdapter
+from .elliman import EllimanSource
 from .glenwood import GlenwoodAdapter
 from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
@@ -19,6 +20,7 @@ ADAPTERS = {
         AvalonBayAdapter,
         CorcoranSource,
         DurstAdapter,
+        EllimanSource,
         GlenwoodAdapter,
         NooklynAdapter,
         OgdenCapAdapter,

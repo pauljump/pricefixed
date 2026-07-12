@@ -13,6 +13,22 @@ Roadmap, in order (see the README for the full thesis):
   run the scrapers to get the history.
 - **Algorithm transparency.** Public analysis of how landlord pricing software sets rent.
 
+## [0.5.0] - 2026-07-11
+
+Second brokerage: Douglas Elliman (MLS-backed).
+
+### Added
+- **`elliman` adapter** (`pricefixed/adapters/elliman.py`) — current NYC rental listings from
+  Douglas Elliman's core API (`core.api.elliman.com`), which is backed by the Trestle/CoreLogic
+  MLS feed. Same IDX/RLS ride-along as `corcoran`: one adapter, a large slice of the broker
+  market, no feed license.
+- Requests `statuses:["Active"]` + `listingTypes:["ResidentialLease"]` only — current on-market
+  rentals — with a defensive `_is_active` guard (drops any row with a close date/price) so the
+  `Closed` sold/rented history the same API serves can never leak into the open dataset.
+- Auth is a timestamp-derived header (no key, no login). The API recycles past ~300 results per
+  query, so the adapter partitions each borough by bedroom count to reach under the cap.
+- FEEDS.md marks Elliman shipped; Compass is the next brokerage.
+
 ## [0.4.0] - 2026-07-11
 
 Go upstream: the brokerage/IDX backdoor.

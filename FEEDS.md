@@ -63,8 +63,8 @@ Crack one, get everyone on it. This is the highest-leverage work left.
 | Brokerage | Backend | IDX/RLS | Mechanism | Status |
 |---|---|---|---|---|
 | **Corcoran** | `backendapi.corcoranlabs.com` | ✅ | POST `/api/search/listings`, active for-rent, paginated | ✅ shipped (`corcoran`) |
-| **Douglas Elliman** | `core.api.elliman.com` | ✅ (MLS-backed) | same shape; active rentals | 🔨 endpoint known, adapter not written |
-| **Compass** | Compass listing API | ✅ | active for-rent search | 🔬 recon |
+| **Douglas Elliman** | `core.api.elliman.com` | ✅ (MLS-backed) | POST `/listing/filter`, `statuses:["Active"]` + `ResidentialLease`, borough×bedroom partitioned | ✅ shipped (`elliman`) |
+| **Compass** | Compass listing API | ✅ | active for-rent search | 🔬 recon — next |
 | **Brown Harris Stevens** | BHS site API | likely | active rentals | 🔬 |
 
 ## Tier 2 — Big portfolios (own sites)
