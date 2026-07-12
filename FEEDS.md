@@ -62,10 +62,12 @@ Crack one, get everyone on it. This is the highest-leverage work left.
 
 | Brokerage | Backend | IDX/RLS | Mechanism | Status |
 |---|---|---|---|---|
-| **Corcoran** | `backendapi.corcoranlabs.com` | ✅ | POST `/api/search/listings`, active for-rent, paginated | ✅ shipped (`corcoran`) |
-| **Douglas Elliman** | `core.api.elliman.com` | ✅ (MLS-backed) | POST `/listing/filter`, `statuses:["Active"]` + `ResidentialLease`, borough×bedroom partitioned | ✅ shipped (`elliman`) |
-| **Compass** | Compass listing API | ✅ | active for-rent search | 🔬 recon — next |
-| **Brown Harris Stevens** | BHS site API | likely | active rentals | 🔬 |
+| **Corcoran** | `backendapi.corcoranlabs.com` | ✅ | POST `/api/search/listings`, active for-rent, paginated — clean JSON backend, no bot wall | ✅ shipped (`corcoran`) |
+| **Douglas Elliman** | `core.api.elliman.com` | ✅ (MLS-backed) | POST `/listing/filter`, `statuses:["Active"]` + `ResidentialLease`, borough×bedroom partitioned — clean JSON backend | ✅ shipped (`elliman`) |
+| **Compass** | site behind Cloudflare | ✅ | no reachable clean backend — the site returns a JS bot-challenge (HTTP 202, empty body). Needs headless discovery of its GraphQL + per-session tokens. **Hard tier.** | 🔬 headless only |
+| **Brown Harris Stevens** | bot-walled | likely | `bhsusa.com` returns 403 to a plain request. Headless discovery required. **Hard tier.** | 🔬 headless only |
+
+**Diminishing returns, and where the additive coverage actually is.** Every NYC brokerage syndicates to/from the same REBNY RLS feed, so once Corcoran + Elliman are in, a third brokerage mostly re-pulls listings already captured (its own exclusives are the only genuinely-new part). The `dedupe` engine (`scrape.py --dedupe`) collapses the overlap. So after two clean-API brokerages, the higher-leverage next inventory is **platforms** (below) — mid-market landlords who are *not* on the broker feed — not a third brokerage behind a headless wall.
 
 ## Tier 2 — Big portfolios (own sites)
 
