@@ -6,10 +6,11 @@ This is the point of the project: not nine scrapers, but a repeatable way to tur
 
 Do the highest-leverage sources first (this is why the map is tiered):
 
-1. **Platforms** (Tier 1). Each one is many landlords for one adapter. RentCafe, MRI ProspectConnect, AppFolio, Entrata, Funnel/Nestio. Crack the platform, then enumerate every NYC landlord on it and register each as a config entry, not a new file.
-2. **Big portfolios** (Tier 2) that run their own sites.
-3. **Broker marketplaces** (Tier 3).
-4. **The walled aggregators** (Tier 4), last and hardest.
+1. **Brokerages, for the IDX/RLS backdoor.** One brokerage adapter (Corcoran shipped; Elliman, Compass next) rides that brokerage's IDX/MLS syndication and pulls a large slice of the whole broker-listed market — no feed license. See the brokerage recipe below. Highest leverage per adapter.
+2. **Platforms** (Tier 1). Each one is many landlords for one adapter. RentCafe, MRI ProspectConnect, AppFolio, Entrata, Funnel/Nestio. Crack the platform, then enumerate every NYC landlord on it and register each as a config entry, not a new file.
+3. **Big portfolios** (Tier 2) that run their own sites.
+4. **Broker marketplaces** (Tier 3).
+5. **The walled aggregators** (Tier 4), last and hardest.
 
 ## Building one adapter (the loop)
 
@@ -34,9 +35,21 @@ A platform adapter is worth ten landlord adapters. Once you have the platform's 
 
 Examples already in the repo: `securecafe.py` (Yardi/RentCafe portals), `durst.py` and `ogdencap.py` (MRI ProspectConnect). Copy their structure.
 
+## The brokerage recipe (the IDX backdoor)
+
+A brokerage adapter is the highest-leverage of all: it rides the brokerage's own IDX/MLS access to the REBNY RLS feed, so you pull far beyond that one brokerage's exclusives. The move:
+
+1. **Find the brokerage's listing-search backend.** Open the brokerage's rental-search page, watch the network tab; it's usually a JSON API on an `*api*` subdomain (Corcoran: `backendapi.corcoranlabs.com/api/search/listings`, Elliman: `core.api.elliman.com`).
+2. **Ask for active for-rent only.** POST the search with `transactionTypes:["for-rent"]` and **no** `sold`/`rented`/`closed`/`listingStatus` filter. Paginate.
+3. **Confirm the syndication.** Look for `isIdx` / `isMLS` / `isVow` on the rows — those are listings from *other* brokers riding the feed. That is the multiplier.
+4. **Add a defensive active-only filter** (see `corcoran.py`'s `_is_active`) so a closed/rented row can never leak into the open dataset even if the API's defaults change.
+5. **Handle the key as public config.** Brokerage web APIs usually take the brokerage's own public web-app key (the one their site sends from every browser). Ship it as a default constant, overridable by env; when it rotates, the healthcheck goes red and you update it.
+
+Example already in the repo: `corcoran.py`. Copy its structure for Elliman and Compass.
+
 ## Rules that keep this honest
 
-- **Landlord-direct and public only.** No logins, no access-control bypasses, no aggregators-behind-a-wall (that is Tier 4, a separate and careful fight). This is the ethic and the legal line.
+- **Public, current listings only.** Landlord-direct feeds, platform availability, and brokerage *current on-market* listings are all fair game — they are what a landlord or broker publishes to lease a unit right now. Off-limits: anything behind a login or access control, the walled aggregators (Tier 4, a separate careful fight), and — for brokerages specifically — the *closed* sold/rented price history their backends can also serve. Stay on the currently-advertised side of that line.
 - **Standard library only at runtime.** If a source needs a headless browser to *discover* its API, do that discovery yourself and ship an adapter that uses plain `fetch()` at runtime. The installed repo stays dependency-free.
 - **Be gentle.** Honor rate limits. The framework already retries with backoff. Do not parallel-hammer one source.
 - **Expect rot.** Sources change to stop exactly this. `healthcheck.py` surfaces breakage; fixing it is normal, ongoing work. The maintenance is the project.

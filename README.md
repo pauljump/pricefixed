@@ -78,9 +78,11 @@ The bigger move: point your agent at the source map ([`FEEDS.md`](FEEDS.md)) and
 
 ## Sources
 
-Ten live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), AppFolio operators (`appfolio`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
+Live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), AppFolio operators (`appfolio`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
 
-Ten landlords is the start, not the goal. The goal is every apartment in the city, then every city. Getting there means taking the walls down one at a time and keeping them down as they go back up. That fight is the project.
+Plus the highest-leverage source of all: **`corcoran`**, a brokerage. A big brokerage's public search returns not just its own exclusives but every listing syndicated to it through IDX/MLS — the REBNY RLS feed. So one brokerage adapter rides that syndication and reaches a large slice of the whole broker-listed market, no feed license required. It pulls **current, on-market listings only** — the same public availability a landlord posts about its own units. Douglas Elliman and Compass are the same move; see [`FEEDS.md`](FEEDS.md#brokerages--the-idxrls-backdoor) for how to add one.
+
+This is the start, not the goal. The goal is every apartment in the city, then every city. Getting there means taking the walls down one at a time and keeping them down as they go back up. That fight is the project.
 
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 

@@ -13,6 +13,24 @@ Roadmap, in order (see the README for the full thesis):
   run the scrapers to get the history.
 - **Algorithm transparency.** Public analysis of how landlord pricing software sets rent.
 
+## [0.4.0] - 2026-07-11
+
+Go upstream: the brokerage/IDX backdoor.
+
+### Added
+- **`corcoran` adapter** (`pricefixed/adapters/corcoran.py`) — current NYC rental listings
+  from Corcoran's public backend API. A brokerage's search returns its own exclusives **plus**
+  every listing syndicated to it via IDX/MLS (the REBNY RLS feed), so one adapter rides that
+  syndication and reaches a large slice of the whole broker-listed market — no feed license
+  required (~44 of every ~250 rows sampled are IDX, i.e. other brokers' listings).
+- Pulls **active, on-market listings only** (`transactionTypes:["for-rent"]`, never a closed
+  status), with a defensive `_is_active` filter so no sold/rented history can leak into the
+  open dataset. The closed-rent history the same backend can serve is deliberately out of scope.
+- The API key is Corcoran's own public web-app key; overridable via `CORCORAN_API_KEY` if it
+  rotates (the healthcheck goes red when it does).
+- **`FEEDS.md`** documents the brokerage/IDX method as a first-class tier, with a step-by-step
+  guide to replicate it for Douglas Elliman (`core.api.elliman.com`) and Compass.
+
 ## [0.3.0] - 2026-07-11
 
 Borough scoping — the record composes over one geography.

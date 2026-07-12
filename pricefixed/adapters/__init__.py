@@ -2,6 +2,7 @@
 register it here. Keep the map alphabetical."""
 from .appfolio import AppFolioAdapter
 from .avalonbay import AvalonBayAdapter
+from .corcoran import CorcoranSource
 from .durst import DurstAdapter
 from .glenwood import GlenwoodAdapter
 from .nooklyn import NooklynAdapter
@@ -16,6 +17,7 @@ ADAPTERS = {
     for a in (
         AppFolioAdapter,
         AvalonBayAdapter,
+        CorcoranSource,
         DurstAdapter,
         GlenwoodAdapter,
         NooklynAdapter,
