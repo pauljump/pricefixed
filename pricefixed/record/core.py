@@ -36,6 +36,10 @@ BUILDING_COLUMNS = [
     "evictions", "eviction_last", "litigations", "litigation_last",
     "sr311", "sr311_open", "sr311_last",
     "rent_stab_units", "rent_stab_status", "rent_stab_year",
+    # Geo spine — PLUTO carries these, and the enrichment/ layer joins on them: a
+    # building's point (latitude/longitude) for nearest-X and point-in-polygon, and
+    # its area codes (community district, census tract) for area-keyed context.
+    "latitude", "longitude", "community_district", "census_tract",
 ]
 
 

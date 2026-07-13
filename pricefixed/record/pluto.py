@@ -23,6 +23,13 @@ def _int(v):
         return None
 
 
+def _float(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
 def normalize_bbl(raw):
     """PLUTO stores bbl as a float-string ("2054800111.00000000"). Normalize to the
     canonical 10-digit BBL string."""
@@ -34,9 +41,12 @@ class PlutoSource(RecordSource):
     name = "pluto"
     description = "PLUTO — the buildings spine (address, year, units, class) per BBL"
 
-    # We only need the spine columns; selecting them keeps each page small.
+    # We only need the spine columns; selecting them keeps each page small. latitude/
+    # longitude/cd/ct2010 are the geo spine the enrichment/ layer joins on (nearest
+    # subway, flood zone, school district, tract demographics).
     SELECT = ("bbl,borough,block,lot,address,zipcode,yearbuilt,"
-              "unitsres,unitstotal,bldgclass,ownername")
+              "unitsres,unitstotal,bldgclass,ownername,"
+              "latitude,longitude,cd,ct2010")
 
     def pull(self, conn, limit=None, boro=None):
         # PLUTO spells the borough as a 2-letter abbr (BX). Scope server-side so a
@@ -58,6 +68,10 @@ class PlutoSource(RecordSource):
                 "units_res": _int(r.get("unitsres")),
                 "units_total": _int(r.get("unitstotal")),
                 "building_class": r.get("bldgclass"),
+                "latitude": _float(r.get("latitude")),
+                "longitude": _float(r.get("longitude")),
+                "community_district": _int(r.get("cd")),
+                "census_tract": r.get("ct2010"),
             })
             n += 1
         conn.commit()
