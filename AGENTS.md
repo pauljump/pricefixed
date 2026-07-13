@@ -2,6 +2,12 @@
 
 This repo is built to be handed to an LLM (Claude, Codex, or any coding agent). This file is the instruction sheet. If you are an agent, read this first.
 
+> **⏸ Active build in progress — read [`HANDOFF.md`](HANDOFF.md) first.** The self-maintaining
+> enrichment/ledger/monitor toolkit is mid-build: the enrichment foundation + transit
+> enricher landed; six more enrichers and the coverage ledger, one-shot build spec, and
+> monitor→issue loop remain, all fully specced there. If you were asked to continue this
+> work, HANDOFF.md is your entry point.
+
 **If the user asked you to build an apartment database, go to [`BUILD.md`](BUILD.md)** — it is the guided prompt: interview them on what they want, then build it. This file (AGENTS.md) is the deeper reference on the data model and commands.
 
 ## What this repo does
