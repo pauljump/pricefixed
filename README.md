@@ -87,20 +87,20 @@ This is the start, not the goal. The goal is every apartment in the city, then e
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 11/12 live, checked 2026-07-17
+**Feed status** — 11/12 live, checked 2026-07-18
 
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 25 |  |
-| `avalonbay` | 🟢 live | 237 |  |
-| `corcoran` | 🟢 live | 1424 |  |
+| `avalonbay` | 🟢 live | 230 |  |
+| `corcoran` | 🟢 live | 1423 |  |
 | `durst` | 🟢 live | 25 |  |
-| `elliman` | 🟢 live | 2380 |  |
-| `glenwood` | 🟢 live | 29 |  |
-| `nooklyn` | 🟢 live | 1468 |  |
-| `ogdencap` | 🟢 live | 49 |  |
-| `stonehenge` | 🟢 live | 74 |  |
-| `stuytown` | 🟢 live | 370 |  |
+| `elliman` | 🟢 live | 2368 |  |
+| `glenwood` | 🟢 live | 25 |  |
+| `nooklyn` | 🟢 live | 1472 |  |
+| `ogdencap` | 🟢 live | 48 |  |
+| `stonehenge` | 🟢 live | 72 |  |
+| `stuytown` | 🟢 live | 351 |  |
 | `tfcornerstone` | 🟢 live | 122 |  |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
