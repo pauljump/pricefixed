@@ -87,18 +87,18 @@ This is the start, not the goal. The goal is every apartment in the city, then e
 The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 10/12 live, checked 2026-07-28
+**Feed status** — 10/12 live, checked 2026-07-29
 
 | source | status | listings | note |
 |---|---|---|---|
-| `appfolio` | 🟢 live | 22 |  |
-| `avalonbay` | 🟢 live | 235 |  |
-| `corcoran` | 🟢 live | 1428 |  |
+| `appfolio` | 🟢 live | 21 |  |
+| `avalonbay` | 🟢 live | 246 |  |
+| `corcoran` | 🟢 live | 1434 |  |
 | `durst` | 🟢 live | 22 |  |
-| `elliman` | 🟢 live | 2408 |  |
-| `glenwood` | 🟢 live | 17 |  |
-| `ogdencap` | 🟢 live | 54 |  |
-| `stonehenge` | 🟢 live | 73 |  |
+| `elliman` | 🟢 live | 2383 |  |
+| `glenwood` | 🟢 live | 20 |  |
+| `ogdencap` | 🟢 live | 55 |  |
+| `stonehenge` | 🟢 live | 74 |  |
 | `stuytown` | 🟢 live | 345 |  |
 | `tfcornerstone` | 🟢 live | 117 |  |
 | `nooklyn` | 🔴 down | — | HTTPError: HTTP Error 404: Not Found |
