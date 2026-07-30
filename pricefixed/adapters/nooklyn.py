@@ -1,12 +1,11 @@
-"""Nooklyn — broker marketplace. This is the no-fee / small-landlord inventory that the
-big-landlord feeds never contain. Paginated JSON. Prices are in CENTS (435000 = $4,350)."""
+"""Nooklyn public rental search. Prices are in cents (435000 = $4,350)."""
 import json
 import re
 import time
 
 from ..core import SourceAdapter, fetch
 
-API_URL = "https://nooklyn.com/api/v2/listings.search"
+API_URL = "https://nooklyn.com/api/v3/web/listings.search"
 CITY_TO_BORO = {
     "Manhattan": "Manhattan", "Brooklyn": "Brooklyn", "Queens": "Queens", "Bronx": "Bronx",
     "Staten Island": "Staten Island", "Astoria": "Queens", "Long Island City": "Queens",
@@ -21,8 +20,21 @@ class NooklynAdapter(SourceAdapter):
     description = "Nooklyn — broker marketplace (no-fee / small-landlord inventory)"
 
     def _page(self, page):
-        body = json.dumps({"page": page, "per_page": 100, "type": "residential", "transaction": "rentals"}).encode()
-        return json.loads(fetch(API_URL, headers={"Content-Type": "application/json"}, data=body))
+        # This is the active-rental search request made by Nooklyn's public web app.
+        # The former v2 endpoint was removed in July 2026.
+        body = json.dumps({
+            "page": page,
+            "per_page": 100,
+            "order": "newest",
+            "type": "residential",
+            "transaction": "rentals",
+        }).encode()
+        return json.loads(fetch(
+            API_URL,
+            headers={"Content-Type": "application/json", "Accept": "application/json"},
+            data=body,
+            method="POST",
+        ))
 
     def pull(self):
         first = self._page(1)

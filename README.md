@@ -120,6 +120,38 @@ python3 build_record.py                              # everything (large; it's a
 
 Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), **ACRIS sales** (recorded deeds), **HPD violations** and **complaints**, **DOB complaints**, **certificates of occupancy**, **evictions**, **housing litigation**, **311** (housing complaints), and **rent-stabilization** status (DHCR-derived unit counts from the taxbills.nyc scrape — a 2017 snapshot, tagged with its vintage so it's never mistaken for a live signal). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
 
+## The catalog
+
+`catalog.py` is the canonical layer above those source databases. It preserves a
+listing or public record as source-attributed evidence, then records the project's own
+building/unit matches separately with a method and confidence. A unit is created only
+when an address maps to exactly one official BBL and the source supplied a usable unit
+label; ambiguous records remain visible and unresolved. See [`CATALOG.md`](CATALOG.md)
+for the methodology.
+
+```bash
+python3 catalog.py --record record.db --listings listings.db --db catalog.db
+python3 catalog.py --db catalog.db --status
+python3 catalog.py --source hpd_violations --boro BX --limit 1000 --db catalog.db
+python3 catalog.py --source hpd_omo_work_orders --boro BX --limit 1000 --db catalog.db
+python3 catalog.py --source acris_property_legals --boro MN --limit 1000 --db catalog.db
+python3 acquire.py --db catalog.db --source acris_unit_legals --page-size 10000 --pages 1
+python3 catalog.py --source vayo_all_nyc_units --vayo-db /path/to/all_nyc_units.db --limit 25000 --db catalog.db
+python3 catalog.py --source vayo_streeteasy_unit_summary --vayo-db /path/to/se_listings.db --limit 10000 --db catalog.db
+python3 catalog.py --source vayo_elliman_mls_archive --vayo-db /path/to/elliman_mls.db --limit 25000 --db catalog.db
+python3 catalog.py --source vayo_corcoran_archive --vayo-db /path/to/corcoran.db --limit 10000 --db catalog.db
+python3 catalog.py --source annualized_sales --boro MN --limit 1000 --db catalog.db
+python3 catalog.py --source evictions --boro BX --limit 1000 --db catalog.db
+python3 catalog.py --source dob_now_jobs --boro MN --limit 1000 --db catalog.db
+python3 catalog.py --source hpd_registration_coverage --boro BX --db catalog.db
+python3 catalog.py --source condo_units --limit 1000 --db catalog.db
+python3 catalog.py --source pad_addresses --zips 10001,10002 --limit 10000 --db catalog.db
+python3 catalog.py --source pad_listing_zips --listings listings.db --db catalog.db
+python3 catalog.py --source listings --listings listings.db --db catalog.db
+python3 catalog.py --source derive_addressable_units --limit 10000 --derive-batches 1 --db catalog.db
+python3 catalog.py --coverage --listings listings.db --db catalog.db
+```
+
 Two engine passes turn the raw record into something you can act on:
 
 - **Who owns what** (`python build_record.py --portfolios`) clusters buildings into landlord portfolios by shared HPD-registered business address, unmasking the single-purpose LLCs. Build one borough and it's concrete: in the Bronx, one registered business address ties together **96 buildings spread across 25 separate LLCs — 700 HPD violations, 77 evictions, and 250 complaints between them.** That's a real row from `--boro BX`, not a mock-up.

@@ -60,6 +60,32 @@ Separate from the live-listing feeds, `build_record.py` builds a canonical recor
 - Sources live in `pricefixed/record/`, each a `RecordSource` subclass (see `pricefixed/record/core.py`), registered in `pricefixed/record/__init__.py`. Adding one mirrors adding an adapter: find the NYC Open Data dataset id, verify its real field keys by pulling `--limit 2`, map to the schema, register.
 - This layer is public record only. It never contains rent data — that is out of scope here by design.
 
+## The canonical catalog (`catalog.py`)
+
+`catalog.py` composes `record.db` and `listings.db` into `catalog.db`. Its data contract
+is in [`CATALOG.md`](CATALOG.md): source material, observations, entity-resolution
+claims, and canonical entities are deliberately separate. Do not treat a source's raw
+listing as a canonical unit, and do not merge an ambiguous address. The current strict
+rule creates a unit only from an exact official BBL address match plus a usable unit
+label; unmatched and ambiguous observations must remain in the catalog with their
+reason, not be discarded or guessed into a building.
+
+```bash
+python3 catalog.py --record record.db --listings listings.db --db catalog.db
+python3 catalog.py --db catalog.db --status
+python3 catalog.py --source hpd_violations --boro BX --limit 1000 --db catalog.db
+python3 catalog.py --source hpd_omo_work_orders --boro BX --limit 1000 --db catalog.db
+python3 catalog.py --source acris_property_legals --boro MN --limit 1000 --db catalog.db
+python3 catalog.py --source annualized_sales --boro MN --limit 1000 --db catalog.db
+python3 catalog.py --source evictions --boro BX --limit 1000 --db catalog.db
+python3 catalog.py --source dob_now_jobs --boro MN --limit 1000 --db catalog.db
+python3 catalog.py --source hpd_registration_coverage --boro BX --db catalog.db
+python3 catalog.py --source condo_units --limit 1000 --db catalog.db
+python3 catalog.py --source pad_addresses --zips 10001,10002 --limit 10000 --db catalog.db
+python3 catalog.py --source pad_listing_zips --listings listings.db --db catalog.db
+python3 catalog.py --coverage --listings listings.db --db catalog.db
+```
+
 ## Rules of the road
 
 - **Landlord-direct only.** Targets are public availability feeds landlords publish to lease their units. Do not add sources that require an account, defeat an access control, or belong to an aggregator (Zillow, StreetEasy, RentHop). That is both the ethic and the legal line.

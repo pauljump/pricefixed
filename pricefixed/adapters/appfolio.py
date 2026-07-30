@@ -117,10 +117,13 @@ def _parse_address(addr):
         borough = "Manhattan"
     street = addr.split(",")[0].strip()
     unit = ""
-    unit_m = re.search(r"(?:-|#|Apt\.?|Unit|Suite|Ste\.?)\s*([\w/]+)\s*$", street, re.I)
+    # AppFolio commonly puts the apartment after the first comma, before the city.
+    # Take only an explicit label; a later city/borough fragment must not become unit data.
+    unit_m = re.search(r"(?:-|#|Apt\.?|Apartment|Unit|Suite|Ste\.?)\s*([\w/]+)(?=\s*,|\s*$)", addr, re.I)
     if unit_m:
         unit = unit_m.group(1)
-        street = street[: unit_m.start()].rstrip(" -#").strip()
+        if unit_m.start() < len(street):
+            street = street[:unit_m.start()].rstrip(" -#,").strip()
     return street, unit, borough, zipcode
 
 

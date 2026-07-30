@@ -10,6 +10,20 @@ from urllib.parse import urlencode
 from ..core import SourceAdapter, fetch
 
 
+_ADDRESS_UNIT_SUFFIX = re.compile(
+    r"(?:\s*,?\s*)(?:apt\.?|apartment|unit|#)\s*([\w/-]+)\s*$", re.I
+)
+
+
+def _split_address_unit(address):
+    """Separate AvalonBay's trailing public apartment label from its street address."""
+    address = (address or "").strip()
+    match = _ADDRESS_UNIT_SUFFIX.search(address)
+    if not match:
+        return address, None
+    return address[:match.start()].strip(" ,"), match.group(1).strip()
+
+
 class AvalonBayAdapter(SourceAdapter):
     name = "avalonbay"
     description = "AvalonBay Communities — proprietary API (NYC metro, NY units only)"
@@ -93,14 +107,8 @@ class AvalonBayAdapter(SourceAdapter):
 
             # Unit name often includes unit number e.g. "19N"
             unit_name = u.get("unitName", "")
-            # community name sometimes includes unit: "200 Boyden Ave #264"
             addr_line = addr.get("addressLine1", "")
-            # Extract unit from addressLine1 if present
-            unit_from_addr = None
-            um = re.search(r"#(.+)$", addr_line)
-            if um:
-                unit_from_addr = um.group(1).strip()
-                addr_line = addr_line[:um.start()].strip()
+            addr_line, unit_from_addr = _split_address_unit(addr_line)
 
             listings.append({
                 "source_id": u.get("unitId", ""),

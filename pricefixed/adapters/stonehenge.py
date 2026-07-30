@@ -7,6 +7,30 @@ import time
 
 from ..core import SourceAdapter, fetch
 
+# The Salesforce building endpoint exposes a stable property code but no street address.
+# These addresses are the operator's own public building/availability addresses, keyed by
+# that code. Leave a future unknown code blank instead of guessing from its display name.
+BUILDING_ADDRESSES = {
+    "41parkav": "41 Park Avenue",
+    "354e91ow": "354 East 91st Street",
+    "210w70st": "210 West 70th Street",
+    "10downg": "10 Downing Street",
+    "east65ow": "360 East 65th Street",
+    "201w89st": "201 West 89th Street",
+    "555sixth": "101 West 15th Street",
+    "165e66ow": "165 East 66th Street",
+    "330e63st": "330 East 63rd Street",
+    "oneqps": "42-20 24th Street",
+    "920park": "920 Park Avenue",
+    "235w48ca": "235 West 48th Street",
+    "1143scnd": "1143 2nd Avenue",
+    "141e33st": "141 East 33rd Street",
+    "20parkav": "20 Park Avenue",
+    "408e92ow": "408 East 92nd Street",
+    "340e51ow": "340 East 51st Street",
+    "8grampk": "8 Gramercy Park South",
+    "780owner": "780 Greenwich Street",
+}
 
 class StonehengeAdapter(SourceAdapter):
     name = "stonehenge"
@@ -24,6 +48,7 @@ class StonehengeAdapter(SourceAdapter):
         for bldg in buildings:
             code = bldg.get("value", "")
             label = bldg.get("label", "")
+            address = BUILDING_ADDRESSES.get(code)
             try:
                 units_raw = fetch(
                     f"{self.API_URL}?buildingCode={code}",
@@ -62,7 +87,7 @@ class StonehengeAdapter(SourceAdapter):
                 all_units.append({
                     "source_id": f"stonehenge-{u.get('value', '')}",
                     "building_name": label,
-                    "address": "",
+                    "address": address,
                     "unit_number": unit_num,
                     "bedrooms": beds,
                     "bathrooms": baths,

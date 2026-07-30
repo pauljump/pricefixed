@@ -30,6 +30,12 @@ from ..core import SourceAdapter, fetch
 
 # NYC zips often sit only in the address string, not the postalCode field — recover them.
 _ZIP = re.compile(r"(\d{5})(?:-\d{4})?\s*$")
+_TRAILING_UNIT = re.compile(
+    r"^(?P<street>.+?\b(?:ST|STREET|AVE|AVENUE|BLVD|BOULEVARD|PL|PLACE|RD|ROAD|"
+    r"DR|DRIVE|LN|LANE|TERR|TERRACE|PKWY|PARKWAY|CT|COURT|SQ|SQUARE)\b)\s+"
+    r"(?P<unit>[A-Z0-9-]+)$",
+    re.I,
+)
 
 API_URL = "https://core.api.elliman.com/listing/filter"
 PAGE = 100
@@ -119,11 +125,35 @@ def _is_active(it):
     return status == "active" and not it.get("closeDate") and not it.get("closePrice")
 
 
+def _address_and_unit(addr):
+    """Separate the MLS display address from a trailing apartment label when safe.
+
+    The MLS feed often leaves `unitNumber` empty while putting "211 W 10th St 2B"
+    in `samlsFullAddress`. Keep parsing deliberately narrow: only a token after a
+    known street suffix counts, and lettered avenues ("622 Avenue B") stay streets.
+    """
+    full = addr.get("samlsFullAddress") or addr.get("samlsPartialAddress") or ""
+    street = full.split(",", 1)[0].strip()
+    explicit = addr.get("unitNumber")
+    match = _TRAILING_UNIT.match(street)
+    if explicit:
+        return (match.group("street").strip() if match else street), str(explicit).strip()
+    if not match:
+        return street or full, None
+    candidate = match.group("unit").upper()
+    prefix = match.group("street").upper()
+    # In NYC, AVE A through AVE D are street names, not apartment labels.
+    if candidate in {"A", "B", "C", "D"} and re.search(r"\bAVE(?:NUE)?$", prefix):
+        return street, None
+    return match.group("street").strip(), candidate
+
+
 def _to_listing(it, borough):
     addr = it.get("address") or {}
     latlng = it.get("latLng") or {}
     price = it.get("listPrice")
     full = addr.get("samlsFullAddress") or addr.get("samlsPartialAddress")
+    street_address, unit_number = _address_and_unit(addr)
     zipcode = addr.get("postalCode")
     if not zipcode and full:
         m = _ZIP.search(full.strip())
@@ -133,8 +163,8 @@ def _to_listing(it, borough):
     return {
         "source_id": str(it.get("coreListingId", "")),
         "building_name": it.get("buildingName"),
-        "address": full,
-        "unit_number": addr.get("unitNumber"),
+        "address": street_address,
+        "unit_number": unit_number,
         "bedrooms": it.get("bedroomsTotal"),
         "bathrooms": it.get("bathroomsTotal"),
         "price": price,

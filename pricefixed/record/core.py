@@ -44,7 +44,7 @@ BUILDING_COLUMNS = [
 
 
 def socrata(dataset_id, where=None, select=None, order=None, limit=None,
-            page_size=50000, app_token=None):
+            page_size=50000, app_token=None, offset=0):
     """Pull rows from a Socrata dataset, paginating with $limit/$offset.
 
     Returns a list of dicts. `limit` caps the total rows fetched (None = all).
@@ -54,7 +54,7 @@ def socrata(dataset_id, where=None, select=None, order=None, limit=None,
     url_base = SOCRATA_BASE.format(dataset_id=dataset_id)
     headers = {"X-App-Token": app_token} if app_token else None
     rows: list[dict] = []
-    offset = 0
+    offset = int(offset or 0)
     while True:
         want = page_size
         if limit is not None:
