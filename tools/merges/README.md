@@ -95,8 +95,11 @@ reproducibility dependency in the release manifest.
   This queue is a work list, not a claim that the missing capacity is addressable.
   A document must supply a usable apartment label and a resolvable BBL before it can
   create a unit record.
-- Same-street 2-family duplexes (4,585 buildings / 9,170 units) — the safe subset of
-  the PAD-count tiebreak above, never merged.
+- Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
+  conservative subset where PLUTO says there are exactly two residential units
+  and PAD has exactly two addresses on the same street. These are address-level
+  dwelling identities, not apartment labels. The broader PAD address-count rule
+  is intentionally not used.
 - NYS voter file — blocked on Paul filing the request.
 
 ## Completed since the citywide merge
