@@ -98,8 +98,9 @@ reproducibility dependency in the release manifest.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
-  dwelling identities, not apartment labels. The broader PAD address-count rule
-  is intentionally not used.
+  dwelling candidates, not proven apartment labels. The broader PAD address-count
+  rule is intentionally not used; downstream consumers should filter the
+  `entity_matches` row to see the candidate status and confidence.
 - NYS voter file — blocked on Paul filing the request.
 
 ## Completed since the citywide merge

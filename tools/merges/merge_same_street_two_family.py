@@ -26,7 +26,9 @@ def stable_id(*parts):
 
 def split_address(value):
     match = re.match(r"^(\S+)\s+(.+)$", (value or "").strip())
-    return (match.group(1), re.sub(r"\s+", " ", match.group(2)).strip()) if match else None
+    if not match or not re.fullmatch(r"\d+(?:-\d+)?[A-Za-z]?", match.group(1)):
+        return None
+    return (match.group(1), re.sub(r"\s+", " ", match.group(2)).strip().upper())
 
 
 def main():
@@ -43,8 +45,7 @@ def main():
         SELECT b.bbl, x.norm_address
         FROM buildings b
         JOIN crosswalk x ON x.bbl = b.bbl
-        LEFT JOIN units u ON u.bbl = b.bbl
-        WHERE b.units_res = 2 AND u.bbl IS NULL
+        WHERE b.units_res = 2
         GROUP BY b.bbl, x.norm_address
         """
     ).fetchall()
@@ -60,6 +61,18 @@ def main():
         if any(item is None for item in parsed) or parsed[0][1] != parsed[1][1]:
             continue
         targets.append((bbl, sorted(addresses)))
+
+    existing = {
+        (bbl, normalized)
+        for bbl, normalized in conn.execute(
+            "SELECT bbl, normalized_unit FROM units WHERE normalized_unit LIKE 'ADDRESS:%'"
+        )
+    }
+    targets = [
+        (bbl, [address for address in addresses if (bbl, "ADDRESS:" + address) not in existing])
+        for bbl, addresses in targets
+    ]
+    targets = [(bbl, addresses) for bbl, addresses in targets if addresses]
 
     print(f"target buildings: {len(targets)}")
     print(f"target dwellings: {len(targets) * 2}")
@@ -87,8 +100,8 @@ def main():
             matches.extend([
                 (observation_id, "building", bbl, "resolved", 1.0, "pluto_units_res_and_pad_same_street",
                  "PLUTO reports two residential units and PAD supplies exactly two same-street addresses", stamp),
-                (observation_id, "unit", unit_id, "resolved", 1.0, "pad_address_level_dwelling",
-                 "Address identifies a dwelling on a two-family lot; no apartment number was inferred", stamp),
+                (observation_id, "unit", unit_id, "candidate", 0.8, "pad_address_level_dwelling_candidate",
+                 "Address supports a dwelling candidate on a two-family lot; no apartment number was inferred", stamp),
             ])
     conn.executemany(
         "INSERT INTO units (unit_id,bbl,unit_label,normalized_unit,first_seen,last_seen) VALUES (?,?,?,?,?,?) "
