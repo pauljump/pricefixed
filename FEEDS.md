@@ -4,8 +4,15 @@ This is the plan for compiling every apartment in the city. Each row is a source
 
 **The strategy, in order of leverage:**
 
-1. **Brokerages, for the IDX/RLS backdoor.** A brokerage's own public search (Corcoran, Elliman, Compass) returns not just its exclusives but every listing syndicated to it through IDX/MLS — i.e. the REBNY RLS feed. One brokerage source rides that syndication and reaches a huge slice of the whole broker market, no feed license required. Highest leverage per adapter. See the [Brokerages](#brokerages--the-idxrls-backdoor) section.
-2. **Platforms.** Most landlords do not run a custom site. They rent software. Crack the *platform* once and every landlord on it comes with it. This is why the source count and the coverage are not the same number.
+1. **Brokerages, for IDX/RLS-syndicated public listings.** A brokerage's own public
+   search (Corcoran, Elliman, Compass) may return both its exclusives and listings
+   syndicated to it through IDX/MLS, including REBNY RLS records in NYC. Named source
+   adapters preserve provenance while collecting current public availability. See
+   the [Brokerages](#brokerages-and-idxrls-syndication) section.
+2. **Platforms.** Most landlords do not run a custom site. They rent software. Support
+   a platform once and every participating landlord can be represented through the
+   same adapter pattern. This is why the source count and the coverage are not the
+   same number.
 3. **Then the big portfolios** that run their own sites.
 4. **Then the broker marketplaces** for the no-fee and small-landlord inventory.
 5. **Then the walled aggregators** (StreetEasy, Zillow, and the rest). This is where most small-building units actually list, and it is the hardest tier. It is the endgame, and it is literally the walled gardens this project is named against.
@@ -37,7 +44,8 @@ Nine live. Copy these when building new ones.
 
 ## Tier 1 — Platforms (the multipliers)
 
-Crack one, get everyone on it. This is the highest-leverage work left.
+Support one platform adapter and many landlord sites can share it. This is the
+highest-leverage work left.
 
 | Platform | Landlords on it (NYC) | Mechanism | Status |
 |---|---|---|---|
@@ -49,25 +57,26 @@ Crack one, get everyone on it. This is the highest-leverage work left.
 | **RealPage / On-Site** | large operators | On-Site availability API | 🔬 |
 | **Rent Manager / Buildium** | long tail of small operators | per-vendor API | 🔬 |
 
-## Brokerages — the IDX/RLS backdoor
+## Brokerages and IDX/RLS syndication
 
-<a name="brokerages--the-idxrls-backdoor"></a>The highest-leverage move in the whole map. A big NYC brokerage runs a public listing search backed by an API. That API returns the brokerage's own exclusives **and** every listing syndicated to it via IDX/MLS — which in NYC means the REBNY RLS feed. The brokerage already paid for RLS access; scraping their *public current-listings* endpoint rides that access. You reach a large share of the entire broker-listed market from one adapter, with no feed license of your own.
+<a name="brokerages-and-idxrls-syndication"></a>Large NYC brokerages often run public listing searches backed by APIs. Those APIs can return the brokerage's own exclusives **and** current listings syndicated through IDX/MLS, which in NYC may include REBNY RLS records. These adapters collect only public current-listing records and keep the brokerage source ID so downstream users can audit provenance and reproduce collection.
 
 **How to add one (the method, replicable):**
 1. Find the brokerage's listing-search backend (open the site's network tab; it's usually a JSON API on a `*api*` subdomain — Corcoran: `backendapi.corcoranlabs.com`, Elliman: `core.api.elliman.com`).
 2. POST the search asking for **active for-rent only** — never send a `sold`/`rented`/`closed` status filter. Paginate.
-3. Look for `isIdx` / `isMLS` on the results — that flag is the syndicated feed riding along (44 of ~250 sampled Corcoran rows were IDX, i.e. other brokers' listings).
+3. Look for `isIdx` / `isMLS` on the results. Those flags usually indicate a
+   syndicated listing rather than the brokerage's own exclusive inventory.
 4. Add a defensive filter that drops anything not currently active, so historical rows can never leak in. Keep the adapter strictly on the current-listings side of the line.
 5. The API key, if any, is typically the brokerage's own public web-app key (sent by every browser). Treat it as public config, overridable by env; when it rotates, the healthcheck goes red and you update it.
 
 | Brokerage | Backend | IDX/RLS | Mechanism | Status |
 |---|---|---|---|---|
-| **Corcoran** | `backendapi.corcoranlabs.com` | ✅ | POST `/api/search/listings`, active for-rent, paginated — clean JSON backend, no bot wall | ✅ shipped (`corcoran`) |
+| **Corcoran** | `backendapi.corcoranlabs.com` | ✅ | POST `/api/search/listings`, active for-rent, paginated JSON backend | ✅ shipped (`corcoran`) |
 | **Douglas Elliman** | `core.api.elliman.com` | ✅ (MLS-backed) | POST `/listing/filter`, `statuses:["Active"]` + `ResidentialLease`, borough×bedroom partitioned — clean JSON backend | ✅ shipped (`elliman`) |
-| **Compass** | site behind Cloudflare | ✅ | no reachable clean backend — the site returns a JS bot-challenge (HTTP 202, empty body). Needs headless discovery of its GraphQL + per-session tokens. **Hard tier.** | 🔬 headless only |
-| **Brown Harris Stevens** | bot-walled | likely | `bhsusa.com` returns 403 to a plain request. Headless discovery required. **Hard tier.** | 🔬 headless only |
+| **Compass** | browser-rendered site | ✅ | no reachable JSON backend confirmed yet; browser-based discovery needed to document any GraphQL endpoint and per-session tokens. **Hard tier.** | 🔬 headless only |
+| **Brown Harris Stevens** | browser-rendered site | likely | `bhsusa.com` returns 403 to a plain request. Browser-based discovery required. **Hard tier.** | 🔬 headless only |
 
-**Diminishing returns, and where the additive coverage actually is.** Every NYC brokerage syndicates to/from the same REBNY RLS feed, so once Corcoran + Elliman are in, a third brokerage mostly re-pulls listings already captured (its own exclusives are the only genuinely-new part). The `dedupe` engine (`scrape.py --dedupe`) collapses the overlap. So after two clean-API brokerages, the higher-leverage next inventory is **platforms** (below) — mid-market landlords who are *not* on the broker feed — not a third brokerage behind a headless wall.
+**Diminishing returns, and where the additive coverage actually is.** Every NYC brokerage syndicates to/from the same REBNY RLS feed, so once Corcoran + Elliman are in, a third brokerage mostly re-pulls listings already captured (its own exclusives are the only genuinely-new part). The `dedupe` engine (`scrape.py --dedupe`) collapses the overlap. So after two clean-API brokerages, the higher-leverage next inventory is **platforms** (below) — mid-market landlords who are *not* on the broker feed — not a third brokerage that requires browser automation.
 
 ## Tier 2 — Big portfolios (own sites)
 
@@ -91,11 +100,13 @@ Crack one, get everyone on it. This is the highest-leverage work left.
 | RentHop | large | anti-bot; API behind the site | hard |
 | Localize.city | large | JSON API | 🔬 |
 | RealtyHop | medium | JSON API | 🔬 |
-| REBNY RLS syndication | very large | feed licensing / partner access — **or ride a brokerage's IDX access** (see [Brokerages](#brokerages--the-idxrls-backdoor)) | 🔨 via Corcoran |
+| REBNY RLS syndication | very large | feed licensing / partner access, or current public-listing collection through a brokerage source (see [Brokerages](#brokerages-and-idxrls-syndication)) | 🔨 via Corcoran |
 
 ## Tier 4 — The walled aggregators (the endgame)
 
-Where most small-building units actually list, and the hardest tier: aggressive bot walls, headless browsers, and a permanent cat-and-mouse. This is the real "every apartment" unlock. Pursue by fair, public means only.
+Where most small-building units actually list, and the hardest tier: anti-automation
+barriers, browser-only flows, and source-specific maintenance. This is the real
+"every apartment" unlock. Pursue by fair, public means only.
 
 StreetEasy · Zillow · Apartments.com · Craigslist · HotPads · Trulia
 

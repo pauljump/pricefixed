@@ -1,62 +1,86 @@
-# Contributing
+# Contributing to Pricefixed
 
-This is a solo, founder-led project, run in the open. You do not need permission to help,
-and there is no process to learn. Pick whichever of these fits:
+Pricefixed is building an open, evidence-backed registry of NYC housing and the
+public asking-rent history attached to it. Contributions are welcome from developers,
+researchers, journalists, tenants, and housing organizers.
 
-- **Star and follow** if you want it to exist. That is the signal that keeps it going.
-- **Report a broken feed** by opening an [issue](../../issues) — sites change constantly, and
-  a heads-up that one stopped working is genuinely useful.
-- **Request a landlord** you want covered: open an issue with the landlord and their listings URL.
-- **Send a pull request** to add a source (see below) or fix one. Small, focused PRs get merged fast.
-- **Questions or ideas:** the fastest way to reach me is X — [@paulljump](https://x.com/paulljump).
+The project accepts evidence and reproducible methods, not unsupported assertions.
+Do not add a home merely because it seems likely to exist: retain the source, state
+the rule, and preserve ambiguity when the evidence does not support one answer.
 
-No contribution is too small, and none is expected. Follow along and jump in when you feel like it.
+## Choose a contribution lane
 
-## Add a source
+### Add or repair a listing source
 
-A new source is about 30 lines. The framework handles HTTP, retries, the database,
-price-history snapshots, and marking gone listings inactive — an adapter just returns
-listing dicts.
+Add a public, landlord-direct availability source or repair one that has changed.
+See [`COMPILE.md`](COMPILE.md) for the adapter workflow and
+[`FEEDS.md`](FEEDS.md) for the source map. Open a [broken-feed issue](../../issues/new?template=broken-feed.md)
+when a current source stops working.
 
-1. Create `pricefixed/adapters/yourlandlord.py`:
+### Add a public-record source
 
-```python
-from ..core import SourceAdapter, fetch
-import json
+Add a source that contributes building, premise, unit, or event evidence. A source
+must document its publisher, public access path, retrieval method, license or terms,
+and the fields it contributes. Start with the
+[registry-source issue template](../../issues/new?template=registry-source.md) before
+writing a large importer so the scope can be reviewed early.
 
-class YourLandlordAdapter(SourceAdapter):
-    name = "yourlandlord"
-    description = "Your Landlord — N buildings"
+### Propose an identity rule
 
-    def pull(self):
-        data = json.loads(fetch("https://.../availability.json"))
-        out = []
-        for u in data["units"]:
-            out.append({
-                "source_id": u["id"],        # the only required field
-                "address": u.get("address"),
-                "unit_number": u.get("unit"),
-                "bedrooms": u.get("beds"),
-                "price": u.get("rent"),
-                "zipcode": u.get("zip"),
-                "raw_json": json.dumps(u),   # always keep the raw record
-            })
-        return out
-```
+An identity rule is a deterministic transformation from source evidence to a building,
+premise, unit, or unresolved-capacity claim. It must say what it proves, what it does
+not prove, and include positive and negative fixtures. Use the
+[resolution-rule template](../../issues/new?template=resolution-rule.md).
 
-2. Register it in `pricefixed/adapters/__init__.py`.
-3. Test: `python3 scrape.py --source yourlandlord --db /tmp/test.db`
-4. Open a PR.
+### Report a data-quality issue
 
-See `FEEDS.md` for the full list of NYC sources waiting to be built, tiered by difficulty.
+Report a false match, missing source, questionable inference, or coverage gap with
+the source record or a reproducible query. Do not post tenant names, account data, or
+material obtained behind a login. Use the
+[data-quality template](../../issues/new?template=data-quality.md).
 
-## Ground rules
+### Improve documentation, tests, or release tooling
 
-- **Landlord-direct feeds only.** Public availability data landlords publish to lease their
-  units — not anything behind a login or an access control.
-- **Be gentle.** Honor rate limits, add a small delay between paged requests, don't hammer.
-- **Standard library only** where possible. Keep the install a one-liner with zero dependencies.
-- **Keep `raw_json`.** Always store the source's raw record so nothing is lost to a mapping bug.
+Small improvements matter: schema documentation, test fixtures, source freshness
+checks, release manifests, and independent audits are all first-class contributions.
 
-Full-city adapters (a whole platform like RentCafe or AppFolio at once) are especially welcome —
-that's how this scales past NYC.
+## Rules that protect the registry
+
+- **Evidence first.** Every public record must retain source identity and retrieval
+  context. A manual correction needs a public source reference.
+- **Never fill gaps with invented homes.** A source-reported dwelling count can create
+  unresolved capacity, not an apartment identity.
+- **Keep the layers separate.** Source material, observations, entity matches, and
+  registry records are distinct claims. See [`CATALOG.md`](CATALOG.md).
+- **Make rules deterministic.** A reviewer must be able to rerun a rule on a fixture
+  and get the same result.
+- **Test the failure case.** Every matching rule needs at least one example it must
+  refuse to resolve.
+- **Use public, permitted sources.** Do not add data that requires a login, defeats an
+  access control, or includes personal information that is not necessary for the
+  housing record.
+- **Do not add runtime dependencies casually.** Pricefixed currently runs on Python's
+  standard library. Discuss a dependency before adding one.
+
+## Add a listing adapter
+
+An adapter is intentionally small. The framework handles HTTP, retries, SQLite,
+price-history snapshots, and inactive listings; an adapter returns normalized listing
+dicts.
+
+1. Create `pricefixed/adapters/yourlandlord.py` by running
+   `python3 new_adapter.py yourlandlord`.
+2. Implement `pull()` and retain the source row in `raw_json`.
+3. Register the adapter in `pricefixed/adapters/__init__.py`.
+4. Run `python3 scrape.py --source yourlandlord --db /tmp/pricefixed-test.db`.
+5. Add a focused test or fixture when parsing is nontrivial.
+6. Open a focused pull request.
+
+## Pull request checklist
+
+State which contribution lane the PR belongs to. Include the source URL or public
+dataset identifier, the affected entity layer, the expected quality effect, and the
+commands you ran. Keep a change small enough that an outside reviewer can audit it.
+
+For the data model and release interface, read [`REGISTRY.md`](REGISTRY.md) and
+[`DATA.md`](DATA.md). For listing sources, read [`COMPILE.md`](COMPILE.md).

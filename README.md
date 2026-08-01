@@ -2,19 +2,53 @@
 
 [![feed status](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml/badge.svg)](https://github.com/pauljump/pricefixed/actions/workflows/healthcheck.yml) · **launch page: [pricefixed.polyfeeds.dev](https://pricefixed.polyfeeds.dev)**
 
-**Open tools to pull every apartment's price and history out of the walled gardens, and a standardized public record of every NYC building. Point Claude or Codex at them and build.**
+**Open tools for pulling NYC apartment listings, public records, and unit history into one place.**
 
-The rent number on your lease was not set by a person. It was set by software. Landlords across the country feed their vacancies into shared pricing algorithms like RealPage's YieldStar, and those algorithms quietly raise rents in lockstep across competitors. The Department of Justice sued over it and called it what it is: price-fixing.
+Pricefixed is software first. The repo lets you pull public listing data, keep the
+price history the listing sites throw away, and build a local apartment database with
+the source attached to every record.
 
-You cannot audit an algorithm without the data it feeds on, and almost none of that data is public or standardized. So that is where this starts: pulling it into the open, owned by no one, for anyone to build on. To be clear about what this is today: it is the data layer, not the detector. Exposing the pricing algorithm itself is the destination (see the roadmap below), not a claim about what ships today.
+I have a citywide build locally, but the multi-gigabyte database is **not on GitHub
+yet**. [`DATA.md`](DATA.md) explains what will be in the first public download and how
+to export CSVs from a local build.
+
+The rent number on your lease was not set by a person. It was set by software.
+Landlords feed their vacancies into shared pricing tools like RealPage's YieldStar,
+and those tools can push rents up across competitors. The Department of Justice sued
+over it and called it what it is: price-fixing.
+
+You cannot figure out what the software is doing without the data it feeds on. Almost
+none of that data is public in a useful shape. So that is where this starts: pull the
+housing data into the open, owned by no one, so anyone can build on it.
+
+To be clear: this is the data layer. The part that proves how rent gets set comes
+later.
 
 `pricefixed` starts with the hard part every real-estate project starts with: getting the data. It gives those tools away.
 
+If this should exist in public, please star the repo. Stars help this reach the people
+who can check the work, add sources, and build useful things on top of it.
+
 ---
+
+## What ships today
+
+| piece | status | how to use it |
+|---|---|---|
+| Listing collectors | maintained | Run `python3 scrape.py` to create your own `listings.db` and preserve future price history. |
+| Building public record | maintained | Run `python3 build_record.py` against NYC public sources. |
+| Housing registry builder | maintained | Run `catalog.py` to turn listings and public records into building/unit records. |
+| Citywide build | built, not yet published | The July 31, 2026 local build contains 2,750,889 unit records. It still needs a public download before anyone else can use it directly. |
+
+That 2.75M number is not a claim that we found every NYC home. NYC has about 3.7M
+housing units, so this is close to 75% by the count we are using. Every row keeps the
+source that got it there, and the known gaps are written down in [`CATALOG.md`](CATALOG.md).
 
 ## The idea
 
-The data is the wall. Zillow and StreetEasy are paid by landlords and brokers, so the real prices and the real history stay locked behind them. `pricefixed` pulls it straight from the source instead.
+The data is the wall. Zillow and StreetEasy are paid by landlords and brokers, so the
+real prices and the real history stay locked behind them. `pricefixed` pulls from the
+source instead.
 
 - A tiny, dependency-free framework for pulling listings from **landlord-direct feeds**, the availability data landlords publish themselves to lease their own units.
 - Every pull snapshots price and lease terms, so you keep **the history the listing sites throw away**.
@@ -24,13 +58,13 @@ Scraping gets a bad name. But it is how the big real-estate companies got their 
 
 ## Where this is going
 
-Three steps, in order:
+The order is simple:
 
-1. **The feeds.** Maintained, dependency-free scrapers for landlord-direct sources. NYC first, because it is the hardest and the most walled. This is what ships today.
-2. **The inventory.** A published, open dataset of what those feeds return over time, so nobody has to run the scrapers to get the history.
-3. **The algorithms.** Reverse-engineering how landlord pricing software actually sets your rent, in public, so the thing setting the price can finally be seen.
+1. **Pull the feeds.** Keep public listing data before it disappears.
+2. **Publish the inventory.** Make the housing layer public enough for other people to use.
+3. **Show how rent gets set.** Use the same kind of data the pricing tools use, and make the pattern visible.
 
-Contributors are welcome. This is going to be big and I am happy to go it alone, but you are welcome along.
+Contributors are welcome. This is big enough that it should not be one person's thing.
 
 ## Quickstart
 
@@ -56,7 +90,7 @@ $ python3 scrape.py --status
   TOTAL           2632 active
 ```
 
-## The data
+## Your local data
 
 One SQLite database, three tables:
 
@@ -68,6 +102,26 @@ One SQLite database, three tables:
 
 Run it on a cron and `price_history` becomes something no listing site will sell you: the real trajectory of what every unit actually asked, over time.
 
+## Public download
+
+The repo does **not** currently include the citywide database. There is no GitHub
+download for the 2.75M-unit build yet.
+
+When the first snapshot is published, it will be a normal release download with:
+
+- `units.csv`
+- `unit_observations.csv`
+- `sources.csv`
+- `manifest.json`
+- `quality-report.json`
+
+No raw source dumps. No private working files. Just the rows people need to inspect,
+join, challenge, and build on.
+
+[`DATA.md`](DATA.md) has the file layout and export command. [`REGISTRY.md`](REGISTRY.md)
+explains what counts as a real unit, what stays as a gap, and how to contribute without
+asking anyone to trust a mystery row.
+
 ## Point your agent at it
 
 **The fastest start:** hand this repo to Claude or Codex and say *"read [`BUILD.md`](BUILD.md) and help me build an apartment database."* It asks you what you want — current inventory, price history, the full public record per building, or all of it — and then builds exactly that from the feeds and data here. That guided prompt is the front door.
@@ -78,13 +132,22 @@ The bigger move: point your agent at the source map ([`FEEDS.md`](FEEDS.md)) and
 
 ## Sources
 
-Live landlord-direct feeds across NYC: big portfolios (AvalonBay, Beam Living's StuyTown, TF Cornerstone, Durst, Glenwood, Stonehenge, Ogden CAP), RentCafe/Yardi leasing portals (`securecafe`), AppFolio operators (`appfolio`), and the no-fee broker marketplace (`nooklyn`). Live counts are in the table below.
+Live landlord-direct feeds across NYC: big portfolios, RentCafe/Yardi portals,
+AppFolio operators, MRI-backed sites, broker search sources, and the no-fee broker
+marketplace Nooklyn. Live counts are in the table below.
 
-Plus the highest-leverage sources of all: **`corcoran`** and **`elliman`**, two brokerages. A big brokerage's public search returns not just its own exclusives but every listing syndicated to it through IDX/MLS — the REBNY RLS feed. So one brokerage adapter rides that syndication and reaches a large slice of the whole broker-listed market, no feed license required. Both pull **current, on-market listings only** — the same public availability a landlord posts about its own units, never the closed rent history the same APIs can serve. Compass is the same move next; see [`FEEDS.md`](FEEDS.md#brokerages--the-idxrls-backdoor) for how to add one.
+Brokerage sources like **`corcoran`** and **`elliman`** stay named because people need
+to know where a row came from. These adapters only pull current public listings, not
+closed rent history. See [`FEEDS.md`](FEEDS.md#brokerages-and-idxrls-syndication) for
+how that works.
 
-This is the start, not the goal. The goal is every apartment in the city, then every city. Getting there means taking the walls down one at a time and keeping them down as they go back up. That fight is the project.
+This is the start, not the goal. The goal is every apartment in the city, then every
+city. Getting there means knocking down one wall at a time and keeping track when the
+walls move.
 
-The full map of what is out there, tiered by how hard it is to pull and by what each source exposes, is in [`FEEDS.md`](FEEDS.md). Sites change constantly to stop exactly this, so the maintenance *is* the project. Every feed is health-checked; when one breaks it shows up as broken, not as silence.
+The full source map is in [`FEEDS.md`](FEEDS.md). Sites change constantly, so the
+maintenance is part of the work. Every feed is health-checked; when one breaks it
+shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
 **Feed status** — 11/12 live, checked 2026-08-01
@@ -107,7 +170,10 @@ The full map of what is out there, tiered by how hard it is to pull and by what 
 
 ## The public record
 
-Live listings are only half of it. `pricefixed` also builds a standardized record of every NYC building and its public history, pulled fresh from [NYC Open Data](https://data.cityofnewyork.us). `build_record.py` assembles a `buildings` table (one row per lot, keyed by BBL: address, year built, units, class, owner) and a `building_events` timeline (permits, sales, violations, each with a date and a source). No rent data. All public record.
+Live listings are only half of it. `pricefixed` also builds a public record for NYC
+buildings from [NYC Open Data](https://data.cityofnewyork.us). `build_record.py`
+creates a `buildings` table and a `building_events` table: permits, sales,
+violations, complaints, evictions, and more. No private rent data. Public records only.
 
 ```bash
 python3 build_record.py --list
@@ -116,18 +182,32 @@ python3 build_record.py --boro BX --limit 20000      # one borough, every source
 python3 build_record.py                              # everything (large; it's all of nyc)
 ```
 
-`--boro` (MN/BX/BK/QN/SI) is the one that makes the record *compose*: it scopes every source to a single borough, so ownership and violations and evictions all land on the **same buildings** instead of thin all-NYC samples that never overlap. Build one borough and the landlord portfolios below light up with real numbers.
+`--boro` (MN/BX/BK/QN/SI) is the useful one. It pulls every source for one borough, so
+owners, violations, evictions, complaints, and permits all land on the same buildings
+instead of random citywide samples that never line up.
 
-Shipping now: **PLUTO** (the building spine), **DOB permits** (filing history), **HPD registrations** (ownership), **ACRIS sales** (recorded deeds), **HPD violations** and **complaints**, **DOB complaints**, **certificates of occupancy**, **evictions**, **housing litigation**, **311** (housing complaints), and **rent-stabilization** status (DHCR-derived unit counts from the taxbills.nyc scrape — a 2017 snapshot, tagged with its vintage so it's never mistaken for a live signal). A crosswalk (`pricefixed/engine/crosswalk.py`) joins a listing to its building's record by address, so an asking rent and its building's full public history sit together. Public data is building-level for most lots and unit-level for condo sales and currently-listed rentals.
+Shipping now: **PLUTO** buildings, **DOB** permits, **HPD** registrations, violations
+and complaints, **ACRIS** sales, certificates of occupancy, evictions, housing court,
+311 housing complaints, and rent-stabilized unit counts from taxbills.nyc. A crosswalk
+joins a listing to its building, so an asking rent and the building's public history
+can sit together.
 
-## The catalog
+## The registry
 
-`catalog.py` is the canonical layer above those source databases. It preserves a
-listing or public record as source-attributed evidence, then records the project's own
-building/unit matches separately with a method and confidence. A unit is created only
-when an address maps to exactly one official BBL and the source supplied a usable unit
-label; ambiguous records remain visible and unresolved. See [`CATALOG.md`](CATALOG.md)
-for the methodology.
+`catalog.py` is how the repo turns messy source files into a clean building/unit
+registry. It keeps the original source, then records how the project matched that row
+to a building and unit.
+
+A unit only gets counted when the source gives a real unit label and the address maps
+cleanly to an official NYC building ID. If the match is messy, it stays unresolved
+instead of getting guessed into the data. See [`CATALOG.md`](CATALOG.md) for the full
+rules.
+
+The current citywide build reached **2,750,889 unit records** on July 31, 2026. That is
+a useful milestone, not a guarantee that every NYC home has been found. The biggest
+gap is buildings where public records say how many homes exist but do not name the
+units. The build steps and limits are documented in
+[`CATALOG.md`](CATALOG.md) and [`tools/merges/README.md`](tools/merges/README.md).
 
 ```bash
 python3 catalog.py --record record.db --listings listings.db --db catalog.db
@@ -154,26 +234,42 @@ python3 catalog.py --coverage --listings listings.db --db catalog.db
 
 Two engine passes turn the raw record into something you can act on:
 
-- **Who owns what** (`python build_record.py --portfolios`) clusters buildings into landlord portfolios by shared HPD-registered business address, unmasking the single-purpose LLCs. Build one borough and it's concrete: in the Bronx, one registered business address ties together **96 buildings spread across 25 separate LLCs — 700 HPD violations, 77 evictions, and 250 complaints between them.** That's a real row from `--boro BX`, not a mock-up.
-- **Dedupe** (`python scrape.py --dedupe`) collapses the same physical unit surfaced by more than one feed into one canonical listing, so a compiled inventory counts each apartment once.
+- **Who owns what** (`python build_record.py --portfolios`) groups buildings by shared
+  HPD business address, so one landlord hiding behind a pile of LLCs can still show up
+  as one pattern. In the Bronx, one business address ties together **96 buildings
+  across 25 LLCs, with 700 HPD violations, 77 evictions, and 250 complaints.** Real
+  row, not a demo.
+- **Dedupe** (`python scrape.py --dedupe`) finds the same apartment when it shows up in
+  more than one feed, so you do not count it twice.
 
 ## Prior art, and how this is different
 
-NYC already has open-data heroes, and this is not trying to replace them. JustFix's [NYCDB](https://github.com/nycdb/nycdb) loads dozens of housing datasets into Postgres, and [Who Owns What](https://whoownswhat.justfix.org) maps landlord portfolios. Use them. They are excellent, and the public-record layer here stands on the same city datasets they do.
+NYC already has good open-data projects. JustFix's [NYCDB](https://github.com/nycdb/nycdb)
+loads a ton of housing datasets into Postgres, and [Who Owns What](https://whoownswhat.justfix.org)
+maps landlord portfolios. Use them. They are great.
 
-The difference is the join. `pricefixed` fuses that public record with **live listing feeds and their price history over time** in one standardized, per-building shape, dependency-free and built to be driven by an AI agent. The live asking-rent layer, snapshotted so the history is not thrown away, is the part nobody else maintains.
+The difference is the join. `pricefixed` puts public building records next to live
+listing feeds and their price history. The live asking-rent history is the part nobody
+keeps in public.
 
 ## Contributing
 
-A new source is about 30 lines: subclass `SourceAdapter`, implement `pull()` to return listing dicts, register it. See any file in [`pricefixed/adapters/`](pricefixed/adapters/) and [`CONTRIBUTING.md`](CONTRIBUTING.md). PRs welcome.
+A new source can be small: subclass `SourceAdapter`, implement `pull()`, register it.
+See any file in [`pricefixed/adapters/`](pricefixed/adapters/) and
+[`CONTRIBUTING.md`](CONTRIBUTING.md). PRs welcome.
 
 ## Get involved
 
-No permission needed, no process to learn. Star it if you want it to exist. Open an [issue](../../issues) to report a broken feed or request a landlord. Send a PR to add a source. The fastest way to reach me is on X, [@paulljump](https://x.com/paulljump). Follow along and jump in when you feel like it.
+No permission needed. Star it if you want it to exist. Open an [issue](../../issues)
+to report a broken feed or request a source. Send a PR to add one. The fastest way to
+reach me is on X, [@paulljump](https://x.com/paulljump).
 
 ## Please scrape responsibly
 
-Targets are **landlord-direct availability feeds**: public data landlords publish to lease their apartments, not walled gardens behind a login. Keep it that way. Honor rate limits, the adapters are gentle by default, do not hammer, and do not touch anything that requires an account or defeats an access control. This is a transparency project, not a denial-of-service one.
+Targets are **public availability feeds**: data posted so apartments can be rented,
+not anything behind a login. Keep it that way. Be gentle. Do not hammer sites. Do not
+touch anything that requires an account or breaks access controls. This is a
+transparency project, not a spam tool.
 
 ## License
 

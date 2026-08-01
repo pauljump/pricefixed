@@ -6,11 +6,12 @@ This is corroboration between two already-imported official sources (PLUTO count
 official PAD-derived address), not a guess, and it's tagged with its own evidence
 grade so it's never confused with a directly-observed apartment label.
 """
+import argparse
 import sqlite3
 import time
 import uuid
 
-DB = "/Users/mini-home/pricefixed-build/catalog.db"
+DB = None
 SOURCE = "pluto_single_family_dwelling"
 NORMALIZED_UNIT = "WHOLEBLDG"
 
@@ -21,6 +22,10 @@ def _id(*parts):
     return uuid.uuid5(uuid.NAMESPACE_URL, "|".join(str(p) for p in parts)).hex[:20]
 
 def main():
+    global DB
+    parser = argparse.ArgumentParser(description="Create explicit one-dwelling building identities from PLUTO capacity.")
+    parser.add_argument("--catalog-db", required=True, help="catalog SQLite path to update")
+    DB = parser.parse_args().catalog_db
     c = sqlite3.connect(DB)
     c.execute("PRAGMA journal_mode=WAL")
     c.execute("PRAGMA busy_timeout=30000")

@@ -4,17 +4,19 @@
 parking annex sharing its civic address. Same PLUTO_INFERRED exclusion as before so
 no synthetic vayo rows sneak in. Merges survivors into catalog.db with real sources.
 """
+import argparse
 import sqlite3
 import sys
 import time
 import uuid
+from pathlib import Path
 
-sys.path.insert(0, "/Users/mini-home/Desktop/unwalled")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.dedupe import normalize_unit
 
-H_DB = "/Users/mini-home/pricefixed-build/hierarchy.db"
-C_DB = "/Users/mini-home/pricefixed-build/catalog.db"
-VAYO_DB = "/Users/mini-home/pricefixed-build/all_nyc_units.db"
+H_DB = None
+C_DB = None
+VAYO_DB = None
 
 def _now():
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -51,6 +53,13 @@ def real_source_label(source, source_ref, vayo_class):
     return f"vayo_{cls}" if cls else None
 
 def main():
+    global H_DB, C_DB, VAYO_DB
+    parser = argparse.ArgumentParser(description="Resolve archive ambiguity when one BBL is residential.")
+    parser.add_argument("--hierarchy-db", required=True, help="hierarchy SQLite path from build_hierarchy.py")
+    parser.add_argument("--catalog-db", required=True, help="catalog SQLite path to update")
+    parser.add_argument("--vayo-db", required=True, help="all_nyc_units archive SQLite path")
+    args = parser.parse_args()
+    H_DB, C_DB, VAYO_DB = args.hierarchy_db, args.catalog_db, args.vayo_db
     h = sqlite3.connect(H_DB)
     c = sqlite3.connect(C_DB)
     c.execute("PRAGMA journal_mode=WAL")

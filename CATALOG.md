@@ -21,14 +21,19 @@ canonical apartments.
 
 ## Current citywide build
 
-The current full-PLUTO build has **3,753,223 anonymous capacity slots** across the
+The current citywide build has **3,753,223 anonymous capacity slots** across the
 city. This is the complete count layer currently supported by the imported primary
 PLUTO records, and exceeds the 3,705,000 reporting benchmark because the two sources
-measure housing stock differently. It has **452,680 canonical units** with a
-source-supplied label and resolved BBL (12.1% of the PLUTO capacity). These numbers
-are intentionally reported separately: a capacity slot answers "how many units does
-this source say the building has?"; a canonical unit answers "which apartment did a
+measure housing stock differently. It has **2,750,889 canonical units** with a
+source-supplied label and resolved BBL: **74.3% of the 3,705,000 housing-stock
+reporting denominator** and 73.3% of the imported PLUTO capacity. These numbers are
+intentionally reported separately: a capacity slot answers "how many units does this
+source say the building has?"; a canonical unit answers "which apartment did a
 source identify?"
+
+This is a working build, not yet a published data release. Its counts are reported so
+the methodology can be audited; downstream consumers should use a versioned release
+asset and manifest once one is published. [`DATA.md`](DATA.md) defines that interface.
 
 To build or resume the count layer after importing PLUTO:
 
@@ -332,8 +337,8 @@ resolution to its corroborating evidence. The source databases remain intact.
 
 ## Coverage-growth pass (2026-07-30/31)
 
-A working citywide build (on the external drive, not committed here — see
-`tools/merges/README.md`) went from 514,306 to 2,750,889 canonical units, 12.4% to
+A working citywide build (not committed here — see
+[`tools/merges/README.md`](tools/merges/README.md)) went from 514,306 to 2,750,889 canonical units, 12.4% to
 74.3% of the 3,705,000 citywide target. Six scripts under `tools/merges/`: raw
 archive extraction, exact-match BBL resolution with a condo-designation tiebreak,
 merging real (non-synthetic) archive evidence, single-family whole-building

@@ -32,6 +32,32 @@ Run order, each step depends on the last:
 **Result: 514,306 -> 2,750,889 canonical units** (12.4% -> 74.3% of the 3,705,000
 citywide target).
 
+## Run it reproducibly
+
+The July 2026 run used local archive copies, but the scripts no longer encode those
+machine paths. A contributor needs a catalog database with the prerequisite PLUTO,
+PAD, and official condo-unit-lot imports, plus four archive SQLite inputs. All inputs
+are explicit:
+
+```bash
+python3 tools/merges/run.py \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-merge-work \
+  --streeteasy-db /archives/se_listings.db \
+  --elliman-db /archives/elliman_mls.db \
+  --corcoran-db /archives/corcoran.db \
+  --vayo-db /archives/all_nyc_units.db
+```
+
+The runner creates `extracted_addresses.csv` and `hierarchy.db` in `--work-dir`, then
+runs all six steps in order. The input catalog is updated in place, so use a copy for
+experimentation. Each direct merge is idempotent at the catalog-row level, but the
+runner deliberately rebuilds its intermediate CSV and hierarchy database on every run.
+
+The archive inputs are not distributed in this repository. Before publishing a build,
+confirm that every source can legally be redistributed or document it as a
+reproducibility dependency in the release manifest.
+
 ## What didn't work, and why it matters
 
 - **Bulk DOB CofO data has no unit labels**, only `number_of_dwelling_units` — same
@@ -54,20 +80,17 @@ citywide target).
 
 ## Still on the table, not yet run
 
-- **ACRIS staging backlog**: `/Volumes/Backup Plus/pricefixed-acquisition-20260729/
-  acris-unit-source.db` has 548,038 rows already downloaded, only 50,000 resolved.
-  136,538 rows (`resolved_at IS NULL`) are sitting there for free — resolve via
-  `catalog.py --source acris_stage --stage-db <path> --limit N --db catalog.db`.
+- **ACRIS staging backlog**: the archived `acris-unit-source.db` has 548,038 rows
+  already downloaded, only 50,000 resolved. 136,538 rows (`resolved_at IS NULL`) are
+  available for a rerun via
+  `catalog.py --source acris_stage --stage-db <acris-stage-db> --limit N --db <catalog-db>`.
 - Same-street 2-family duplexes (4,585 buildings / 9,170 units) — the safe subset of
   the PAD-count tiebreak above, never merged.
 - NYS voter file — blocked on Paul filing the request.
 
-## Working files
+## Build artifacts
 
-`catalog.db` lives at `/Users/mini-home/pricefixed-build/catalog.db` (SSD) and is
-mirrored to `/Volumes/Backup Plus/pricefixed-acquisition-20260729/
-catalog-citywide-20260730.db` (verify byte-identical before trusting the SSD copy is
-current — it wasn't always kept in sync during this session). `extracted_addresses.csv`
-and `hierarchy.db` are backed up on the external drive as `*-20260730.*`; both were
-deleted from local disk during an ENOSPC recovery and can be regenerated from steps 1-2
-if needed, or restored from the external drive.
+`extracted_addresses.csv` and `hierarchy.db` are reproducible intermediates, not
+release artifacts. Keep them in the chosen work directory or regenerate them with the
+runner. Publish only the versioned, payload-free data bundle described in
+[`DATA.md`](../../DATA.md), with the source commit and input provenance in its manifest.

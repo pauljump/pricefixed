@@ -3,14 +3,15 @@
 tagged with their real source. Excludes PLUTO_INFERRED rows from vayo_all_nyc_units
 (synthetic placeholder unit numbers, not observed evidence). Identity only -- no price.
 """
+import argparse
 import sqlite3
 import sys
 import time
 import uuid
 
-H_DB = "/Users/mini-home/pricefixed-build/hierarchy.db"
-C_DB = "/Users/mini-home/pricefixed-build/catalog.db"
-VAYO_DB = "/Volumes/Backup Plus/vayo/all_nyc_units.db"
+H_DB = None
+C_DB = None
+VAYO_DB = None
 
 def _now():
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime())
@@ -43,6 +44,13 @@ def source_label(source, vayo_class):
     return f"vayo_{vayo_class}" if vayo_class else None  # None = synthetic, drop
 
 def main():
+    global H_DB, C_DB, VAYO_DB
+    parser = argparse.ArgumentParser(description="Merge source-backed resolved archive units into a catalog.")
+    parser.add_argument("--hierarchy-db", required=True, help="hierarchy SQLite path from build_hierarchy.py")
+    parser.add_argument("--catalog-db", required=True, help="catalog SQLite path to update")
+    parser.add_argument("--vayo-db", required=True, help="all_nyc_units archive SQLite path")
+    args = parser.parse_args()
+    H_DB, C_DB, VAYO_DB = args.hierarchy_db, args.catalog_db, args.vayo_db
     h = sqlite3.connect(H_DB)
     vayo_class = classify_vayo(h)
 
