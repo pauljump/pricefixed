@@ -330,6 +330,19 @@ when an independent primary source confirms a BBL plus unit label.
 `units`, `observations`, `entity_matches`, candidate BBLs, and audit links from a
 resolution to its corroborating evidence. The source databases remain intact.
 
+## Coverage-growth pass (2026-07-30/31)
+
+A working citywide build (on the external drive, not committed here — see
+`tools/merges/README.md`) went from 514,306 to 2,750,889 canonical units, 12.4% to
+74.3% of the 3,705,000 citywide target. Six scripts under `tools/merges/`: raw
+archive extraction, exact-match BBL resolution with a condo-designation tiebreak,
+merging real (non-synthetic) archive evidence, single-family whole-building
+inference, a residential-vs-non-residential tiebreak for remaining ambiguous
+addresses, and a direct pass over DOF's own condo unit-lot registry. Full
+methodology, what didn't work and why (bulk CofO data has no unit labels; PAD
+address-count is not a safe proxy for unit count on 2-family lots), and what's left
+(the ACRIS staging backlog, the NYS voter file) are documented there.
+
 ## What comes next
 
 This establishes the method, not complete inventory coverage. The next additions are:
