@@ -155,15 +155,15 @@ shows up as broken, not as silence.
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 25 |  |
-| `avalonbay` | 🟢 live | 250 |  |
-| `corcoran` | 🟢 live | 1457 |  |
+| `avalonbay` | 🟢 live | 255 |  |
+| `corcoran` | 🟢 live | 1465 |  |
 | `durst` | 🟢 live | 25 |  |
-| `elliman` | 🟢 live | 2410 |  |
-| `glenwood` | 🟢 live | 28 |  |
-| `nooklyn` | 🟢 live | 1353 |  |
+| `elliman` | 🟢 live | 2397 |  |
+| `glenwood` | 🟢 live | 25 |  |
+| `nooklyn` | 🟢 live | 1358 |  |
 | `ogdencap` | 🟢 live | 54 |  |
-| `stonehenge` | 🟢 live | 71 |  |
-| `stuytown` | 🟢 live | 346 |  |
+| `stonehenge` | 🟢 live | 75 |  |
+| `stuytown` | 🟢 live | 341 |  |
 | `tfcornerstone` | 🟢 live | 115 |  |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
