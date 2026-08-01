@@ -82,8 +82,18 @@ reproducibility dependency in the release manifest.
 
 - **ACRIS staging backlog**: the archived `acris-unit-source.db` has 548,038 rows
   already downloaded, only 50,000 resolved. 136,538 rows (`resolved_at IS NULL`) are
-  available for a rerun via
-  `catalog.py --source acris_stage --stage-db <acris-stage-db> --limit N --db <catalog-db>`.
+  available for a resumable rerun. Use the bounded runner first:
+
+  ```bash
+  python3 tools/merges/run_acris_backlog.py \
+    --catalog-db /data/catalog.db \
+    --stage-db /archives/acris-unit-source.db \
+    --batch-size 1000 --max-batches 1 --dry-run
+  ```
+
+  Remove `--dry-run` to process one batch. Use `--max-batches 0` to continue until
+  the queue is empty; the runner stops below its free-space threshold and appends
+  JSON progress records when `--log` is supplied.
 - Same-street 2-family duplexes (4,585 buildings / 9,170 units) — the safe subset of
   the PAD-count tiebreak above, never merged.
 - NYS voter file — blocked on Paul filing the request.
