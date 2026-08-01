@@ -93,14 +93,14 @@ The full map of what is out there, tiered by how hard it is to pull and by what 
 |---|---|---|---|
 | `appfolio` | 🟢 live | 25 |  |
 | `avalonbay` | 🟢 live | 250 |  |
-| `corcoran` | 🟢 live | 1453 |  |
-| `durst` | 🟢 live | 24 |  |
-| `elliman` | 🟢 live | 2416 |  |
-| `glenwood` | 🟢 live | 27 |  |
+| `corcoran` | 🟢 live | 1457 |  |
+| `durst` | 🟢 live | 25 |  |
+| `elliman` | 🟢 live | 2410 |  |
+| `glenwood` | 🟢 live | 28 |  |
 | `nooklyn` | 🟢 live | 1353 |  |
 | `ogdencap` | 🟢 live | 54 |  |
 | `stonehenge` | 🟢 live | 71 |  |
-| `stuytown` | 🟢 live | 342 |  |
+| `stuytown` | 🟢 live | 346 |  |
 | `tfcornerstone` | 🟢 live | 115 |  |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
