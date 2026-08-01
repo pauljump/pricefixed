@@ -8,19 +8,21 @@ label match exactly one candidate's official condo unit designation
 (`official_unit_lots`)? That resolves genuine condo BBL-per-unit fan-out without
 ever guessing. Anything still ambiguous or unmatched stays that way, visibly.
 """
+import argparse
 import csv
 import re
 import sqlite3
 import sys
 from collections import defaultdict
+from pathlib import Path
 
-sys.path.insert(0, "/Users/mini-home/Desktop/unwalled")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.crosswalk import normalize_address
 from pricefixed.engine.dedupe import normalize_unit
 
-CATALOG_DB = "/Users/mini-home/pricefixed-build/catalog.db"
-RAW_CSV = "/Users/mini-home/pricefixed-build/extracted_addresses.csv"
-OUT_DB = "/Users/mini-home/pricefixed-build/hierarchy.db"
+CATALOG_DB = None
+RAW_CSV = None
+OUT_DB = None
 
 _NON_ALNUM = re.compile(r"[^A-Z0-9]")
 
@@ -57,6 +59,13 @@ def zip_filter(candidates, raw_zip):
     return kept if kept else {bbl for bbl, _ in candidates}
 
 def main():
+    global CATALOG_DB, RAW_CSV, OUT_DB
+    parser = argparse.ArgumentParser(description="Resolve archive address/unit evidence to BBL candidates.")
+    parser.add_argument("--catalog-db", required=True, help="catalog SQLite path with addresses and condo lots")
+    parser.add_argument("--raw-csv", required=True, help="CSV created by extract_all.py")
+    parser.add_argument("--out-db", required=True, help="output hierarchy SQLite path")
+    args = parser.parse_args()
+    CATALOG_DB, RAW_CSV, OUT_DB = args.catalog_db, args.raw_csv, args.out_db
     addr_index = load_address_index()
     condo_index = load_condo_index()
 

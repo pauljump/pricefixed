@@ -8,15 +8,17 @@ this exact unit exists and is called this. We already imported this table earlie
 today and only used it as an ambiguity tiebreaker; this pass uses it as a first-class
 identity source in its own right, for any unit-lot BBL that still has zero named units.
 """
+import argparse
 import sqlite3
 import sys
 import time
 import uuid
+from pathlib import Path
 
-sys.path.insert(0, "/Users/mini-home/Desktop/unwalled")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.dedupe import normalize_unit
 
-DB = "/Users/mini-home/pricefixed-build/catalog.db"
+DB = None
 SOURCE = "dof_condo_unit_lots_direct"
 
 def _now():
@@ -26,6 +28,10 @@ def _id(*parts):
     return uuid.uuid5(uuid.NAMESPACE_URL, "|".join(str(p) for p in parts)).hex[:20]
 
 def main():
+    global DB
+    parser = argparse.ArgumentParser(description="Merge direct DOF condo unit-lot identities into a catalog.")
+    parser.add_argument("--catalog-db", required=True, help="catalog SQLite path to update")
+    DB = parser.parse_args().catalog_db
     c = sqlite3.connect(DB)
     c.execute("PRAGMA journal_mode=WAL")
     c.execute("PRAGMA busy_timeout=30000")
