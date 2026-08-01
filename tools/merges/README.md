@@ -80,23 +80,31 @@ reproducibility dependency in the release manifest.
 
 ## Still on the table, not yet run
 
-- **ACRIS staging backlog**: the archived `acris-unit-source.db` has 548,038 rows
-  already downloaded, only 50,000 resolved. 136,538 rows (`resolved_at IS NULL`) are
-  available for a resumable rerun. Use the bounded runner first:
+- **Targeted DOB occupancy documents**: the DOB NOW public portal exposes property
+  profiles, Certificates of Occupancy, and Schedules of Occupancy; BIS covers older
+  records. Export the highest-value queue from the current catalog before retrieving
+  documents one property at a time:
 
   ```bash
-  python3 tools/merges/run_acris_backlog.py \
+  python3 tools/merges/export_gap_targets.py \
     --catalog-db /data/catalog.db \
-    --stage-db /archives/acris-unit-source.db \
-    --batch-size 1000 --max-batches 1 --dry-run
+    --out /data/dob-occupancy-targets.csv \
+    --min-capacity 20 --limit 500
   ```
 
-  Remove `--dry-run` to process one batch. Use `--max-batches 0` to continue until
-  the queue is empty; the runner stops below its free-space threshold and appends
-  JSON progress records when `--log` is supplied.
+  This queue is a work list, not a claim that the missing capacity is addressable.
+  A document must supply a usable apartment label and a resolvable BBL before it can
+  create a unit record.
 - Same-street 2-family duplexes (4,585 buildings / 9,170 units) — the safe subset of
   the PAD-count tiebreak above, never merged.
 - NYS voter file — blocked on Paul filing the request.
+
+## Completed since the citywide merge
+
+- **ACRIS unit-legals backlog**: all 548,038 staged rows have now been processed.
+  The final pass left no staged rows pending and added 3,549 net-new canonical units
+  after deduplication. The writable staging copy and runner are local build artifacts;
+  the original archive remains unchanged.
 
 ## Build artifacts
 
