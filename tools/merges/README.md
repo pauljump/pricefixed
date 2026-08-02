@@ -140,6 +140,18 @@ reproducibility dependency in the release manifest.
 
   This is a dated legal-record evidence export. It reports observed unit labels;
   it does not claim that an unobserved label does not exist.
+- **Batch gap-target collection**: the same deterministic pass can collect a review
+  corpus for the ranked gap queue without importing or interpreting anything:
+
+  ```bash
+  python3 tools/merges/mine_acris_gap_targets.py \
+    --targets /data/pricefixed-finance-gap-targets.csv \
+    --out /data/pricefixed-acris-gap-evidence.csv
+  ```
+
+  Rows retain the target BBL/address, unit-lot BBL, unit label, ACRIS document ID,
+  observation date, query URL, and collection status. Failed or empty targets stay
+  in the corpus for later review.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
