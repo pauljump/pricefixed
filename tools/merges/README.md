@@ -126,6 +126,20 @@ reproducibility dependency in the release manifest.
   A condo base BBL may cover many buildings; filter the extracted property address
   before importing any labels into the canonical catalog. The downloaded tax bills
   are not retained.
+- **Exact-address ACRIS unit pass**: ACRIS property-legals rows can be exported for
+  one street address and joined back to DOF's official unit-lot table:
+
+  ```bash
+  python3 tools/merges/mine_acris_building_units.py \
+    --borough 2 --block 3944 --street-number 9 \
+    --street-name "Metropolitan Oval" \
+    --address "9 METROPOLITAN OVAL" \
+    --catalog-db /data/catalog.db \
+    --out /data/9-metropolitan-oval-acris-units.csv
+  ```
+
+  This is a dated legal-record evidence export. It reports observed unit labels;
+  it does not claim that an unobserved label does not exist.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
