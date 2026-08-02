@@ -95,6 +95,22 @@ reproducibility dependency in the release manifest.
   This queue is a work list, not a claim that the missing capacity is addressable.
   A document must supply a usable apartment label and a resolvable BBL before it can
   create a unit record.
+
+  Export the unit-label queue and import only reviewed labels:
+
+  ```bash
+  python3 tools/merges/export_unit_document_targets.py \
+    --catalog-db /data/catalog.db \
+    --out /data/unit-document-targets.csv \
+    --min-capacity 2 --limit 500
+
+  python3 tools/merges/import_unit_labels.py \
+    --catalog-db /data/catalog.db \
+    --csv /data/reviewed-unit-labels.csv
+  ```
+
+  The import CSV must contain `bbl`, `unit_label`, `source_ref`, `source_url`,
+  and optionally `observed_at`. A count without a label is not importable.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
