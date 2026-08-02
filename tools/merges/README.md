@@ -111,6 +111,21 @@ reproducibility dependency in the release manifest.
 
   The import CSV must contain `bbl`, `unit_label`, `source_ref`, `source_url`,
   and optionally `observed_at`. A count without a label is not importable.
+- **Public DOF unit-address statements**: the official condo unit-lot table can be
+  paired with the public DOF Statement of Account PDF endpoint. The miner keeps only
+  the unit BBL, designation, property address, date, and source URL:
+
+  ```bash
+  python3 tools/merges/mine_dof_unit_addresses.py \
+    --catalog-db /data/catalog.db \
+    --condo-base-bbl 2039440003 \
+    --out /data/parkchester-north-dof-addresses.csv
+  ```
+
+  This is a public-record address bridge, not a complete building roster by itself.
+  A condo base BBL may cover many buildings; filter the extracted property address
+  before importing any labels into the canonical catalog. The downloaded tax bills
+  are not retained.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
