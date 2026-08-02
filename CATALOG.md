@@ -241,7 +241,9 @@ python3 catalog.py --source vayo_corcoran_archive --vayo-db /path/to/corcoran.db
 Additional direct public unit-observation imports:
 
 ```bash
-# DOF sales: BBL, sale date/price, and apartment number when reported.
+# DOF sales: BBL, sale date/price, and apartment number when reported. The
+# importer also accepts a narrow, explicit apartment suffix after the final
+# comma in the official address field, which DOF uses for some co-op sales.
 python3 catalog.py --source annualized_sales --boro MN --limit 1000 --db catalog.db
 
 # Current DOF rolling sales: derives BBL from official borough/block/lot fields.

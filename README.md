@@ -203,6 +203,10 @@ cleanly to an official NYC building ID. If the match is messy, it stays unresolv
 instead of getting guessed into the data. See [`CATALOG.md`](CATALOG.md) for the full
 rules.
 
+The NYC Finance sales import also keeps some apartment labels that the agency puts
+after a comma in the official address field, especially for co-op sales. Those labels
+are marked in the catalog as address-suffix evidence so they can be checked separately.
+
 The current citywide build reached **2,750,889 unit records** on July 31, 2026. That is
 a useful milestone, not a guarantee that every NYC home has been found. The biggest
 gap is buildings where public records say how many homes exist but do not name the

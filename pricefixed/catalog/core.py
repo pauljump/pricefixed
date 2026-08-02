@@ -113,6 +113,12 @@ NON_DWELLING_UNIT_LABELS = {
 # apartments; the raw archive remains the source of record for audit purposes.
 VAYO_NON_UNIT_LABELS = {"FINISHES", "MANAGEMENT"}
 
+# DOF documents that co-op sales may put the apartment after a comma in the
+# address while leaving apartment_number empty. Only accept compact labels with
+# a digit (or a small set of explicit non-numeric labels); never parse a freeform
+# address tail into a unit.
+_DOF_ADDRESS_UNIT = re.compile(r"^(?:[A-Z]?\d[A-Z0-9]{0,6}|\d{1,4}[A-Z]{0,4}|PH|PENTHOUSE)$")
+
 
 def _now():
     return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
@@ -1811,17 +1817,30 @@ class Catalog:
             observed_at = iso_date(row.get("sale_date"))
             if not bbl or not observed_at:
                 continue
-            raw_label = row.get("apartment_number")
-            label_key = str(raw_label or "").strip().upper()
-            normalized_label = normalize_unit(raw_label)
             raw_address = str(row.get("address") or "").strip()
-            # Co-op sale addresses often repeat the apartment after a final comma.
             address = raw_address
+            raw_label = row.get("apartment_number")
+            source_label = raw_label
+            label_source = "apartment_number"
+            normalized_label = normalize_unit(raw_label)
+            # Co-op sale addresses often repeat the apartment after a final comma.
+            # The field is official evidence, but the parser is intentionally narrow.
             if normalized_label and "," in raw_address:
                 head, tail = raw_address.rsplit(",", 1)
                 if normalize_unit(tail) == normalized_label:
                     address = head.strip()
-            source_ref = _id("sale", bbl, observed_at, raw_address, raw_label, row.get("sale_price"))
+            elif not normalized_label and "," in raw_address:
+                head, tail = raw_address.rsplit(",", 1)
+                candidate = normalize_unit(tail)
+                if head.strip() and _DOF_ADDRESS_UNIT.fullmatch(candidate):
+                    address = head.strip()
+                    raw_label = tail.strip()
+                    normalized_label = candidate
+                    label_source = "address_suffix"
+            label_key = str(raw_label or "").strip().upper()
+            # Keep the source identity tied to the published columns so a rerun
+            # upgrades an existing unresolved row instead of duplicating it.
+            source_ref = _id("sale", bbl, observed_at, raw_address, source_label, row.get("sale_price"))
             document_id = _id("doc", source, source_ref, retrieved_at)
             payload = json.dumps(row, default=str, sort_keys=True)
             self.conn.execute(
@@ -1869,8 +1888,13 @@ class Catalog:
                     "unit_label=excluded.unit_label,last_seen=excluded.last_seen",
                     (unit_id, bbl, raw_label, normalized_label, now, now),
                 )
+                rationale = "direct DOF sale BBL plus apartment number"
+                method = "official_bbl_and_unit_label"
+                if label_source == "address_suffix":
+                    rationale = "DOF sale address explicitly includes a comma-delimited apartment label"
+                    method = "official_bbl_and_address_unit_label"
                 self._match(observation_id, "unit", unit_id, "resolved", 1.0,
-                            "official_bbl_and_unit_label", "direct DOF sale BBL plus apartment number")
+                            method, rationale)
                 units += 1
                 resolved += 1
             observations += 1
