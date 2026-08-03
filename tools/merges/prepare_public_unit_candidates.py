@@ -2,6 +2,7 @@
 """Prepare deduplicated, net-new unit candidates from compact public mentions."""
 import argparse
 import json
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -13,6 +14,43 @@ from pricefixed.engine.dedupe import normalize_unit
 
 SOURCE_PRIORITY = ("dob_jobs", "dob_permits", "hpd_problems", "hpd_violations", "hpd_omo",
                    "nycha_violations", "evictions")
+
+_LOCATION_WORDS = re.compile(
+    r"\b(?:ATTIC|BACK|BASEM?E?N?T?|BSM?T|BUILDING|CELLAR|COMMERCIAL|ENTIRE|FIRST|"
+    r"FLOOR|FLR|GROUND|HOUSE|LOBBY|OFFICE|PARKING|PRIVATE|REAR|RETAIL|ROOF|"
+    r"SECOND|SIDE|STORAGE|STORE|TOP)\b"
+)
+_LOCATION_CODES = re.compile(
+    r"^(?:NONE|OSP|PVT|PRIVAT|APARTM|HOUSE|ATTIC|BACK|SIDE|REAR|GROUND|GROUN|GRND|"
+    r"GRD|TOP|STORE|COMMERCIAL|PARKING|ENTIRE|FIRST|SECOND|BASE|BASEM|BASEME|"
+    r"BAS|BASMT|BSM|BSMT|BSMNT|BMT|BST|BM|0)$"
+)
+_FLOOR_CODE = re.compile(
+    r"^(?:(?:\d+)(?:ST|ND|RD|TH)?(?:FL|FLO|FLOO|FLOOR|FLR|F)|"
+    r"(?:FL|FLOOR|FLR)\d+|(?:FIRST|SECOND|THIRD|FOURTH)|(?:1ST|2ND|3RD|\d+TH))$"
+)
+_UNIT_CODE = re.compile(r"^(?:\d{1,4}[A-Z]{0,3}|[A-Z]{1,3}\d{1,4}|PH[A-Z0-9]{0,3})$")
+
+
+def usable_dwelling_label(source, label):
+    """Accept only one compact apartment identifier from an official unit field.
+
+    The raw mentions remain in the evidence database. Ambiguous floor, commercial,
+    common-area, and multi-unit strings are withheld rather than counted as homes.
+    """
+    raw = " ".join(str(label or "").strip().upper().split())
+    normalized = normalize_unit(raw)
+    if (not normalized or raw in NON_DWELLING_UNIT_LABELS or raw in {"ALL", "N/A", "NA"} or
+            _LOCATION_WORDS.search(raw) or _LOCATION_CODES.fullmatch(normalized) or
+            _FLOOR_CODE.fullmatch(normalized)):
+        return None
+    # Delimiters in DOB and eviction fields usually join several premises. The
+    # compact pass must not collapse them into a made-up combined unit label.
+    if source in {"dob_jobs", "dob_permits", "evictions"} and re.search(r"[,/&;]", raw):
+        return None
+    if not _UNIT_CODE.fullmatch(normalized):
+        return None
+    return normalized
 
 
 def main():
@@ -45,10 +83,8 @@ def main():
         )
         batch = []
         for bbl, address, zipcode, label, source_ref, observed_at, dataset, source_url in rows:
-            label_key = str(label or "").strip().upper()
-            normalized = normalize_unit(label)
-            if (not normalized or label_key in NON_DWELLING_UNIT_LABELS or
-                    label_key in {"ALL", "N/A", "NA"}):
+            normalized = usable_dwelling_label(source, label)
+            if not normalized:
                 rejected += 1
                 continue
             batch.append((bbl, normalized, label, address, zipcode, source, source_ref,

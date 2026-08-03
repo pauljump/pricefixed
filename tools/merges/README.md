@@ -58,6 +58,19 @@ The archive inputs are not distributed in this repository. Before publishing a b
 confirm that every source can legally be redistributed or document it as a
 reproducibility dependency in the release manifest.
 
+### Compact NYC public-record pass
+
+`mine_public_unit_mentions.py` downloads apartment fields with direct BBLs from the
+supported NYC Open Data datasets and keeps one representative source record for each
+distinct building, address, and raw label. It does not write to the catalog.
+
+Run `prepare_public_unit_candidates.py` next. This keeps only compact, single-dwelling
+identifiers and withholds floor descriptions, commercial spaces, common areas, and
+strings that combine several apartments. The raw rejected rows remain in the mentions
+database for later review. Inspect the JSON summary and run
+`merge_public_unit_candidates.py` without `--apply` before updating a catalog. The
+merge is idempotent and preserves the upstream record ID, dataset, date, and URL.
+
 ## What didn't work, and why it matters
 
 - **Bulk DOB CofO data has no unit labels**, only `number_of_dwelling_units` — same
