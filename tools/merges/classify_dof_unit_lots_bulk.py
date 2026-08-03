@@ -98,7 +98,7 @@ def main():
     fields = [
         "unit_lot_bbl", "official_unit_designation", "address", "tax_class",
         "building_class", "assessment_address", "zipcode", "assessment_year",
-        "classification", "source_url",
+        "classification", "address_source_url", "assessment_source_url",
     ]
     counts = {}
     output = Path(args.output)
@@ -122,7 +122,8 @@ def main():
                 "zipcode": row.get("zip_code", ""),
                 "assessment_year": row.get("year", ""),
                 "classification": status,
-                "source_url": DATASET_URL,
+                "address_source_url": source.get("source_url", ""),
+                "assessment_source_url": DATASET_URL,
             })
 
     summary = {

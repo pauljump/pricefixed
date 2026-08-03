@@ -193,6 +193,21 @@ python3 tools/merges/classify_dof_unit_lots_bulk.py \
 
 The command is evidence preparation only and makes no catalog writes.
 
+Review the summary, then merge residential addresses and remove tax-class-4 lots
+from the canonical homes table. The dry run is the default:
+
+```bash
+python3 tools/merges/merge_dof_unit_lot_classifications.py \
+  --classifications /data/dof-unit-lot-tax-classes.csv \
+  --catalog-db /data/catalog.db \
+  --summary /data/dof-unit-lot-merge-summary.json
+
+# Repeat with --apply after reviewing the counts.
+```
+
+Source documents and observations remain in the catalog when a lot is excluded;
+only its resolved home identity is removed.
+
 ## Local-model extraction
 
 Use the local Qwen server only after deterministic code has downloaded and text-
