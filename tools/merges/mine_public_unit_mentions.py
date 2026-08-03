@@ -161,49 +161,52 @@ def mine_hpd_problems_partitioned(conn, batch_size):
     name = "hpd_problems"
     config = SOURCES[name]
     for borough in "12345":
-        progress_name = f"{name}:{borough}"
-        state = conn.execute("SELECT offset,complete FROM progress WHERE source=?", (progress_name,)).fetchone()
-        offset = state[0] if state else 0
-        if state and state[1]:
-            continue
-        bbl_min = borough + "000000000"
-        bbl_max = borough + "999999999"
-        while True:
-            rows, source_url = query_page(
-                config, offset, batch_size, f"bbl >= '{bbl_min}' AND bbl <= '{bbl_max}'"
-            )
-            accepted = []
-            for row in rows:
-                bbl = normalized_bbl(row, config)
-                unit = " ".join(str(row.get(config["unit"]) or "").strip().upper().split())
-                address = " ".join(
-                    str(row.get(field) or "").strip().upper()
-                    for field in config["address"] if row.get(field)
+        for block_prefix in "0123456789":
+            prefix = borough + block_prefix
+            progress_name = f"{name}:{prefix}"
+            state = conn.execute("SELECT offset,complete FROM progress WHERE source=?", (progress_name,)).fetchone()
+            offset = state[0] if state else 0
+            if state and state[1]:
+                continue
+            bbl_min = prefix + "00000000"
+            bbl_max = prefix + "99999999"
+            while True:
+                rows, source_url = query_page(
+                    config, offset, batch_size, f"bbl >= '{bbl_min}' AND bbl <= '{bbl_max}'"
                 )
-                if bbl and unit and address:
-                    accepted.append((name, str(row.get("source_ref") or ""), bbl, address,
-                                     str(row.get(config["zip"]) or ""), unit,
-                                     str(row.get("observed_at") or ""), config["dataset"], source_url))
-            conn.executemany(
-                "INSERT OR IGNORE INTO mentions "
-                "(source,source_ref,bbl,address,zipcode,unit_label,observed_at,dataset,source_url) "
-                "VALUES (?,?,?,?,?,?,?,?,?)", accepted,
-            )
-            offset += len(rows)
-            complete = int(len(rows) < batch_size)
-            conn.execute(
-                "INSERT INTO progress(source,offset,complete,updated_at) VALUES (?,?,?,datetime('now')) "
-                "ON CONFLICT(source) DO UPDATE SET offset=excluded.offset,complete=excluded.complete,updated_at=excluded.updated_at",
-                (progress_name, offset, complete),
-            )
-            conn.commit()
-            total = conn.execute("SELECT COUNT(*) FROM mentions WHERE source=?", (name,)).fetchone()[0]
-            print(f"{progress_name}: offset={offset} distinct_mentions={total}", flush=True)
-            if complete:
-                break
-            time.sleep(0.25)
+                accepted = []
+                for row in rows:
+                    bbl = normalized_bbl(row, config)
+                    unit = " ".join(str(row.get(config["unit"]) or "").strip().upper().split())
+                    address = " ".join(
+                        str(row.get(field) or "").strip().upper()
+                        for field in config["address"] if row.get(field)
+                    )
+                    if bbl and unit and address:
+                        accepted.append((name, str(row.get("source_ref") or ""), bbl, address,
+                                         str(row.get(config["zip"]) or ""), unit,
+                                         str(row.get("observed_at") or ""), config["dataset"], source_url))
+                conn.executemany(
+                    "INSERT OR IGNORE INTO mentions "
+                    "(source,source_ref,bbl,address,zipcode,unit_label,observed_at,dataset,source_url) "
+                    "VALUES (?,?,?,?,?,?,?,?,?)", accepted,
+                )
+                offset += len(rows)
+                complete = int(len(rows) < batch_size)
+                conn.execute(
+                    "INSERT INTO progress(source,offset,complete,updated_at) VALUES (?,?,?,datetime('now')) "
+                    "ON CONFLICT(source) DO UPDATE SET offset=excluded.offset,complete=excluded.complete,updated_at=excluded.updated_at",
+                    (progress_name, offset, complete),
+                )
+                conn.commit()
+                total = conn.execute("SELECT COUNT(*) FROM mentions WHERE source=?", (name,)).fetchone()[0]
+                print(f"{progress_name}: offset={offset} distinct_mentions={total}", flush=True)
+                if complete:
+                    break
+                time.sleep(0.25)
     total_offset = conn.execute(
-        "SELECT COALESCE(SUM(offset),0) FROM progress WHERE source LIKE 'hpd_problems:%'"
+        "SELECT COALESCE(SUM(offset),0) FROM progress "
+        "WHERE source GLOB 'hpd_problems:[1-5][0-9]'"
     ).fetchone()[0]
     conn.execute(
         "INSERT INTO progress(source,offset,complete,updated_at) VALUES (?,?,1,datetime('now')) "
