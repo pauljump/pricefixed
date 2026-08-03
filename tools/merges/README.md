@@ -165,6 +165,20 @@ reproducibility dependency in the release manifest.
 The output keeps only targets without ACRIS unit rows and sorts them by unresolved
 capacity. The summary reports counts by status, borough, and building class.
 
+Validate the completed DOF address evidence before any catalog import:
+
+```bash
+python3 tools/merges/validate_dof_unit_addresses.py \
+  --catalog-db /data/catalog.db \
+  --input /data/pricefixed-dof-all-unit-addresses.csv \
+  --accepted /data/pricefixed-dof-unit-addresses-accepted.csv \
+  --rejected /data/pricefixed-dof-unit-addresses-rejected.csv \
+  --summary /data/pricefixed-dof-unit-addresses-summary.json
+```
+
+This only checks provenance and official unit-lot membership. It does not write to
+the catalog or treat a model result as a fact.
+
 ## Local-model extraction
 
 Use the local Qwen server only after deterministic code has downloaded and text-
