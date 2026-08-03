@@ -23,6 +23,10 @@ def main():
     args = parser.parse_args()
     conn = sqlite3.connect(args.mentions_db)
     conn.execute("PRAGMA journal_mode=WAL")
+    progress = dict(conn.execute("SELECT source,complete FROM progress").fetchall())
+    incomplete = [source for source in SOURCE_PRIORITY if progress.get(source) != 1]
+    if incomplete:
+        raise SystemExit("source mining is incomplete: " + ", ".join(incomplete))
     conn.executescript("""
         DROP TABLE IF EXISTS unit_candidates;
         CREATE TABLE unit_candidates (
