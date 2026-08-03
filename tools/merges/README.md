@@ -79,6 +79,9 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
   granularity as PLUTO. Confirmed live against both `bs8b-p36w` and `pkdm-hqz6`
   before building anything. If revisiting the ~739 remaining 21+-unit buildings with
   zero named units, it needs individual scanned-document retrieval, not a bulk pull.
+- **DOB Complaints' `unit` column is not an apartment field.** A live metadata and
+  value audit found 3.1 million nonblank rows, but values such as `MAN.`, `QNS.`, and
+  `BKLYN` identify the DOB office or processing unit. It must never create homes.
 - **PAD address-count == PLUTO units_res is not a safe tiebreak for 2-family lots.**
   Tested against 62,347 candidates: only 4,585 (7.4%) were genuinely two dwellings on
   the same street ("28 JANE ST" / "30 JANE ST"). The other 57,762 were corner lots with
