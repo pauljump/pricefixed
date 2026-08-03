@@ -30,6 +30,19 @@ def candidate_is_standalone(label, description):
     }
 
 
+def load_terminal_results(path):
+    """Keep the latest usable result per id; transport errors never prove completion."""
+    results = {}
+    with open(path, encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            result = json.loads(line)
+            if result.get("status") in {"ok", "invalid_json"}:
+                results[result["id"]] = result
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--packets", required=True)
@@ -44,14 +57,12 @@ def main():
             if line.strip():
                 packet = json.loads(line)
                 packets[packet["id"]] = packet
-    results = {}
-    with open(args.results, encoding="utf-8") as handle:
-        for line in handle:
-            if line.strip():
-                result = json.loads(line)
-                results[result["id"]] = result
+    results = load_terminal_results(args.results)
     if len(results) < len(packets):
-        raise SystemExit(f"Qwen run incomplete: {len(results)}/{len(packets)}")
+        missing = sum(packet_id not in results for packet_id in packets)
+        raise SystemExit(
+            f"Qwen run incomplete: {len(packets) - missing}/{len(packets)} terminal results"
+        )
 
     accepted = []
     rejected = []

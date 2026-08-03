@@ -2,7 +2,9 @@ import importlib.util
 import json
 import tempfile
 import unittest
+from argparse import Namespace
 from pathlib import Path
+from unittest.mock import patch
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "local_model" / "run_qwen_extraction.py"
@@ -51,6 +53,36 @@ class LocalQwenRunnerTest(unittest.TestCase):
 
         self.assertEqual(MODULE.call_with_retries(flaky, 3, 0)[0], "raw")
         self.assertEqual(len(calls), 3)
+
+    def test_malformed_batch_stops_after_two_attempts(self):
+        calls = []
+
+        def malformed():
+            calls.append(True)
+            raise KeyError("incomplete batch")
+
+        with self.assertRaises(RuntimeError):
+            MODULE.call_with_retries(malformed, 5, 0)
+        self.assertEqual(len(calls), 2)
+
+    def test_malformed_batch_splits_to_single_records(self):
+        records = [
+            {"id": "a", "text": "APT 2A", "candidate_labels": ["2A"]},
+            {"id": "b", "text": "APT 3B", "candidate_labels": ["3B"]},
+        ]
+        args = Namespace(
+            base_url="local", model="qwen", max_tokens=1024, temperature=0.2,
+            timeout=10, retry_attempts=5, retry_delay=0,
+        )
+        parsed = {
+            "building_address": None, "unit_labels": [], "residential_count": None,
+            "confidence": "high", "notes": "",
+        }
+        with patch.object(MODULE, "call_model_batch", side_effect=KeyError("bad batch")), \
+                patch.object(MODULE, "call_model", return_value=("{}", parsed)) as singles:
+            results = MODULE.extract_batch_with_fallback(args, records)
+        self.assertEqual(set(results), {MODULE.cache_key(record) for record in records})
+        self.assertEqual(singles.call_count, 2)
 
     def test_parse_batch_requires_every_expected_id_once(self):
         text = json.dumps([

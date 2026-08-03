@@ -215,7 +215,10 @@ def call_with_retries(call, attempts, delay):
         try:
             return call()
         except (HTTPError, URLError, TimeoutError, KeyError, json.JSONDecodeError) as exc:
-            if attempt == attempts:
+            # Repeating the same malformed batch is rarely useful. Give Qwen one
+            # retry, then let the caller split that batch into smaller requests.
+            invalid_batch = isinstance(exc, KeyError)
+            if attempt == attempts or (invalid_batch and attempt >= 2):
                 raise RuntimeError(
                     f"local model unavailable after {attempts} attempts; "
                     "queue stopped without consuming the current record"
@@ -228,6 +231,42 @@ def call_with_retries(call, attempts, delay):
                 flush=True,
             )
             time.sleep(wait)
+
+
+def extract_batch_with_fallback(args, records):
+    """Extract one serial batch, splitting malformed responses until they parse."""
+    if len(records) == 1:
+        record = records[0]
+        raw, parsed = call_with_retries(
+            lambda: call_model(
+                args.base_url, args.model, record, args.max_tokens,
+                args.temperature, args.timeout,
+            ),
+            args.retry_attempts, args.retry_delay,
+        )
+        return {cache_key(record): (raw, parsed)}
+    try:
+        raw, parsed_items = call_with_retries(
+            lambda: call_model_batch(
+                args.base_url, args.model, records, args.max_tokens,
+                args.temperature, args.timeout,
+            ),
+            args.retry_attempts, args.retry_delay,
+        )
+    except RuntimeError as exc:
+        if not isinstance(exc.__cause__, KeyError):
+            raise
+        midpoint = len(records) // 2
+        results = extract_batch_with_fallback(args, records[:midpoint])
+        results.update(extract_batch_with_fallback(args, records[midpoint:]))
+        return results
+    return {
+        cache_key(record): (
+            json.dumps(parsed_items[record["id"]], ensure_ascii=True),
+            standardize_batch_item(parsed_items[record["id"]], record),
+        )
+        for record in records
+    }
 
 
 def main():
@@ -294,19 +333,7 @@ def main():
                     )
                     batch_results[cache_key(record)] = (raw, parsed)
                 else:
-                    raw, parsed_items = call_with_retries(
-                        lambda: call_model_batch(
-                            args.base_url, args.model, request_records, args.max_tokens,
-                            args.temperature, args.timeout,
-                        ),
-                        args.retry_attempts, args.retry_delay,
-                    )
-                    for record in request_records:
-                        item = parsed_items[record["id"]]
-                        batch_results[cache_key(record)] = (
-                            json.dumps(item, ensure_ascii=True),
-                            standardize_batch_item(item, record),
-                        )
+                    batch_results.update(extract_batch_with_fallback(args, request_records))
 
             for record in chunk:
                 result = {

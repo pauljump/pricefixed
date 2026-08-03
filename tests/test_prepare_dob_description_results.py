@@ -1,4 +1,6 @@
 import importlib.util
+import json
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -22,6 +24,20 @@ class DobCandidateBoundaryTest(unittest.TestCase):
     def test_rejects_candidates_the_parser_cannot_reproduce(self):
         self.assertFalse(MODULE.candidate_is_standalone("B701-B702", "APARTMENT B701-B702-B703"))
         self.assertFalse(MODULE.candidate_is_standalone("2", "WORK IN APT 2 R ONLY"))
+
+    def test_transport_errors_do_not_count_as_terminal_results(self):
+        rows = [
+            {"id": "retry", "status": "error"},
+            {"id": "done", "status": "ok", "parsed": {"unit_labels": []}},
+            {"id": "retry", "status": "ok", "parsed": {"unit_labels": []}},
+            {"id": "bad-json", "status": "invalid_json"},
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "results.jsonl"
+            path.write_text("".join(json.dumps(row) + "\n" for row in rows), encoding="utf-8")
+            results = MODULE.load_terminal_results(path)
+        self.assertEqual(set(results), {"retry", "done", "bad-json"})
+        self.assertEqual(results["retry"]["status"], "ok")
 
 
 if __name__ == "__main__":
