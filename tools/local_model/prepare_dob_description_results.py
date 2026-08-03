@@ -69,7 +69,8 @@ def main():
                 continue
             accepted.append({
                 "bbl": packet["bbl"], "address": packet["target_address"],
-                "unit_label": label, "source_ref": packet_id.removeprefix("dob-description-"),
+                "unit_label": label,
+                "source_ref": packet.get("source_ref", packet_id.removeprefix("dob-description-")),
                 "source_url": packet["source_url"], "observed_at": packet.get("observed_at", ""),
                 "evidence": item.get("evidence", ""), "confidence": parsed["confidence"],
             })

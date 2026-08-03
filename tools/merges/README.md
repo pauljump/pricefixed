@@ -234,6 +234,24 @@ response alongside parsed JSON and never writes to the catalog. Identical source
 text at the same address reuses a completed local result across related filing IDs.
 Do not send raw documents to a cloud model.
 
+Legacy DOB filings are a separate source covering borough-office, eFiling, and HUB
+jobs since 2000. Collect them into their own checkpoint database, then export only
+labels that are still absent from the catalog:
+
+```bash
+python3 tools/merges/mine_legacy_dob_description_units.py \
+  --db /data/legacy-dob-description-units.db
+
+python3 tools/local_model/export_dob_description_packets.py \
+  --descriptions-db /data/legacy-dob-description-units.db \
+  --catalog-db /data/catalog.db \
+  --output /data/legacy-dob-description-packets.jsonl \
+  --progress-source legacy_dob_descriptions \
+  --dataset ic3t-wcy2 --id-field job_s1_no \
+  --packet-prefix legacy-dob-description \
+  --source-type legacy_dob_job_description
+```
+
 To make packets from downloaded PDFs, create a manifest with columns
 `id,local_path,source_type,target_address,source_url`, then run:
 

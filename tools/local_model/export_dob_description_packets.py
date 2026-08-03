@@ -16,10 +16,15 @@ def main():
     parser.add_argument("--descriptions-db", required=True)
     parser.add_argument("--catalog-db", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--progress-source", default="dob_descriptions")
+    parser.add_argument("--dataset", default="w9ak-ipjd")
+    parser.add_argument("--id-field", default="job_filing_number")
+    parser.add_argument("--packet-prefix", default="dob-description")
+    parser.add_argument("--source-type", default="dob_job_description")
     args = parser.parse_args()
     source = sqlite3.connect(f"file:{Path(args.descriptions_db).resolve()}?mode=ro", uri=True)
     state = source.execute(
-        "SELECT complete FROM progress WHERE source='dob_descriptions'"
+        "SELECT complete FROM progress WHERE source=?", (args.progress_source,)
     ).fetchone()
     if not state or state[0] != 1:
         raise SystemExit("DOB description mining is incomplete")
@@ -44,12 +49,13 @@ def main():
                     missing.append(label)
             if not missing:
                 continue
-            url = "https://data.cityofnewyork.us/resource/w9ak-ipjd.json?" + urlencode({
-                "job_filing_number": job
+            url = f"https://data.cityofnewyork.us/resource/{args.dataset}.json?" + urlencode({
+                args.id_field: job
             })
             packet = {
-                "id": f"dob-description-{job}",
-                "source_type": "dob_job_description",
+                "id": f"{args.packet_prefix}-{job}",
+                "source_ref": job,
+                "source_type": args.source_type,
                 "target_address": address,
                 "source_url": url,
                 "text": description,
