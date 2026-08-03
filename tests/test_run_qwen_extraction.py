@@ -16,8 +16,10 @@ class LocalQwenRunnerTest(unittest.TestCase):
         first = {"source_type": "dob", "target_address": "1 MAIN ST", "text": "APT 2A", "source_url": "a"}
         duplicate = dict(first, source_url="b")
         different = dict(first, text="APT 2B")
+        different_candidates = dict(first, candidate_labels=["2A"])
         self.assertEqual(MODULE.cache_key(first), MODULE.cache_key(duplicate))
         self.assertNotEqual(MODULE.cache_key(first), MODULE.cache_key(different))
+        self.assertNotEqual(MODULE.cache_key(first), MODULE.cache_key(different_candidates))
 
     def test_resume_retries_errors_but_keeps_terminal_results(self):
         records = {

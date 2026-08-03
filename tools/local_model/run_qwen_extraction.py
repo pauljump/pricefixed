@@ -185,6 +185,7 @@ def cache_key(record):
     """Fields that determine extraction; filing URLs do not change the text facts."""
     return (
         record.get("source_type"), record.get("target_address"), record.get("text"),
+        tuple(record.get("candidate_labels") or ()),
     )
 
 

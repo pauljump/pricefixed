@@ -7,6 +7,10 @@ import re
 from collections import Counter
 from pathlib import Path
 
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
+
 
 def normalize_unit(value):
     value = re.sub(r"\b(APT|APARTMENT|UNIT|NO)\b\.?", "", str(value or "").upper())
@@ -19,23 +23,11 @@ def normalize_text(value):
 
 
 def candidate_is_standalone(label, description):
-    """Reject regex prefixes cut from compound or space-separated unit labels."""
-    label = str(label or "").strip()
-    description = str(description or "")
-    if not label:
-        return False
-    pattern = re.compile(re.escape(label), re.IGNORECASE)
-    for match in pattern.finditer(description):
-        before = description[match.start() - 1:match.start()]
-        after = description[match.end():match.end() + 3]
-        if before and (before.isalnum() or before in "/-"):
-            continue
-        if after[:1] and (after[:1].isalnum() or after[:1] in "/-"):
-            continue
-        if label.isdigit() and re.match(r"\s+[A-Za-z](?:\s|[,.;/&-]|$)", after):
-            continue
-        return True
-    return False
+    """Require the deterministic source grammar to reproduce the candidate."""
+    key = normalize_unit(label)
+    return bool(key) and key in {
+        normalize_unit(candidate) for candidate in extract_explicit_unit_labels(description)
+    }
 
 
 def main():
