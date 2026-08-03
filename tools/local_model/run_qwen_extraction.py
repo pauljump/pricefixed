@@ -10,6 +10,7 @@ import argparse
 import json
 import re
 import sys
+import time
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -100,6 +101,47 @@ def cache_key(record):
     )
 
 
+def load_existing_results(output, records_by_id):
+    """Resume terminal results while leaving transport failures retryable."""
+    completed = set()
+    cached = {}
+    if not output.exists():
+        return completed, cached
+    with output.open(encoding="utf-8") as handle:
+        for line in handle:
+            if not line.strip():
+                continue
+            result = json.loads(line)
+            if result.get("status") not in {"ok", "invalid_json"}:
+                continue
+            completed.add(result["id"])
+            record = records_by_id.get(result["id"])
+            if record and result.get("status") == "ok":
+                cached[cache_key(record)] = result
+    return completed, cached
+
+
+def call_with_retries(call, attempts, delay):
+    """Retry server/transport failures, then stop without consuming the record."""
+    for attempt in range(1, attempts + 1):
+        try:
+            return call()
+        except (HTTPError, URLError, TimeoutError, KeyError, json.JSONDecodeError) as exc:
+            if attempt == attempts:
+                raise RuntimeError(
+                    f"local model unavailable after {attempts} attempts; "
+                    "queue stopped without consuming the current record"
+                ) from exc
+            wait = delay * attempt
+            print(
+                f"local model call failed ({type(exc).__name__}: {exc}); "
+                f"retrying in {wait}s ({attempt}/{attempts})",
+                file=sys.stderr,
+                flush=True,
+            )
+            time.sleep(wait)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, help="Input JSONL document packets")
@@ -109,9 +151,13 @@ def main():
     parser.add_argument("--max-tokens", type=int, default=1024)
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument("--retry-attempts", type=int, default=5)
+    parser.add_argument("--retry-delay", type=float, default=15)
     args = parser.parse_args()
     if args.max_tokens <= 0 or not 0 <= args.temperature <= 2:
         parser.error("max-tokens must be positive and temperature must be between 0 and 2")
+    if args.retry_attempts <= 0 or args.retry_delay < 0:
+        parser.error("retry-attempts must be positive and retry-delay must be non-negative")
 
     records = []
     records_by_id = {}
@@ -128,17 +174,7 @@ def main():
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
-    completed = set()
-    cached = {}
-    if output.exists():
-        with output.open(encoding="utf-8") as handle:
-            for line in handle:
-                if line.strip():
-                    result = json.loads(line)
-                    completed.add(result["id"])
-                    record = records_by_id.get(result["id"])
-                    if record and result.get("status") == "ok":
-                        cached[cache_key(record)] = result
+    completed, cached = load_existing_results(output, records_by_id)
 
     with output.open("a", encoding="utf-8") as sink:
         for record in records:
@@ -157,14 +193,15 @@ def main():
                     "reused_from": prior["id"],
                 })
             else:
-                try:
-                    raw, parsed = call_model(
+                raw, parsed = call_with_retries(
+                    lambda: call_model(
                         args.base_url, args.model, record, args.max_tokens,
                         args.temperature, args.timeout
-                    )
-                    result.update({"status": "ok" if parsed else "invalid_json", "parsed": parsed, "raw": raw})
-                except (HTTPError, URLError, TimeoutError, KeyError, json.JSONDecodeError) as exc:
-                    result.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+                    ),
+                    args.retry_attempts,
+                    args.retry_delay,
+                )
+                result.update({"status": "ok" if parsed else "invalid_json", "parsed": parsed, "raw": raw})
             sink.write(json.dumps(result, ensure_ascii=True) + "\n")
             sink.flush()
             completed.add(record["id"])
