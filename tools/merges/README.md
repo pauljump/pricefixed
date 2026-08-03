@@ -263,6 +263,17 @@ python3 tools/merges/merge_dob_description_results.py \
   --source dob_now_job_description_units
 ```
 
+For an unattended run where the current DOB-NOW queue is already active, the queue
+orchestrator waits for that PID, verifies and merges it, exports the now-net-new
+legacy queue, and processes that queue serially with the same local endpoint:
+
+```bash
+python3 tools/local_model/finish_dob_description_queues.py \
+  --current-runner-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 To make packets from downloaded PDFs, create a manifest with columns
 `id,local_path,source_type,target_address,source_url`, then run:
 
