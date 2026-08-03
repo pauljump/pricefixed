@@ -27,7 +27,7 @@ SOURCES = {
         "ref": "violationid", "date": "novissueddate",
     },
     "hpd_problems": {
-        "dataset": "ygpa-z7cr", "bbl": "bbl", "boro": "boroid", "block": "block", "lot": "lot",
+        "dataset": "ygpa-z7cr", "bbl": "bbl", "boro": None, "block": "block", "lot": "lot",
         "address": ("house_number", "street_name"), "zip": "post_code", "unit": "apartment",
         "ref": "problem_id", "date": "received_date",
     },
