@@ -179,6 +179,20 @@ python3 tools/merges/validate_dof_unit_addresses.py \
 This only checks provenance and official unit-lot membership. It does not write to
 the catalog or treat a model result as a fact.
 
+Classify every official unit lot as residential or nonresidential from Finance's
+current bulk assessment roll before treating it as a home. This is much faster than
+requesting one Statement of Account PDF per lot and excludes owners and assessment
+values from the output:
+
+```bash
+python3 tools/merges/classify_dof_unit_lots_bulk.py \
+  --input /data/all-dof-unit-lots-for-classification.csv \
+  --output /data/dof-unit-lot-tax-classes.csv \
+  --summary /data/dof-unit-lot-tax-classes-summary.json
+```
+
+The command is evidence preparation only and makes no catalog writes.
+
 ## Local-model extraction
 
 Use the local Qwen server only after deterministic code has downloaded and text-
