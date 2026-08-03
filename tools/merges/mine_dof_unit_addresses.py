@@ -16,7 +16,7 @@ from pathlib import Path
 from urllib.request import Request, urlopen
 
 
-ADDRESS_RE = re.compile(r"^Property address:\s*(.+?)\s*$", re.MULTILINE | re.IGNORECASE)
+ADDRESS_RE = re.compile(r"Property address:\s*([^\r\n]+)", re.IGNORECASE)
 
 
 def fetch(row, statement_date):
