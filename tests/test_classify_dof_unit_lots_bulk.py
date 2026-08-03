@@ -20,6 +20,13 @@ class DofBulkClassificationTest(unittest.TestCase):
         row = {"housenum_lo": "12", "housenum_hi": "14", "street_name": "MAIN STREET"}
         self.assertEqual(MODULE.assessment_address(row), "12-14 MAIN STREET")
 
+    def test_normalizes_historical_assessment_without_owner_or_values(self):
+        row = {"bble": "1001", "taxclass": "2", "bldgcl": "R4", "staddr": "1 MAIN ST", "year": "2018/19"}
+        normalized = MODULE.normalize_historical(row)
+        self.assertEqual(normalized["fintaxclass"], "2")
+        self.assertEqual(MODULE.assessment_address(normalized), "1 MAIN ST")
+        self.assertNotIn("owner", normalized)
+
 
 if __name__ == "__main__":
     unittest.main()

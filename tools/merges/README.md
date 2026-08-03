@@ -191,7 +191,9 @@ python3 tools/merges/classify_dof_unit_lots_bulk.py \
   --summary /data/dof-unit-lot-tax-classes-summary.json
 ```
 
-The command is evidence preparation only and makes no catalog writes.
+The command uses the current final roll first, then checks Finance's historical
+assessment table for unit lots that have since been dropped or renumbered. It is
+evidence preparation only and makes no catalog writes.
 
 Review the summary, then merge residential addresses and remove tax-class-4 lots
 from the canonical homes table. The dry run is the default:

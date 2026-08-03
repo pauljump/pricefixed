@@ -12,8 +12,11 @@ from urllib.request import Request, urlopen
 
 
 DATASET = "8y4t-faws"
+HISTORICAL_DATASET = "yjxr-fw8i"
 API = f"https://data.cityofnewyork.us/resource/{DATASET}.json"
 DATASET_URL = f"https://data.cityofnewyork.us/d/{DATASET}"
+HISTORICAL_API = f"https://data.cityofnewyork.us/resource/{HISTORICAL_DATASET}.json"
+HISTORICAL_DATASET_URL = f"https://data.cityofnewyork.us/d/{HISTORICAL_DATASET}"
 SELECT = (
     "parid,fintaxclass,curtaxclass,bldg_class,housenum_lo,housenum_hi,"
     "street_name,zip_code,year,period,rectype"
@@ -51,7 +54,47 @@ def fetch_page(offset, limit, year):
         time.sleep(2 ** attempt)
 
 
+def fetch_historical(bbls):
+    values = ",".join(f"'{bbl}'" for bbl in bbls)
+    params = urlencode({
+        "$select": "bble,taxclass,bldgcl,staddr,zip,year,period,valtype",
+        "$where": f"bble in ({values}) AND period = 'FINAL'",
+        "$order": "bble,year DESC",
+        "$limit": 5000,
+    })
+    request = Request(f"{HISTORICAL_API}?{params}", headers={
+        "Accept-Encoding": "gzip", "User-Agent": "pricefixed-public-records/1.0",
+    })
+    for attempt in range(5):
+        try:
+            with urlopen(request, timeout=180) as response:
+                payload = response.read()
+                if response.headers.get("Content-Encoding") == "gzip":
+                    payload = gzip.decompress(payload)
+                return json.loads(payload)
+        except HTTPError as exc:
+            if exc.code < 500 and exc.code != 429:
+                raise
+            if attempt == 4:
+                raise
+        except (URLError, TimeoutError):
+            if attempt == 4:
+                raise
+        time.sleep(2 ** attempt)
+
+
+def normalize_historical(row):
+    return {
+        "parid": row.get("bble", ""), "fintaxclass": row.get("taxclass", ""),
+        "curtaxclass": row.get("taxclass", ""), "bldg_class": row.get("bldgcl", ""),
+        "assessment_address": row.get("staddr", ""), "zip_code": row.get("zip", ""),
+        "year": row.get("year", ""), "_dataset": HISTORICAL_DATASET,
+    }
+
+
 def assessment_address(row):
+    if row.get("assessment_address"):
+        return str(row["assessment_address"]).strip()
     number = str(row.get("housenum_lo") or "").strip()
     high = str(row.get("housenum_hi") or "").strip()
     if high and high != number:
@@ -95,6 +138,19 @@ def main():
         if len(rows) < args.batch_size:
             break
 
+    current_matches = len(assessments)
+    missing_bbls = sorted(wanted - assessments.keys())
+    for start in range(0, len(missing_bbls), 50):
+        historical = fetch_historical(missing_bbls[start:start + 50])
+        for row in historical:
+            bbl = str(row.get("bble") or "").strip()
+            if bbl in wanted and bbl not in assessments:
+                assessments[bbl] = normalize_historical(row)
+        print(
+            f"historical fallback={min(start + 50, len(missing_bbls))}/{len(missing_bbls)} "
+            f"total matched={len(assessments)}", flush=True,
+        )
+
     fields = [
         "unit_lot_bbl", "official_unit_designation", "address", "tax_class",
         "building_class", "assessment_address", "zipcode", "assessment_year",
@@ -123,15 +179,19 @@ def main():
                 "assessment_year": row.get("year", ""),
                 "classification": status,
                 "address_source_url": source.get("source_url", ""),
-                "assessment_source_url": DATASET_URL,
+                "assessment_source_url": (
+                    HISTORICAL_DATASET_URL if row.get("_dataset") == HISTORICAL_DATASET else DATASET_URL
+                ),
             })
 
     summary = {
         "input_unit_lots": len(input_rows),
         "assessment_rows_scanned": offset,
         "matched_unit_lots": len(assessments),
+        "current_assessment_matches": current_matches,
+        "historical_assessment_matches": len(assessments) - current_matches,
         "assessment_year": args.year,
-        "dataset": DATASET,
+        "datasets": [DATASET, HISTORICAL_DATASET],
         "classifications": counts,
         "catalog_writes": 0,
     }
