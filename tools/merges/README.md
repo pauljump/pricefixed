@@ -152,6 +152,18 @@ reproducibility dependency in the release manifest.
   Rows retain the target BBL/address, unit-lot BBL, unit label, ACRIS document ID,
   observation date, query URL, and collection status. Failed or empty targets stay
   in the corpus for later review.
+- **Prepare the review queue**: after collection, make a smaller ranked file for
+  follow-up research or local-model triage. This does not change the catalog:
+
+  ```bash
+  python3 tools/merges/prepare_acris_review.py \
+    --evidence /data/pricefixed-acris-gap-evidence.csv \
+    --out /data/pricefixed-acris-unresolved.csv \
+    --summary /data/pricefixed-acris-review-summary.json
+  ```
+
+  The output keeps only targets without ACRIS unit rows and sorts them by unresolved
+  capacity. The summary reports counts by status, borough, and building class.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
