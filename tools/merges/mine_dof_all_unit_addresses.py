@@ -42,13 +42,17 @@ def main():
         if not completed and output.stat().st_size == 0:
             writer.writeheader()
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
-            futures = [pool.submit(fetch, row, args.statement_date) for row in rows]
-            for index, future in enumerate(as_completed(futures), 1):
-                writer.writerow(future.result())
-                if index % 100 == 0:
-                    handle.flush()
-                    print(f"completed {index}/{len(rows)}", flush=True)
-                time.sleep(0.02)
+            completed_now = 0
+            for start in range(0, len(rows), 500):
+                batch = rows[start:start + 500]
+                futures = [pool.submit(fetch, row, args.statement_date) for row in batch]
+                for future in as_completed(futures):
+                    writer.writerow(future.result())
+                    completed_now += 1
+                    if completed_now % 100 == 0:
+                        handle.flush()
+                        print(f"completed {completed_now}/{len(rows)}", flush=True)
+                    time.sleep(0.02)
     print(f"wrote {len(rows)} new results to {output}")
 
 
