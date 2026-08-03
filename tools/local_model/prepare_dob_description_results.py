@@ -18,6 +18,26 @@ def normalize_text(value):
     return " ".join(str(value or "").upper().split())
 
 
+def candidate_is_standalone(label, description):
+    """Reject regex prefixes cut from compound or space-separated unit labels."""
+    label = str(label or "").strip()
+    description = str(description or "")
+    if not label:
+        return False
+    pattern = re.compile(re.escape(label), re.IGNORECASE)
+    for match in pattern.finditer(description):
+        before = description[match.start() - 1:match.start()]
+        after = description[match.end():match.end() + 3]
+        if before and (before.isalnum() or before in "/-"):
+            continue
+        if after[:1] and (after[:1].isalnum() or after[:1] in "/-"):
+            continue
+        if label.isdigit() and re.match(r"\s+[A-Za-z](?:\s|[,.;/&-]|$)", after):
+            continue
+        return True
+    return False
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--packets", required=True)
@@ -47,7 +67,8 @@ def main():
     for packet_id, packet in packets.items():
         result = results.get(packet_id, {})
         parsed = result.get("parsed") or {}
-        candidate_keys = {normalize_unit(label) for label in packet["candidate_labels"]}
+        candidates = {normalize_unit(label): label for label in packet["candidate_labels"]}
+        candidate_keys = set(candidates)
         description = normalize_text(packet["text"])
         model_labels = parsed.get("unit_labels") or []
         if result.get("status") != "ok" or parsed.get("confidence") not in {"high", "medium"}:
@@ -62,6 +83,8 @@ def main():
             reason = ""
             if not key or key not in candidate_keys:
                 reason = "label_not_in_deterministic_candidates"
+            elif not candidate_is_standalone(candidates[key], packet["text"]):
+                reason = "candidate_is_partial_token"
             elif not evidence or evidence not in description:
                 reason = "evidence_not_in_source_description"
             if reason:

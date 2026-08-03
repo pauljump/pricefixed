@@ -33,6 +33,14 @@ Use this schema exactly:
   "notes": string
 }
 """
+BATCH_SYSTEM_PROMPT = """You verify apartment labels in short public-record descriptions.
+For every input record, return one JSON array item with exactly this shape:
+{"id":"exact input id","unit_labels":[{"label":"exact candidate label","evidence":"short exact substring from text"}],"confidence":"high|medium|low"}
+Include a candidate only when the text clearly uses it as a residential apartment or
+condo identifier. Exclude equipment, HVAC, plumbing, electrical, elevator,
+construction, floor, room, job, and application numbers. Never invent a label or
+evidence. Return JSON only, with one item per input record in input order.
+"""
 
 
 def parse_json(text):
@@ -94,6 +102,85 @@ def call_model(base_url, model, record, max_tokens, temperature, timeout):
     return content, parse_json(content)
 
 
+def parse_batch_json(text, expected_ids):
+    cleaned = text.strip()
+    if cleaned.startswith("```"):
+        cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", cleaned, flags=re.IGNORECASE)
+    try:
+        value = json.loads(cleaned)
+    except json.JSONDecodeError:
+        match = re.search(r"\[.*\]", cleaned, flags=re.DOTALL)
+        if not match:
+            return None
+        try:
+            value = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+    if not isinstance(value, list) or len(value) != len(expected_ids):
+        return None
+    parsed = {}
+    for item in value:
+        if not isinstance(item, dict) or item.get("id") not in expected_ids:
+            return None
+        if item["id"] in parsed or item.get("confidence") not in {"high", "medium", "low"}:
+            return None
+        labels = item.get("unit_labels")
+        if not isinstance(labels, list):
+            return None
+        if any(
+            not isinstance(label, dict)
+            or not isinstance(label.get("label"), str)
+            or not isinstance(label.get("evidence"), str)
+            for label in labels
+        ):
+            return None
+        parsed[item["id"]] = item
+    return parsed if set(parsed) == set(expected_ids) else None
+
+
+def call_model_batch(base_url, model, records, max_tokens, temperature, timeout):
+    contexts = [{
+        "id": record["id"],
+        "source_type": record.get("source_type"),
+        "target_address": record.get("target_address"),
+        "source_url": record.get("source_url"),
+        "candidate_labels": record.get("candidate_labels", []),
+        "text": record["text"],
+    } for record in records]
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": BATCH_SYSTEM_PROMPT},
+            {"role": "user", "content": json.dumps(contexts, ensure_ascii=True)},
+        ],
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+    }
+    request = Request(
+        base_url.rstrip("/") + "/chat/completions",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    with urlopen(request, timeout=timeout) as response:
+        result = json.loads(response.read())
+    content = result["choices"][0]["message"]["content"]
+    parsed = parse_batch_json(content, [record["id"] for record in records])
+    if parsed is None:
+        raise KeyError("local model returned an invalid or incomplete batch")
+    return content, parsed
+
+
+def standardize_batch_item(item, record):
+    return {
+        "building_address": record.get("target_address") or None,
+        "unit_labels": [dict(label, page=None) for label in item["unit_labels"]],
+        "residential_count": None,
+        "confidence": item["confidence"],
+        "notes": "Batched local-model verification of deterministic candidates.",
+    }
+
+
 def cache_key(record):
     """Fields that determine extraction; filing URLs do not change the text facts."""
     return (
@@ -153,11 +240,17 @@ def main():
     parser.add_argument("--timeout", type=int, default=180)
     parser.add_argument("--retry-attempts", type=int, default=5)
     parser.add_argument("--retry-delay", type=float, default=15)
+    parser.add_argument(
+        "--batch-size", type=int, default=1,
+        help="Records per serial request; use 8 for short deterministic candidate packets",
+    )
     args = parser.parse_args()
     if args.max_tokens <= 0 or not 0 <= args.temperature <= 2:
         parser.error("max-tokens must be positive and temperature must be between 0 and 2")
     if args.retry_attempts <= 0 or args.retry_delay < 0:
         parser.error("retry-attempts must be positive and retry-delay must be non-negative")
+    if args.batch_size <= 0:
+        parser.error("batch-size must be positive")
 
     records = []
     records_by_id = {}
@@ -176,38 +269,71 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     completed, cached = load_existing_results(output, records_by_id)
 
+    pending = [record for record in records if record["id"] not in completed]
     with output.open("a", encoding="utf-8") as sink:
-        for record in records:
-            if record["id"] in completed:
-                continue
-            result = {
-                "id": record["id"],
-                "source_url": record.get("source_url", ""),
-                "model": args.model,
-                "base_url": args.base_url,
-            }
-            prior = cached.get(cache_key(record))
-            if prior:
-                result.update({
-                    "status": "ok", "parsed": prior["parsed"], "raw": prior.get("raw", ""),
-                    "reused_from": prior["id"],
-                })
-            else:
-                raw, parsed = call_with_retries(
-                    lambda: call_model(
-                        args.base_url, args.model, record, args.max_tokens,
-                        args.temperature, args.timeout
-                    ),
-                    args.retry_attempts,
-                    args.retry_delay,
-                )
-                result.update({"status": "ok" if parsed else "invalid_json", "parsed": parsed, "raw": raw})
-            sink.write(json.dumps(result, ensure_ascii=True) + "\n")
-            sink.flush()
-            completed.add(record["id"])
-            if result.get("status") == "ok":
-                cached[cache_key(record)] = result
-            print(f"processed {record['id']}", flush=True)
+        for start in range(0, len(pending), args.batch_size):
+            chunk = pending[start:start + args.batch_size]
+            unique = {}
+            for record in chunk:
+                key = cache_key(record)
+                if key not in cached and key not in unique:
+                    unique[key] = record
+
+            batch_results = {}
+            if unique:
+                request_records = list(unique.values())
+                if args.batch_size == 1:
+                    record = request_records[0]
+                    raw, parsed = call_with_retries(
+                        lambda: call_model(
+                            args.base_url, args.model, record, args.max_tokens,
+                            args.temperature, args.timeout,
+                        ),
+                        args.retry_attempts, args.retry_delay,
+                    )
+                    batch_results[cache_key(record)] = (raw, parsed)
+                else:
+                    raw, parsed_items = call_with_retries(
+                        lambda: call_model_batch(
+                            args.base_url, args.model, request_records, args.max_tokens,
+                            args.temperature, args.timeout,
+                        ),
+                        args.retry_attempts, args.retry_delay,
+                    )
+                    for record in request_records:
+                        item = parsed_items[record["id"]]
+                        batch_results[cache_key(record)] = (
+                            json.dumps(item, ensure_ascii=True),
+                            standardize_batch_item(item, record),
+                        )
+
+            for record in chunk:
+                result = {
+                    "id": record["id"],
+                    "source_url": record.get("source_url", ""),
+                    "model": args.model,
+                    "base_url": args.base_url,
+                }
+                key = cache_key(record)
+                prior = cached.get(key)
+                if prior:
+                    result.update({
+                        "status": "ok", "parsed": prior["parsed"],
+                        "raw": prior.get("raw", ""), "reused_from": prior["id"],
+                    })
+                else:
+                    raw, parsed = batch_results[key]
+                    result.update({
+                        "status": "ok" if parsed else "invalid_json",
+                        "parsed": parsed, "raw": raw,
+                        "request_batch_size": len(unique),
+                    })
+                sink.write(json.dumps(result, ensure_ascii=True) + "\n")
+                sink.flush()
+                completed.add(record["id"])
+                if result.get("status") == "ok":
+                    cached[key] = result
+                print(f"processed {record['id']}", flush=True)
 
 
 if __name__ == "__main__":

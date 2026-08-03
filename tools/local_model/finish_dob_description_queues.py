@@ -59,6 +59,7 @@ def main():
         python, root / "tools/local_model/run_qwen_extraction.py",
         "--input", work / "legacy-dob-description-qwen-packets.jsonl",
         "--output", work / "legacy-dob-description-qwen-results.jsonl",
+        "--batch-size", "8",
     )
     run(
         python, root / "tools/local_model/prepare_dob_description_results.py",

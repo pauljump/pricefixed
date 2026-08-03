@@ -237,6 +237,10 @@ response alongside parsed JSON and never writes to the catalog. Identical source
 text at the same address reuses a completed local result across related filing IDs.
 Do not send raw documents to a cloud model.
 
+For short packets that already contain deterministic `candidate_labels`, pass
+`--batch-size 8`. This still sends one local request at a time, but verifies up to
+eight records in that request. The DOB queue orchestrator uses this mode.
+
 Legacy DOB filings are a separate source covering borough-office, eFiling, and HUB
 jobs since 2000. Collect them into their own checkpoint database, then export only
 labels that are still absent from the catalog:

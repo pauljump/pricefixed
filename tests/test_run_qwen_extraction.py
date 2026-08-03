@@ -50,6 +50,21 @@ class LocalQwenRunnerTest(unittest.TestCase):
         self.assertEqual(MODULE.call_with_retries(flaky, 3, 0)[0], "raw")
         self.assertEqual(len(calls), 3)
 
+    def test_parse_batch_requires_every_expected_id_once(self):
+        text = json.dumps([
+            {"id": "a", "unit_labels": [{"label": "2A", "evidence": "APT 2A"}], "confidence": "high"},
+            {"id": "b", "unit_labels": [], "confidence": "low"},
+        ])
+        parsed = MODULE.parse_batch_json(text, ["a", "b"])
+        self.assertEqual(set(parsed), {"a", "b"})
+        self.assertIsNone(MODULE.parse_batch_json(text, ["a", "missing"]))
+
+    def test_standardize_batch_item_uses_common_result_schema(self):
+        item = {"id": "a", "unit_labels": [{"label": "2A", "evidence": "APT 2A"}], "confidence": "high"}
+        parsed = MODULE.standardize_batch_item(item, {"target_address": "1 MAIN ST"})
+        self.assertEqual(parsed["building_address"], "1 MAIN ST")
+        self.assertEqual(parsed["unit_labels"][0]["page"], None)
+
 
 if __name__ == "__main__":
     unittest.main()
