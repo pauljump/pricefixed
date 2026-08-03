@@ -63,7 +63,7 @@ def normalized_bbl(row, config):
     return ""
 
 
-def query_page(config, offset, limit):
+def query_page(config, offset, limit, extra_where=None):
     group_fields = [field for field in (
         config["bbl"], config["boro"], config["block"], config["lot"],
         *config["address"], config["zip"], config["unit"],
@@ -71,9 +71,12 @@ def query_page(config, offset, limit):
     select = ",".join(group_fields + [
         f"min({config['ref']}) as source_ref", f"max({config['date']}) as observed_at"
     ])
+    where = f"{config['unit']} IS NOT NULL AND {config['unit']} != ''"
+    if extra_where:
+        where = f"({where}) AND ({extra_where})"
     params = urlencode({
         "$select": select,
-        "$where": f"{config['unit']} IS NOT NULL AND {config['unit']} != ''",
+        "$where": where,
         "$group": ",".join(group_fields),
         "$order": ",".join(group_fields),
         "$limit": limit,
@@ -154,6 +157,62 @@ def mine_source(conn, name, batch_size):
         time.sleep(0.25)
 
 
+def mine_hpd_problems_partitioned(conn, batch_size):
+    name = "hpd_problems"
+    config = SOURCES[name]
+    for borough in "12345":
+        progress_name = f"{name}:{borough}"
+        state = conn.execute("SELECT offset,complete FROM progress WHERE source=?", (progress_name,)).fetchone()
+        offset = state[0] if state else 0
+        if state and state[1]:
+            continue
+        bbl_min = borough + "000000000"
+        bbl_max = borough + "999999999"
+        while True:
+            rows, source_url = query_page(
+                config, offset, batch_size, f"bbl >= '{bbl_min}' AND bbl <= '{bbl_max}'"
+            )
+            accepted = []
+            for row in rows:
+                bbl = normalized_bbl(row, config)
+                unit = " ".join(str(row.get(config["unit"]) or "").strip().upper().split())
+                address = " ".join(
+                    str(row.get(field) or "").strip().upper()
+                    for field in config["address"] if row.get(field)
+                )
+                if bbl and unit and address:
+                    accepted.append((name, str(row.get("source_ref") or ""), bbl, address,
+                                     str(row.get(config["zip"]) or ""), unit,
+                                     str(row.get("observed_at") or ""), config["dataset"], source_url))
+            conn.executemany(
+                "INSERT OR IGNORE INTO mentions "
+                "(source,source_ref,bbl,address,zipcode,unit_label,observed_at,dataset,source_url) "
+                "VALUES (?,?,?,?,?,?,?,?,?)", accepted,
+            )
+            offset += len(rows)
+            complete = int(len(rows) < batch_size)
+            conn.execute(
+                "INSERT INTO progress(source,offset,complete,updated_at) VALUES (?,?,?,datetime('now')) "
+                "ON CONFLICT(source) DO UPDATE SET offset=excluded.offset,complete=excluded.complete,updated_at=excluded.updated_at",
+                (progress_name, offset, complete),
+            )
+            conn.commit()
+            total = conn.execute("SELECT COUNT(*) FROM mentions WHERE source=?", (name,)).fetchone()[0]
+            print(f"{progress_name}: offset={offset} distinct_mentions={total}", flush=True)
+            if complete:
+                break
+            time.sleep(0.25)
+    total_offset = conn.execute(
+        "SELECT COALESCE(SUM(offset),0) FROM progress WHERE source LIKE 'hpd_problems:%'"
+    ).fetchone()[0]
+    conn.execute(
+        "INSERT INTO progress(source,offset,complete,updated_at) VALUES (?,?,1,datetime('now')) "
+        "ON CONFLICT(source) DO UPDATE SET offset=excluded.offset,complete=1,updated_at=excluded.updated_at",
+        (name, total_offset),
+    )
+    conn.commit()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", required=True)
@@ -163,7 +222,10 @@ def main():
     conn = sqlite3.connect(args.db)
     init_db(conn)
     for source in args.sources:
-        mine_source(conn, source, args.batch_size)
+        if source == "hpd_problems":
+            mine_hpd_problems_partitioned(conn, args.batch_size)
+        else:
+            mine_source(conn, source, args.batch_size)
     conn.close()
 
 
