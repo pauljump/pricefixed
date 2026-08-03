@@ -11,7 +11,8 @@ from pricefixed.catalog.core import NON_DWELLING_UNIT_LABELS
 from pricefixed.engine.dedupe import normalize_unit
 
 
-SOURCE_PRIORITY = ("dob_jobs", "dob_permits", "hpd_problems", "hpd_violations", "hpd_omo", "nycha_violations")
+SOURCE_PRIORITY = ("dob_jobs", "dob_permits", "hpd_problems", "hpd_violations", "hpd_omo",
+                   "nycha_violations", "evictions")
 
 
 def main():

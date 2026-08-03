@@ -42,6 +42,11 @@ SOURCES = {
         "address": ("phn", "str_nm"), "zip": "zip", "unit": "actl_unit_insp",
         "ref": "viol_seq_no", "date": "insp_dt",
     },
+    "evictions": {
+        "dataset": "6z8x-wfk4", "bbl": "bbl", "boro": None, "block": None, "lot": None,
+        "address": ("eviction_address",), "zip": "eviction_zip", "unit": "eviction_apt_num",
+        "ref": "court_index_number", "date": "executed_date",
+    },
 }
 
 
