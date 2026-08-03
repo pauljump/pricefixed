@@ -162,8 +162,30 @@ reproducibility dependency in the release manifest.
     --summary /data/pricefixed-acris-review-summary.json
   ```
 
-  The output keeps only targets without ACRIS unit rows and sorts them by unresolved
-  capacity. The summary reports counts by status, borough, and building class.
+The output keeps only targets without ACRIS unit rows and sorts them by unresolved
+capacity. The summary reports counts by status, borough, and building class.
+
+## Local-model extraction
+
+Use the local Qwen server only after deterministic code has downloaded and text-
+extracted a document. Create one JSON object per document in a JSONL input file:
+
+```json
+{"id":"dob-123-page-3","source_type":"dob_schedule_a","target_address":"123 EXAMPLE STREET","source_url":"https://example.test/doc.pdf","text":"... extracted page text ..."}
+```
+
+Run the serial, resumable extractor:
+
+```bash
+python3 tools/local_model/run_qwen_extraction.py \
+  --input /data/dob-document-packets.jsonl \
+  --output /data/dob-qwen-results.jsonl
+```
+
+It uses `http://100.78.191.106:8080/v1`, `mlx-community/Qwen3-14B-4bit`,
+`max_tokens=1024`, and `temperature=0.2` by default. It writes the raw model
+response alongside parsed JSON and never writes to the catalog. Do not send raw
+documents to a cloud model.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
