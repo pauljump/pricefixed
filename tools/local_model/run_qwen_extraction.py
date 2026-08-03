@@ -20,6 +20,8 @@ DEFAULT_MODEL = "mlx-community/Qwen3-14B-4bit"
 SYSTEM_PROMPT = """You extract housing facts from public-record document text.
 Return JSON only. Never guess or complete missing facts.
 Only report an address or unit label when the supplied text supports it.
+An equipment, HVAC, electrical, plumbing, elevator, or construction "unit" is not
+a home. Never return those as apartment labels.
 Keep evidence as short verbatim snippets from the supplied text.
 Use this schema exactly:
 {
