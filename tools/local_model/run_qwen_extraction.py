@@ -93,6 +93,13 @@ def call_model(base_url, model, record, max_tokens, temperature, timeout):
     return content, parse_json(content)
 
 
+def cache_key(record):
+    """Fields that determine extraction; filing URLs do not change the text facts."""
+    return (
+        record.get("source_type"), record.get("target_address"), record.get("text"),
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input", required=True, help="Input JSONL document packets")
@@ -106,16 +113,9 @@ def main():
     if args.max_tokens <= 0 or not 0 <= args.temperature <= 2:
         parser.error("max-tokens must be positive and temperature must be between 0 and 2")
 
-    output = Path(args.output)
-    output.parent.mkdir(parents=True, exist_ok=True)
-    completed = set()
-    if output.exists():
-        with output.open(encoding="utf-8") as handle:
-            for line in handle:
-                if line.strip():
-                    completed.add(json.loads(line)["id"])
-
-    with open(args.input, encoding="utf-8") as source, output.open("a", encoding="utf-8") as sink:
+    records = []
+    records_by_id = {}
+    with open(args.input, encoding="utf-8") as source:
         for line_number, line in enumerate(source, 1):
             if not line.strip():
                 continue
@@ -123,6 +123,25 @@ def main():
             if not record.get("id") or not record.get("text"):
                 print(f"skip line {line_number}: id and text are required", file=sys.stderr)
                 continue
+            records.append(record)
+            records_by_id[record["id"]] = record
+
+    output = Path(args.output)
+    output.parent.mkdir(parents=True, exist_ok=True)
+    completed = set()
+    cached = {}
+    if output.exists():
+        with output.open(encoding="utf-8") as handle:
+            for line in handle:
+                if line.strip():
+                    result = json.loads(line)
+                    completed.add(result["id"])
+                    record = records_by_id.get(result["id"])
+                    if record and result.get("status") == "ok":
+                        cached[cache_key(record)] = result
+
+    with output.open("a", encoding="utf-8") as sink:
+        for record in records:
             if record["id"] in completed:
                 continue
             result = {
@@ -131,17 +150,26 @@ def main():
                 "model": args.model,
                 "base_url": args.base_url,
             }
-            try:
-                raw, parsed = call_model(
-                    args.base_url, args.model, record, args.max_tokens,
-                    args.temperature, args.timeout
-                )
-                result.update({"status": "ok" if parsed else "invalid_json", "parsed": parsed, "raw": raw})
-            except (HTTPError, URLError, TimeoutError, KeyError, json.JSONDecodeError) as exc:
-                result.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
+            prior = cached.get(cache_key(record))
+            if prior:
+                result.update({
+                    "status": "ok", "parsed": prior["parsed"], "raw": prior.get("raw", ""),
+                    "reused_from": prior["id"],
+                })
+            else:
+                try:
+                    raw, parsed = call_model(
+                        args.base_url, args.model, record, args.max_tokens,
+                        args.temperature, args.timeout
+                    )
+                    result.update({"status": "ok" if parsed else "invalid_json", "parsed": parsed, "raw": raw})
+                except (HTTPError, URLError, TimeoutError, KeyError, json.JSONDecodeError) as exc:
+                    result.update({"status": "error", "error": f"{type(exc).__name__}: {exc}"})
             sink.write(json.dumps(result, ensure_ascii=True) + "\n")
             sink.flush()
             completed.add(record["id"])
+            if result.get("status") == "ok":
+                cached[cache_key(record)] = result
             print(f"processed {record['id']}", flush=True)
 
 

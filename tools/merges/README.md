@@ -227,8 +227,9 @@ python3 tools/local_model/run_qwen_extraction.py \
 
 It uses `http://100.78.191.106:8080/v1`, `mlx-community/Qwen3-14B-4bit`,
 `max_tokens=1024`, and `temperature=0.2` by default. It writes the raw model
-response alongside parsed JSON and never writes to the catalog. Do not send raw
-documents to a cloud model.
+response alongside parsed JSON and never writes to the catalog. Identical source
+text at the same address reuses a completed local result across related filing IDs.
+Do not send raw documents to a cloud model.
 
 To make packets from downloaded PDFs, create a manifest with columns
 `id,local_path,source_type,target_address,source_url`, then run:
