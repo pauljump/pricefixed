@@ -31,6 +31,9 @@ SOURCES = {
         "dataset": "ygpa-z7cr", "bbl": "bbl", "boro": None, "block": "block", "lot": "lot",
         "address": ("house_number", "street_name"), "zip": "post_code", "unit": "apartment",
         "ref": "problem_id", "date": "received_date",
+        # The apartment field is also populated for building-wide and public-area
+        # complaints. HPD's own unit_type is the deterministic distinction.
+        "where": "unit_type = 'APARTMENT'",
     },
     "hpd_omo": {
         "dataset": "mdbu-nrqn", "bbl": "bbl", "boro": "boro_id", "block": "block", "lot": "lot",
@@ -72,6 +75,8 @@ def query_page(config, offset, limit, extra_where=None):
         f"min({config['ref']}) as source_ref", f"max({config['date']}) as observed_at"
     ])
     where = f"{config['unit']} IS NOT NULL AND {config['unit']} != ''"
+    if config.get("where"):
+        where = f"({where}) AND ({config['where']})"
     if extra_where:
         where = f"({where}) AND ({extra_where})"
     params = urlencode({

@@ -106,6 +106,10 @@ NON_DWELLING_UNIT_LABELS = {
     "BASEMENT", "CELLAR", "ROOF", "PUBLIC HALL", "PUBLIC AREA", "HALLWAY",
     "STAIRWAY", "STAIRWELL", "ELEVATOR", "ENTIRE BUILDING", "BUILDING WIDE",
     "BLDG", "BUILDING", "MEDICAL", "COMMERCIAL", "RETAIL", "OFFICE", "PARKING", "STORAGE", "RESIDENTIAL",
+    # HPD fields are short and often contain truncated versions of the same
+    # common-area values.
+    "BASE", "BASEM", "BASEME", "BSMT", "BSMNT", "BLD", "BLDG.", "BUILDI",
+    "BUILD", "ENT", "ENTIRE", "LOBBY", "ALL", "NA", "N/A", "ANON", "PVT",
 }
 
 # The archived Vayo all-NYC-unit export contains a small number of scraper
