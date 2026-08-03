@@ -19,7 +19,7 @@ def fetch(row):
         with urlopen(request, timeout=30) as response:
             pdf = response.read()
         text = subprocess.run(
-            ["pdftotext", "-", "-"], input=pdf, stdout=subprocess.PIPE,
+            ["pdftotext", "-layout", "-", "-"], input=pdf, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, check=True,
         ).stdout.decode("utf-8", errors="replace")
         match = TAX_CLASS_RE.search(text)
