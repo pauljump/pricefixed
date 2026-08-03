@@ -199,6 +199,7 @@ from the canonical homes table. The dry run is the default:
 ```bash
 python3 tools/merges/merge_dof_unit_lot_classifications.py \
   --classifications /data/dof-unit-lot-tax-classes.csv \
+  --addresses /data/pricefixed-dof-unit-addresses-accepted.csv \
   --catalog-db /data/catalog.db \
   --summary /data/dof-unit-lot-merge-summary.json
 

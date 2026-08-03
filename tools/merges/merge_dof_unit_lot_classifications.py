@@ -36,16 +36,27 @@ def load_rows(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--classifications", required=True)
+    parser.add_argument("--addresses", help="validated DOF Statement address CSV")
     parser.add_argument("--catalog-db", required=True)
     parser.add_argument("--summary", required=True)
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
 
     rows = load_rows(args.classifications)
+    address_evidence = {}
+    if args.addresses:
+        for row in load_rows(args.addresses):
+            if row.get("validation_status") and row["validation_status"] != "accepted":
+                continue
+            if normalize_address(row.get("address")):
+                address_evidence[row["unit_lot_bbl"]] = row
     residential = [row for row in rows if row["classification"] == "residential_tax_class"]
     nonresidential = [row for row in rows if row["classification"] == "nonresidential_tax_class"]
     missing = [row for row in rows if row["classification"] == "tax_class_not_found"]
-    residential_addresses = [row for row in residential if normalize_address(row.get("address"))]
+    residential_addresses = [
+        row for row in residential
+        if normalize_address(address_evidence.get(row["unit_lot_bbl"], row).get("address"))
+    ]
 
     catalog = sqlite3.connect(args.catalog_db)
     catalog.execute("PRAGMA busy_timeout=60000")
@@ -66,6 +77,7 @@ def main():
 
     summary = {
         "input_unit_lots": len(rows),
+        "validated_statement_addresses": len(address_evidence),
         "residential_unit_lots": len(residential),
         "residential_unit_lots_with_statement_address": len(residential_addresses),
         "nonresidential_unit_lots": len(nonresidential),
@@ -159,11 +171,12 @@ def main():
         unit_id = catalog.execute(
             "SELECT unit_id FROM units WHERE bbl=? AND normalized_unit=?", (bbl, normalized_unit)
         ).fetchone()[0]
-        address = row.get("address", "")
+        address_row = address_evidence.get(bbl, row)
+        address = address_row.get("address", "")
         normalized = normalize_address(address)
         if not normalized:
             continue
-        source_url = row.get("address_source_url", "")
+        source_url = address_row.get("source_url") or row.get("address_source_url", "")
         observed_at = statement_date(source_url) or stamp[:10]
         source_ref = stable_id("dof_soa", bbl, observed_at)
         document_id = stable_id("doc", "dof_statement_of_account", source_ref)
