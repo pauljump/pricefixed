@@ -5,6 +5,7 @@ import json
 import sqlite3
 import time
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
@@ -75,8 +76,19 @@ def query_page(config, offset, limit):
     })
     url = f"{API}/{config['dataset']}.json?{params}"
     request = Request(url, headers={"User-Agent": "pricefixed-public-records/1.0"})
-    with urlopen(request, timeout=180) as response:
-        return json.loads(response.read()), url
+    for attempt in range(5):
+        try:
+            with urlopen(request, timeout=180) as response:
+                return json.loads(response.read()), url
+        except HTTPError as exc:
+            if exc.code < 500 and exc.code != 429:
+                raise
+            if attempt == 4:
+                raise
+        except (URLError, TimeoutError):
+            if attempt == 4:
+                raise
+        time.sleep(2 ** attempt)
 
 
 def init_db(conn):
