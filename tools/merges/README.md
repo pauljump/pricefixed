@@ -186,6 +186,19 @@ It uses `http://100.78.191.106:8080/v1`, `mlx-community/Qwen3-14B-4bit`,
 `max_tokens=1024`, and `temperature=0.2` by default. It writes the raw model
 response alongside parsed JSON and never writes to the catalog. Do not send raw
 documents to a cloud model.
+
+To make packets from downloaded PDFs, create a manifest with columns
+`id,local_path,source_type,target_address,source_url`, then run:
+
+```bash
+python3 tools/local_model/build_document_packets.py \
+  --manifest /data/dob-documents.csv \
+  --output /data/dob-document-packets.jsonl \
+  --skipped /data/dob-documents-skipped.jsonl
+```
+
+This uses local `pdfinfo` and `pdftotext`, emits one packet per text-bearing page,
+and records scanned or unreadable PDFs for a later OCR pass.
 - Same-street 2-family addresses: `merge_same_street_two_family.py` adds only the
   conservative subset where PLUTO says there are exactly two residential units
   and PAD has exactly two addresses on the same street. These are address-level
