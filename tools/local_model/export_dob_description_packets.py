@@ -29,10 +29,10 @@ def main():
     written = 0
     with output.open("w", encoding="utf-8") as handle:
         rows = source.execute(
-            "SELECT job_filing_number,bbl,address,description,extracted_labels "
+            "SELECT job_filing_number,bbl,address,description,extracted_labels,filing_date "
             "FROM descriptions WHERE status='explicit_candidate' ORDER BY job_filing_number"
         )
-        for job, bbl, address, description, labels_json in rows:
+        for job, bbl, address, description, labels_json, filing_date in rows:
             if not bbl:
                 continue
             missing = []
@@ -55,6 +55,7 @@ def main():
                 "text": description,
                 "candidate_labels": missing,
                 "bbl": bbl,
+                "observed_at": filing_date,
             }
             handle.write(json.dumps(packet, ensure_ascii=True) + "\n")
             written += 1
