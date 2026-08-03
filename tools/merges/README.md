@@ -208,6 +208,9 @@ python3 tools/merges/merge_dof_unit_lot_classifications.py \
 # Repeat with --apply after reviewing the counts.
 ```
 
+If a historical fallback run classifies a small residual queue, pass the earlier
+classification CSV as `--baseline-classifications` so only changed rows are applied.
+
 Source documents and observations remain in the catalog when a lot is excluded;
 only its resolved home identity is removed.
 

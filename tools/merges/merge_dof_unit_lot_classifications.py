@@ -36,6 +36,7 @@ def load_rows(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--classifications", required=True)
+    parser.add_argument("--baseline-classifications", help="apply only rows whose classification changed")
     parser.add_argument("--addresses", help="validated DOF Statement address CSV")
     parser.add_argument("--catalog-db", required=True)
     parser.add_argument("--summary", required=True)
@@ -43,6 +44,15 @@ def main():
     args = parser.parse_args()
 
     rows = load_rows(args.classifications)
+    if args.baseline_classifications:
+        baseline = {
+            row["unit_lot_bbl"]: row.get("classification", "")
+            for row in load_rows(args.baseline_classifications)
+        }
+        rows = [
+            row for row in rows
+            if row.get("classification", "") != baseline.get(row["unit_lot_bbl"], "")
+        ]
     address_evidence = {}
     if args.addresses:
         for row in load_rows(args.addresses):
@@ -55,7 +65,10 @@ def main():
     missing = [row for row in rows if row["classification"] == "tax_class_not_found"]
     residential_addresses = [
         row for row in residential
-        if normalize_address(address_evidence.get(row["unit_lot_bbl"], row).get("address"))
+        if normalize_address(
+            address_evidence.get(row["unit_lot_bbl"], {}).get("address") or
+            row.get("address") or row.get("assessment_address")
+        )
     ]
 
     catalog = sqlite3.connect(args.catalog_db)
@@ -79,7 +92,7 @@ def main():
         "input_unit_lots": len(rows),
         "validated_statement_addresses": len(address_evidence),
         "residential_unit_lots": len(residential),
-        "residential_unit_lots_with_statement_address": len(residential_addresses),
+        "residential_unit_lots_with_official_address": len(residential_addresses),
         "nonresidential_unit_lots": len(nonresidential),
         "unclassified_unit_lots": len(missing),
         "existing_nonresidential_units_to_remove": existing_nonres_units,
@@ -172,43 +185,47 @@ def main():
             "SELECT unit_id FROM units WHERE bbl=? AND normalized_unit=?", (bbl, normalized_unit)
         ).fetchone()[0]
         address_row = address_evidence.get(bbl, row)
-        address = address_row.get("address", "")
+        address = address_row.get("address") or row.get("address") or row.get("assessment_address", "")
         normalized = normalize_address(address)
         if not normalized:
             continue
-        source_url = address_row.get("source_url") or row.get("address_source_url", "")
+        statement_url = address_row.get("source_url") or row.get("address_source_url", "")
+        source_url = statement_url or row.get("assessment_source_url", "")
+        address_catalog_source = (
+            "dof_statement_of_account" if statement_url else "dof_property_assessment_bulk"
+        )
         observed_at = statement_date(source_url) or stamp[:10]
-        source_ref = stable_id("dof_soa", bbl, observed_at)
-        document_id = stable_id("doc", "dof_statement_of_account", source_ref)
-        observation_id = stable_id("obs", "dof_statement_of_account", source_ref, "unit_lot_address")
+        source_ref = stable_id("dof_unit_address", bbl, observed_at, address_catalog_source)
+        document_id = stable_id("doc", address_catalog_source, source_ref)
+        observation_id = stable_id("obs", address_catalog_source, source_ref, "unit_lot_address")
         payload = json.dumps({
             "unit_lot_bbl": bbl, "unit_designation": label, "address": address,
-            "statement_url": source_url, "assessment_year": row.get("assessment_year"),
+            "address_source_url": source_url, "assessment_year": row.get("assessment_year"),
             "tax_class": row.get("tax_class"), "building_class": row.get("building_class"),
             "assessment_source_url": row.get("assessment_source_url"),
         }, sort_keys=True)
         catalog.execute(
             "INSERT OR IGNORE INTO source_documents(document_id,source,source_ref,retrieved_at,payload,payload_kind) "
             "VALUES (?,?,?,?,?,?)",
-            (document_id, "dof_statement_of_account", source_ref, stamp, payload, "extracted_public_record_fields"),
+            (document_id, address_catalog_source, source_ref, stamp, payload, "extracted_public_record_fields"),
         )
         catalog.execute(
             "INSERT INTO buildings(bbl,source,first_seen,last_seen) VALUES (?,?,?,?) "
             "ON CONFLICT(bbl) DO UPDATE SET last_seen=excluded.last_seen",
-            (bbl, "dof_statement_of_account", stamp, stamp),
+            (bbl, address_catalog_source, stamp, stamp),
         )
         catalog.execute(
             "INSERT INTO addresses(address_id,bbl,address,normalized,zipcode,source) VALUES (?,?,?,?,?,?) "
             "ON CONFLICT(bbl,normalized) DO UPDATE SET address=excluded.address,zipcode=excluded.zipcode",
             (stable_id("addr", bbl, normalized), bbl, address, normalized, row.get("zipcode"),
-             "dof_statement_of_account"),
+             address_catalog_source),
         )
         premise_id = stable_id("premise", bbl, normalized)
         addressable_id = stable_id("addressable_unit", premise_id, normalized_unit)
         catalog.execute(
             "INSERT INTO premises(premise_id,bbl,address,normalized,zipcode,source,first_seen,last_seen) "
             "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(bbl,normalized) DO UPDATE SET last_seen=excluded.last_seen",
-            (premise_id, bbl, address, normalized, row.get("zipcode"), "dof_statement_of_account", stamp, stamp),
+            (premise_id, bbl, address, normalized, row.get("zipcode"), address_catalog_source, stamp, stamp),
         )
         premise_id = catalog.execute(
             "SELECT premise_id FROM premises WHERE bbl=? AND normalized=?", (bbl, normalized)
@@ -230,7 +247,7 @@ def main():
             "address,unit_label,status,raw_fields,evidence_grade) VALUES (?,?,?,?,?,?,?,?,?,?,?) "
             "ON CONFLICT(source,source_ref,observed_at,observation_kind) DO UPDATE SET document_id=excluded.document_id,"
             "address=excluded.address,unit_label=excluded.unit_label,raw_fields=excluded.raw_fields",
-            (observation_id, document_id, "dof_statement_of_account", source_ref, observed_at,
+            (observation_id, document_id, address_catalog_source, source_ref, observed_at,
              "official_unit_lot_address", address, label, "reported", payload, "source_document"),
         )
         for entity_type, entity_id, method, rationale in (
