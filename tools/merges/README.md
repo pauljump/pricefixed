@@ -267,7 +267,25 @@ python3 tools/merges/merge_dob_description_results.py \
   --csv /data/dob-description-qwen-accepted.csv \
   --catalog-db /data/catalog.db \
   --summary /data/dob-description-merge-summary.json \
-  --source dob_now_job_description_units
+    --source dob_now_job_description_units
+```
+
+Official DOB-issued OATH cases provide a separate violation-description source.
+The collector stores only ticket/location/date text needed for unit evidence and
+does not retain respondent names, hearing balances, or mailing addresses:
+
+```bash
+python3 tools/merges/mine_oath_description_units.py \
+  --db /data/oath-dob-description-units.db
+
+python3 tools/local_model/export_dob_description_packets.py \
+  --descriptions-db /data/oath-dob-description-units.db \
+  --catalog-db /data/catalog.db \
+  --output /data/oath-dob-description-packets.jsonl \
+  --progress-source oath_dob_descriptions \
+  --dataset jz4z-kudi --id-field ticket_number \
+  --packet-prefix oath-dob-description \
+  --source-type oath_dob_violation_description
 ```
 
 For an unattended run where the current DOB-NOW queue is already active, the queue

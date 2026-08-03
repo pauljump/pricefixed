@@ -4,6 +4,7 @@ import argparse
 import json
 import re
 import sqlite3
+import sys
 import time
 from pathlib import Path
 from urllib.parse import urlencode
@@ -16,11 +17,8 @@ WHERE = (
     "(upper(job_description) like '%APT%' OR upper(job_description) like '%APARTMENT%' "
     "OR upper(job_description) like '%UNIT%')"
 )
-LABEL_RE = re.compile(
-    r"\b(?:APT|APARTMENT|DWELLING\s+UNIT|RESIDENTIAL\s+UNIT)\s*(?:NO\.?\s*|#\s*)?"
-    r"([A-Z]?\d[A-Z0-9-]{0,7}|\d+[A-Z][A-Z0-9-]{0,7})\b",
-    re.IGNORECASE,
-)
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
 
 
 def normalize_bbl(value):
@@ -45,6 +43,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", required=True)
     parser.add_argument("--batch-size", type=int, default=50000)
+    parser.add_argument("--reclassify", action="store_true", help="Reparse stored descriptions without downloading")
     args = parser.parse_args()
     conn = sqlite3.connect(args.db)
     conn.executescript("""
@@ -61,6 +60,23 @@ def main():
     """)
     state = conn.execute("SELECT offset,complete FROM progress WHERE source='dob_descriptions'").fetchone()
     offset = state[0] if state else 0
+    if state and state[1] and args.reclassify:
+        rows = conn.execute("SELECT job_filing_number,description FROM descriptions")
+        updates = []
+        for job, description in rows:
+            labels = extract_explicit_unit_labels(description)
+            updates.append((json.dumps(labels), "explicit_candidate" if labels else "ambiguous_unit_word", job))
+            if len(updates) >= 10000:
+                conn.executemany("UPDATE descriptions SET extracted_labels=?,status=? WHERE job_filing_number=?", updates)
+                conn.commit()
+                updates = []
+        if updates:
+            conn.executemany("UPDATE descriptions SET extracted_labels=?,status=? WHERE job_filing_number=?", updates)
+            conn.commit()
+        explicit = conn.execute("SELECT COUNT(*) FROM descriptions WHERE status='explicit_candidate'").fetchone()[0]
+        print(f"reclassified stored DOB descriptions; explicit_candidates={explicit}")
+        conn.close()
+        return
     if state and state[1]:
         print("DOB description mining already complete")
         return
@@ -69,7 +85,7 @@ def main():
         output = []
         for row in rows:
             description = str(row.get("job_description") or "").strip()
-            labels = list(dict.fromkeys(match.upper() for match in LABEL_RE.findall(description)))
+            labels = extract_explicit_unit_labels(description)
             address = " ".join(str(row.get(field) or "").strip().upper()
                                for field in ("house_no", "street_name") if row.get(field))
             output.append((str(row.get("job_filing_number") or ""), normalize_bbl(row.get("bbl")),

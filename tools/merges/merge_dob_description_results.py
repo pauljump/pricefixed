@@ -26,6 +26,12 @@ def main():
     parser.add_argument("--catalog-db", required=True)
     parser.add_argument("--summary", required=True)
     parser.add_argument("--source", default="dob_now_job_description_units")
+    parser.add_argument(
+        "--methodology",
+        default=("Explicit apartment label in an official DOB job description; extracted by deterministic regex, "
+                 "reviewed by the documented local Qwen model, and accepted only when its evidence is verbatim source text"),
+    )
+    parser.add_argument("--match-rationale", default="Official source supplies the BBL and verbatim apartment-label evidence")
     parser.add_argument("--apply", action="store_true")
     args = parser.parse_args()
     with open(args.csv, newline="", encoding="utf-8") as handle:
@@ -63,10 +69,7 @@ def main():
     catalog.execute(
         "INSERT INTO sources(source,source_kind,methodology,first_seen,last_seen) VALUES (?,?,?,?,?) "
         "ON CONFLICT(source) DO UPDATE SET last_seen=excluded.last_seen",
-        (args.source, "public_record",
-         "Explicit apartment label in an official DOB job description; extracted by deterministic regex, "
-         "reviewed by the documented local Qwen model, and accepted only when its evidence is verbatim source text",
-         stamp, stamp),
+        (args.source, "public_record", args.methodology, stamp, stamp),
     )
     for (bbl, normalized), (row, _normalized) in candidates.items():
         label = row["unit_label"].strip()
@@ -143,8 +146,7 @@ def main():
                 "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(observation_id,entity_type) DO UPDATE SET "
                 "entity_id=excluded.entity_id,status=excluded.status,confidence=excluded.confidence",
                 (observation_id, entity_type, entity_id, "resolved", 1.0,
-                 "official_bbl_and_verified_description_label",
-                 "DOB supplies the BBL and verbatim apartment-label evidence", stamp),
+                 "official_bbl_and_verified_description_label", args.match_rationale, stamp),
             )
     catalog.commit()
     summary["catalog_writes"] = 1

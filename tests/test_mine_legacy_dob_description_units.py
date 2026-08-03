@@ -15,7 +15,7 @@ class LegacyDobDescriptionTest(unittest.TestCase):
 
     def test_only_extracts_explicit_residential_unit_language(self):
         text = "REPLACE HVAC UNIT 4. RENOVATE APARTMENT #3B AND DWELLING UNIT 2A."
-        self.assertEqual(MODULE.LABEL_RE.findall(text), ["3B", "2A"])
+        self.assertEqual(MODULE.extract_explicit_unit_labels(text), ["3B", "2A"])
 
 
 if __name__ == "__main__":
