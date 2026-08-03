@@ -17,6 +17,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--catalog-db", required=True)
     parser.add_argument("--input", required=True)
+    parser.add_argument("--retry", help="optional retry CSV; address_found rows replace base results")
     parser.add_argument("--accepted", required=True)
     parser.add_argument("--rejected", required=True)
     parser.add_argument("--summary", required=True)
@@ -31,24 +32,32 @@ def main():
     finally:
         conn.close()
 
+    input_rows = {}
+    with open(args.input, encoding="utf-8", newline="") as handle:
+        input_rows = {row["unit_lot_bbl"]: row for row in csv.DictReader(handle)}
+    if args.retry:
+        with open(args.retry, encoding="utf-8", newline="") as handle:
+            for row in csv.DictReader(handle):
+                if row["status"] == "address_found":
+                    input_rows[row["unit_lot_bbl"]] = row
+
     accepted = []
     rejected = []
-    with open(args.input, encoding="utf-8", newline="") as handle:
-        for row in csv.DictReader(handle):
-            bbl = normalize(row["unit_lot_bbl"])
-            address = normalize(row["address"])
-            reasons = []
-            if row["status"] != "address_found":
-                reasons.append(row["status"])
-            if bbl not in official:
-                reasons.append("not_in_official_unit_lots")
-            if not address:
-                reasons.append("empty_address")
-            result = {**row, "unit_lot_bbl": bbl, "address": address,
-                      "official_unit_designation": official.get(bbl, ""),
-                      "validation_status": "accepted" if not reasons else "rejected",
-                      "validation_reason": ";".join(reasons)}
-            (accepted if not reasons else rejected).append(result)
+    for row in input_rows.values():
+        bbl = normalize(row["unit_lot_bbl"])
+        address = normalize(row["address"])
+        reasons = []
+        if row["status"] != "address_found":
+            reasons.append(row["status"])
+        if bbl not in official:
+            reasons.append("not_in_official_unit_lots")
+        if not address:
+            reasons.append("empty_address")
+        result = {**row, "unit_lot_bbl": bbl, "address": address,
+                  "official_unit_designation": official.get(bbl, ""),
+                  "validation_status": "accepted" if not reasons else "rejected",
+                  "validation_reason": ";".join(reasons)}
+        (accepted if not reasons else rejected).append(result)
 
     fields = list(accepted[0] if accepted else rejected[0])
     for path, rows in ((Path(args.accepted), accepted), (Path(args.rejected), rejected)):
