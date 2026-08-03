@@ -66,8 +66,10 @@ distinct building, address, and raw label. It does not write to the catalog.
 
 Run `prepare_public_unit_candidates.py` next. This keeps only compact, single-dwelling
 identifiers and withholds floor descriptions, commercial spaces, common areas, and
-strings that combine several apartments. The raw rejected rows remain in the mentions
-database for later review. Inspect the JSON summary and run
+free text. It splits comma, slash, ampersand, and semicolon lists in DOB's explicitly
+plural apartment/condo field when every part is a compact identifier; other combined
+strings stay withheld. The raw rejected rows remain in the mentions database for later
+review. Inspect the JSON summary and run
 `merge_public_unit_candidates.py` without `--apply` before updating a catalog. The
 merge is idempotent and preserves the upstream record ID, dataset, date, and URL.
 

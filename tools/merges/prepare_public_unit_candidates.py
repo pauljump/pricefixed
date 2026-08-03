@@ -32,7 +32,7 @@ _FLOOR_CODE = re.compile(
 _UNIT_CODE = re.compile(r"^(?:\d{1,4}[A-Z]{0,3}|[A-Z]{1,3}\d{1,4}|PH[A-Z0-9]{0,3})$")
 
 
-def usable_dwelling_label(source, label):
+def usable_dwelling_label(source, label, allow_delimiters=False):
     """Accept only one compact apartment identifier from an official unit field.
 
     The raw mentions remain in the evidence database. Ambiguous floor, commercial,
@@ -46,11 +46,30 @@ def usable_dwelling_label(source, label):
         return None
     # Delimiters in DOB and eviction fields usually join several premises. The
     # compact pass must not collapse them into a made-up combined unit label.
-    if source in {"dob_jobs", "dob_permits", "evictions"} and re.search(r"[,/&;]", raw):
+    if (not allow_delimiters and source in {"dob_jobs", "dob_permits", "evictions"} and
+            re.search(r"[,/&;]", raw)):
         return None
     if not _UNIT_CODE.fullmatch(normalized):
         return None
     return normalized
+
+
+def usable_dwelling_labels(source, label):
+    """Return normalized/raw label pairs, splitting only DOB's plural unit field."""
+    raw = " ".join(str(label or "").strip().upper().split())
+    if source in {"dob_jobs", "dob_permits"} and re.search(r"[,/&;]", raw):
+        parts = [part.strip() for part in re.split(r"\s*[,/&;]\s*", raw) if part.strip()]
+        if len(parts) < 2:
+            return []
+        labels = []
+        for part in parts:
+            normalized = usable_dwelling_label(source, part, allow_delimiters=True)
+            if not normalized:
+                return []
+            labels.append((normalized, part))
+        return list(dict.fromkeys(labels))
+    normalized = usable_dwelling_label(source, raw)
+    return [(normalized, raw)] if normalized else []
 
 
 def main():
@@ -83,20 +102,21 @@ def main():
         )
         batch = []
         for bbl, address, zipcode, label, source_ref, observed_at, dataset, source_url in rows:
-            normalized = usable_dwelling_label(source, label)
-            if not normalized:
+            labels = usable_dwelling_labels(source, label)
+            if not labels:
                 rejected += 1
                 continue
-            batch.append((bbl, normalized, label, address, zipcode, source, source_ref,
-                          observed_at, dataset, source_url))
-            if len(batch) >= 20000:
-                conn.executemany(
-                    "INSERT OR IGNORE INTO unit_candidates "
-                    "(bbl,normalized_unit,unit_label,address,zipcode,source,source_ref,observed_at,dataset,source_url) "
-                    "VALUES (?,?,?,?,?,?,?,?,?,?)", batch,
-                )
-                conn.commit()
-                batch = []
+            for normalized, candidate_label in labels:
+                batch.append((bbl, normalized, candidate_label, address, zipcode, source, source_ref,
+                              observed_at, dataset, source_url))
+                if len(batch) >= 20000:
+                    conn.executemany(
+                        "INSERT OR IGNORE INTO unit_candidates "
+                        "(bbl,normalized_unit,unit_label,address,zipcode,source,source_ref,observed_at,dataset,source_url) "
+                        "VALUES (?,?,?,?,?,?,?,?,?,?)", batch,
+                    )
+                    conn.commit()
+                    batch = []
         if batch:
             conn.executemany(
                 "INSERT OR IGNORE INTO unit_candidates "

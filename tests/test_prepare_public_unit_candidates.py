@@ -27,6 +27,19 @@ class UsableDwellingLabelTest(unittest.TestCase):
             with self.subTest(label=label):
                 self.assertIsNone(MODULE.usable_dwelling_label("dob_jobs", label))
 
+    def test_splits_dob_plural_unit_field(self):
+        self.assertEqual(
+            MODULE.usable_dwelling_labels("dob_jobs", "5D/6D"),
+            [("5D", "5D"), ("6D", "6D")],
+        )
+        self.assertEqual(
+            MODULE.usable_dwelling_labels("dob_jobs", "002, 003"),
+            [("2", "002"), ("3", "003")],
+        )
+
+    def test_does_not_split_eviction_premise_text(self):
+        self.assertEqual(MODULE.usable_dwelling_labels("evictions", "5D/6D"), [])
+
     def test_rejects_free_text_and_keeps_raw_hpd_evidence_outside_catalog(self):
         self.assertIsNone(MODULE.usable_dwelling_label("hpd_problems", "APARTMENT"))
         self.assertIsNone(MODULE.usable_dwelling_label("hpd_problems", "2ND FLO"))
