@@ -252,6 +252,17 @@ python3 tools/local_model/export_dob_description_packets.py \
   --source-type legacy_dob_job_description
 ```
 
+After the local run and deterministic verifier finish, review the dry-run summary
+and merge the accepted CSV with its source-specific label:
+
+```bash
+python3 tools/merges/merge_dob_description_results.py \
+  --csv /data/dob-description-qwen-accepted.csv \
+  --catalog-db /data/catalog.db \
+  --summary /data/dob-description-merge-summary.json \
+  --source dob_now_job_description_units
+```
+
 To make packets from downloaded PDFs, create a manifest with columns
 `id,local_path,source_type,target_address,source_url`, then run:
 
