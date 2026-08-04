@@ -47,6 +47,7 @@ class ExplicitUnitMentionTest(unittest.TestCase):
         self.assertEqual(extract_explicit_unit_labels("apartment 3 including a bath"), ["3"])
         self.assertEqual(extract_explicit_unit_labels("APT #2FLINCLUDING WORK"), [])
         self.assertEqual(extract_explicit_unit_labels("apartment 2nd floor"), [])
+        self.assertEqual(extract_explicit_unit_labels("apt 1stfl, 1st story"), [])
         self.assertEqual(extract_explicit_unit_labels("Apartment 4ND."), [])
 
     def test_splits_prose_concatenated_to_a_label(self):

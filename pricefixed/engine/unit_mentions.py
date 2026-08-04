@@ -38,7 +38,8 @@ _THRU_RANGE = re.compile(
 def _plausible_label(label, allow_ordinal=False):
     if label.isdigit() and len(label) > 4:
         return False
-    return allow_ordinal or not re.fullmatch(r"\d+(?:ST|ND|RD|TH|FL|FLOOR)", label)
+    floor = r"\d+(?:(?:ST|ND|RD|TH)(?:FL|FLO|FLOOR)?|FL|FLO|FLOOR)"
+    return allow_ordinal or not re.fullmatch(floor, label)
 
 
 def _expand_thru_range(token):
@@ -148,8 +149,8 @@ def extract_explicit_unit_labels(text):
                 previous and current
                 and previous.group("prefix").upper() == current.group("prefix").upper()
                 and previous.group("number") == current.group("number")
-                and len(previous.group("suffix")) >= 2
-                and len(current.group("suffix")) >= 2
+                and len(previous.group("suffix")) == 2
+                and len(current.group("suffix")) == 2
                 and previous.group("suffix")[0].upper() == current.group("suffix")[0].upper()
             )
             labels.extend(
