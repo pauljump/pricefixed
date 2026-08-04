@@ -11,6 +11,10 @@ class ExplicitUnitMentionTest(unittest.TestCase):
             extract_explicit_unit_labels("COMBINE APTS 2A &amp; 3R"),
             ["2A", "3R"],
         )
+        self.assertEqual(
+            extract_explicit_unit_labels("RENOVATE APTS 1R, 2R, &amp; 3R"),
+            ["1R", "2R", "3R"],
+        )
 
     def test_expands_clear_compounds_and_shorthand(self):
         self.assertEqual(extract_explicit_unit_labels("APARTMENT 14J/14K"), ["14J", "14K"])

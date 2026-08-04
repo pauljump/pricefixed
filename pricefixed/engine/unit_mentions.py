@@ -10,7 +10,7 @@ _MARKER = re.compile(
 )
 _TOKEN = re.compile(r"[A-Z]?\d+(?:\s+[A-Z]\b|[A-Z0-9]*)?(?:(?:/|-)[A-Z0-9]+)*", re.IGNORECASE)
 _SEPARATOR = re.compile(
-    r"\s*(?:,|&|\+|;|\.|AND\b)\s*"
+    r"\s*(?:,\s*(?:&|AND\b)?|&|\+|;|\.|AND\b)\s*"
     r"(?:(?:APTS?\.?|APARTMENTS?)\s*)?(?:(?:NO|NOS)\.?\s*|#\s*)?",
     re.IGNORECASE,
 )
