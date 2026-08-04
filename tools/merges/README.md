@@ -336,6 +336,17 @@ python3 tools/local_model/finish_remaining_description_queues.py \
 
 These collectors exclude owner, respondent, contractor, penalty, and payment fields.
 
+DOB NOW electrical permit descriptions provide another direct BBL-backed text source.
+The collector keeps only filing/property/date fields and description text, then the
+finisher runs the same net-new local-model gate:
+
+```bash
+python3 tools/local_model/finish_electrical_description_queue.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 DOF's current property-assessment table also has an apartment label, but it mixes
 years, assessment periods, whole tax lots, and commercial condo units. Audit only the
 current final period against the already imported official condo-unit-lot spine:
