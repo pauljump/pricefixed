@@ -65,6 +65,31 @@ def linked_entities(catalog, observation_ids, entity_type):
     return entities
 
 
+def delete_orphan_documents(catalog, document_ids):
+    """Delete candidate documents after one observation scan per SQLite bind batch."""
+    candidates = sorted({document_id for document_id in document_ids if document_id})
+    if not candidates:
+        return 0
+    referenced = set()
+    bind_limit = catalog.getlimit(sqlite3.SQLITE_LIMIT_VARIABLE_NUMBER)
+    for start in range(0, len(candidates), bind_limit):
+        batch = candidates[start:start + bind_limit]
+        placeholders = ",".join("?" for _ in batch)
+        referenced.update(
+            row[0] for row in catalog.execute(
+                f"SELECT DISTINCT document_id FROM observations "
+                f"WHERE document_id IN ({placeholders})",
+                batch,
+            )
+        )
+    orphans = [(document_id,) for document_id in candidates if document_id not in referenced]
+    catalog.executemany(
+        "DELETE FROM source_documents WHERE document_id=?",
+        orphans,
+    )
+    return len(orphans)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--packets", action="append", required=True)
@@ -110,13 +135,7 @@ def main():
         for observation_id in invalid_ids:
             catalog.execute("DELETE FROM entity_matches WHERE observation_id=?", (observation_id,))
             catalog.execute("DELETE FROM observations WHERE observation_id=?", (observation_id,))
-        for _, document_id in invalid:
-            if document_id:
-                catalog.execute(
-                    "DELETE FROM source_documents WHERE document_id=? AND NOT EXISTS "
-                    "(SELECT 1 FROM observations WHERE document_id=?)",
-                    (document_id, document_id),
-                )
+        delete_orphan_documents(catalog, (document_id for _, document_id in invalid))
         removed_addressable = 0
         for entity_id in addressable_ids:
             before = catalog.total_changes

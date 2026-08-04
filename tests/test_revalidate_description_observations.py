@@ -104,6 +104,10 @@ class DescriptionObservationRevalidationTest(unittest.TestCase):
                 catalog.execute("SELECT observation_id FROM observations ORDER BY observation_id").fetchall(),
                 [("obs-good",), ("obs-shared-support",)],
             )
+            self.assertEqual(
+                catalog.execute("SELECT document_id FROM source_documents ORDER BY document_id").fetchall(),
+                [("doc-good",), ("doc-shared-support",)],
+            )
             catalog.close()
 
 
