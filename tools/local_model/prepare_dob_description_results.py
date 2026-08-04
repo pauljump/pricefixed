@@ -78,7 +78,12 @@ def main():
     for packet_id, packet in packets.items():
         result = results.get(packet_id, {})
         parsed = result.get("parsed") or {}
-        candidates = {normalize_unit(label): label for label in packet["candidate_labels"]}
+        # Packets can outlive parser improvements made during a long local-model
+        # run. Recompute this whitelist so a stale packet cannot force a second
+        # model pass for a label the current deterministic grammar now supports.
+        candidates = {
+            normalize_unit(label): label for label in extractor(packet["text"])
+        }
         candidate_keys = set(candidates)
         description = normalize_text(packet["text"])
         model_labels = parsed.get("unit_labels") or []

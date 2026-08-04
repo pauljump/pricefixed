@@ -1,4 +1,5 @@
 import importlib.util
+import csv
 import json
 import subprocess
 import tempfile
@@ -80,6 +81,33 @@ class DobCandidateBoundaryTest(unittest.TestCase):
             ], capture_output=True, text=True)
         self.assertNotEqual(completed.returncode, 0)
         self.assertIn("Qwen run incomplete: 1/2 terminal results", completed.stderr)
+
+    def test_recomputes_candidates_when_packet_parser_is_stale(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packets = root / "packets.jsonl"
+            results = root / "results.jsonl"
+            packets.write_text(json.dumps({
+                "id": "stale", "text": "APARTMENTS 2A AND 2B", "bbl": "1000000001",
+                "candidate_labels": ["2A"], "target_address": "1 TEST ST",
+                "source_url": "https://example.test", "source_ref": "stale",
+            }) + "\n", encoding="utf-8")
+            results.write_text(json.dumps({
+                "id": "stale", "status": "ok",
+                "parsed": {
+                    "confidence": "high",
+                    "unit_labels": [{"label": "2B", "evidence": "2B"}],
+                },
+            }) + "\n", encoding="utf-8")
+            completed = subprocess.run([
+                "python3", str(SCRIPT), "--packets", str(packets), "--results", str(results),
+                "--accepted", str(root / "accepted.csv"),
+                "--rejected", str(root / "rejected.csv"),
+                "--summary", str(root / "summary.json"),
+            ], capture_output=True, text=True)
+            accepted = list(csv.DictReader((root / "accepted.csv").open(encoding="utf-8")))
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual([row["unit_label"] for row in accepted], ["2B"])
 
 
 if __name__ == "__main__":
