@@ -87,6 +87,7 @@ python3 catalog_export.py --db /path/to/catalog.db --out pricefixed-catalog-YYYY
   --release-id YYYY-MM-DD --commit "$(git rev-parse HEAD)"
 python3 catalog_report.py --db /path/to/catalog.db --out pricefixed-catalog-YYYY-MM-DD/quality-report.json \
   --release-id YYYY-MM-DD --commit "$(git rev-parse HEAD)"
+python3 catalog_verify_release.py pricefixed-catalog-YYYY-MM-DD
 ```
 
 These commands create the three CSV files, `source-policy.json`, `manifest.json`, and
