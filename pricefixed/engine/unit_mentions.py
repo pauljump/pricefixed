@@ -1,4 +1,5 @@
 """Conservative extraction of explicit apartment labels from public-record text."""
+import html
 import re
 
 
@@ -107,7 +108,7 @@ def extract_explicit_unit_labels(text):
     A short comma/and/period-separated label list is accepted. Ordinary prose
     ends the list because the next token must begin with a digit or letter-digit.
     """
-    text = str(text or "")
+    text = html.unescape(str(text or ""))
     labels = []
     for marker in _MARKER.finditer(text):
         tail = text[marker.end():marker.end() + 120]

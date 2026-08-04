@@ -7,6 +7,10 @@ class ExplicitUnitMentionTest(unittest.TestCase):
     def test_extracts_single_and_separated_lists(self):
         self.assertEqual(extract_explicit_unit_labels("WORK IN APT 6C"), ["6C"])
         self.assertEqual(extract_explicit_unit_labels("Apts 1R and 1F, 2R. 2F"), ["1R", "1F", "2R", "2F"])
+        self.assertEqual(
+            extract_explicit_unit_labels("COMBINE APTS 2A &amp; 3R"),
+            ["2A", "3R"],
+        )
 
     def test_expands_clear_compounds_and_shorthand(self):
         self.assertEqual(extract_explicit_unit_labels("APARTMENT 14J/14K"), ["14J", "14K"])

@@ -88,7 +88,7 @@ class DobCandidateBoundaryTest(unittest.TestCase):
             packets = root / "packets.jsonl"
             results = root / "results.jsonl"
             packets.write_text(json.dumps({
-                "id": "stale", "text": "APARTMENTS 2A AND 2B", "bbl": "1000000001",
+                "id": "stale", "text": "APARTMENTS 2A &amp; 2B", "bbl": "1000000001",
                 "candidate_labels": ["2A"], "target_address": "1 TEST ST",
                 "source_url": "https://example.test", "source_ref": "stale",
             }) + "\n", encoding="utf-8")
@@ -96,7 +96,7 @@ class DobCandidateBoundaryTest(unittest.TestCase):
                 "id": "stale", "status": "ok",
                 "parsed": {
                     "confidence": "high",
-                    "unit_labels": [{"label": "2B", "evidence": "2B"}],
+                    "unit_labels": [{"label": "2B", "evidence": "APARTMENTS 2A & 2B"}],
                 },
             }) + "\n", encoding="utf-8")
             completed = subprocess.run([

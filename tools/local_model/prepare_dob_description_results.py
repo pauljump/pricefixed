@@ -2,6 +2,7 @@
 """Verify local-Qwen DOB-description results against deterministic evidence."""
 import argparse
 import csv
+import html
 import json
 import re
 from collections import Counter
@@ -20,7 +21,7 @@ def normalize_unit(value):
 
 
 def normalize_text(value):
-    return " ".join(str(value or "").upper().split())
+    return " ".join(html.unescape(str(value or "")).upper().split())
 
 
 def candidate_is_standalone(label, description, extractor=extract_explicit_unit_labels):
