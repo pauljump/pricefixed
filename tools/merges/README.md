@@ -336,6 +336,35 @@ python3 tools/local_model/finish_remaining_description_queues.py \
 
 These collectors exclude owner, respondent, contractor, penalty, and payment fields.
 
+DOF's current property-assessment table also has an apartment label, but it mixes
+years, assessment periods, whole tax lots, and commercial condo units. Audit only the
+current final period against the already imported official condo-unit-lot spine:
+
+```bash
+python3 tools/merges/mine_dof_assessment_unit_labels.py \
+  --db /data/dof-assessment-unit-labels.db \
+  --catalog-db /data/catalog.db \
+  --accepted /data/dof-assessment-unit-labels-accepted.csv \
+  --rejected /data/dof-assessment-unit-labels-rejected.csv \
+  --summary /data/dof-assessment-unit-labels-summary.json
+```
+
+Only residential tax classes on an exact official condo unit-lot BBL survive. A row
+must agree with the condo registry's designation or fill a blank designation; conflicts
+are withheld. The collector never requests owner names, values, exemptions, or mailing
+addresses.
+
+Review the dry-run summary, then merge accepted labels:
+
+```bash
+python3 tools/merges/merge_dof_assessment_unit_labels.py \
+  --csv /data/dof-assessment-unit-labels-accepted.csv \
+  --catalog-db /data/catalog.db \
+  --summary /data/dof-assessment-unit-labels-merge-summary.json
+
+# Repeat with --apply after reviewing the counts.
+```
+
 For an unattended run where the current DOB-NOW queue is already active, the queue
 orchestrator waits for that PID, verifies and merges it, exports the now-net-new
 legacy queue, and processes that queue serially with the same local endpoint:

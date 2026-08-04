@@ -12,6 +12,7 @@
     "dof_annualized_sales",
     "dof_condo_unit_lots_direct",
     "dof_property_assessment_bulk",
+    "dof_property_assessment_unit_labels",
     "dof_rolling_sales",
     "dof_statement_of_account",
     "hpd_multiple_dwelling_registrations",
