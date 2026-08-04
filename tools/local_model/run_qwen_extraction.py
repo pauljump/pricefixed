@@ -213,7 +213,7 @@ def load_existing_results(output, records_by_id):
             if not record:
                 continue
             prior_fingerprint = result.get("input_fingerprint")
-            if prior_fingerprint and prior_fingerprint != input_fingerprint(record):
+            if prior_fingerprint != input_fingerprint(record):
                 continue
             completed.add(result["id"])
             if record and result.get("status") == "ok":

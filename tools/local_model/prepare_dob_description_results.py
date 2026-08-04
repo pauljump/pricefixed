@@ -12,6 +12,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
 from tools.merges.mine_dob_electrical_detail_units import extract_electrical_detail_labels
+from tools.local_model.run_qwen_extraction import input_fingerprint
 
 
 def normalize_unit(value):
@@ -32,7 +33,7 @@ def candidate_is_standalone(label, description, extractor=extract_explicit_unit_
     }
 
 
-def load_terminal_results(path):
+def load_terminal_results(path, records_by_id=None):
     """Keep the latest usable result per id; transport errors never prove completion."""
     results = {}
     with open(path, encoding="utf-8") as handle:
@@ -41,6 +42,10 @@ def load_terminal_results(path):
                 continue
             result = json.loads(line)
             if result.get("status") in {"ok", "invalid_json"}:
+                if records_by_id is not None:
+                    record = records_by_id.get(result["id"])
+                    if not record or result.get("input_fingerprint") != input_fingerprint(record):
+                        continue
                 results[result["id"]] = result
     return results
 
@@ -66,7 +71,7 @@ def main():
             if line.strip():
                 packet = json.loads(line)
                 packets[packet["id"]] = packet
-    results = load_terminal_results(args.results)
+    results = load_terminal_results(args.results, packets)
     missing = sum(packet_id not in results for packet_id in packets)
     if missing:
         raise SystemExit(

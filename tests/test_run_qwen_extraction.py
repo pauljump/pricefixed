@@ -30,8 +30,10 @@ class LocalQwenRunnerTest(unittest.TestCase):
             "error": {"id": "error", "source_type": "dob", "target_address": "3 MAIN ST", "text": "APT 4A"},
         }
         rows = [
-            {"id": "ok", "status": "ok", "parsed": {"unit_labels": []}},
-            {"id": "bad-json", "status": "invalid_json"},
+            {"id": "ok", "status": "ok", "parsed": {"unit_labels": []},
+             "input_fingerprint": MODULE.input_fingerprint(records["ok"])},
+            {"id": "bad-json", "status": "invalid_json",
+             "input_fingerprint": MODULE.input_fingerprint(records["bad-json"])},
             {"id": "error", "status": "error", "error": "connection refused"},
         ]
         with tempfile.TemporaryDirectory() as directory:
@@ -41,6 +43,18 @@ class LocalQwenRunnerTest(unittest.TestCase):
         self.assertEqual(completed, {"ok", "bad-json"})
         self.assertIn(MODULE.cache_key(records["ok"]), cached)
         self.assertNotIn("error", completed)
+
+    def test_resume_retries_unfingerprinted_legacy_results(self):
+        record = {"id": "legacy", "text": "APT 2A"}
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "results.jsonl"
+            output.write_text(
+                json.dumps({"id": "legacy", "status": "ok", "parsed": {}}) + "\n",
+                encoding="utf-8",
+            )
+            completed, cached = MODULE.load_existing_results(output, {"legacy": record})
+        self.assertEqual(completed, set())
+        self.assertEqual(cached, {})
 
     def test_resume_rejects_a_result_for_changed_model_inputs(self):
         original = {

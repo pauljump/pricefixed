@@ -60,17 +60,20 @@ class DobCandidateBoundaryTest(unittest.TestCase):
             root = Path(directory)
             packets = root / "packets.jsonl"
             results = root / "results.jsonl"
-            packets.write_text("".join(
-                json.dumps({
+            packet_rows = [{
                     "id": packet_id, "text": "APARTMENT 2A", "bbl": "1000000001",
                     "candidate_labels": ["2A"], "target_address": "1 TEST ST",
                     "source_url": "https://example.test", "source_ref": packet_id,
-                }) + "\n" for packet_id in ("present", "missing")
-            ))
+                } for packet_id in ("present", "missing")]
+            packets.write_text("".join(json.dumps(row) + "\n" for row in packet_rows))
+            present = packet_rows[0]
             results.write_text("".join(
                 json.dumps({
                     "id": result_id, "status": "ok",
                     "parsed": {"confidence": "high", "unit_labels": []},
+                    "input_fingerprint": (
+                        MODULE.input_fingerprint(present) if result_id == "present" else "unrelated"
+                    ),
                 }) + "\n" for result_id in ("present", "unrelated", "also-unrelated")
             ))
             completed = subprocess.run([
@@ -87,13 +90,15 @@ class DobCandidateBoundaryTest(unittest.TestCase):
             root = Path(directory)
             packets = root / "packets.jsonl"
             results = root / "results.jsonl"
-            packets.write_text(json.dumps({
+            packet = {
                 "id": "stale", "text": "APARTMENTS 2A &amp; 2B", "bbl": "1000000001",
                 "candidate_labels": ["2A"], "target_address": "1 TEST ST",
                 "source_url": "https://example.test", "source_ref": "stale",
-            }) + "\n", encoding="utf-8")
+            }
+            packets.write_text(json.dumps(packet) + "\n", encoding="utf-8")
             results.write_text(json.dumps({
                 "id": "stale", "status": "ok",
+                "input_fingerprint": MODULE.input_fingerprint(packet),
                 "parsed": {
                     "confidence": "high",
                     "unit_labels": [{"label": "2B", "evidence": "APARTMENTS 2A & 2B"}],
