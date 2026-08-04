@@ -72,6 +72,8 @@ URL, observed date when available, method, and match reason.
 | DOB after-hours `enclosed_work` | A boolean flag | Excluded |
 | BSA project descriptions and DOB safety violations | Housing counts or generic project language; no deterministic apartment labels in the live marker audit | No new units |
 | Elevator safety data | Building device records, not apartment identities | Building evidence only |
+| Encroachments and Defacements `unit` | On regular lots the numeric value usually tracks the building unit count; condo designations are already covered by tax-map sources | Counts or duplicate condo evidence only |
+| DOB sign and cellular-antenna descriptions | Marker hits describe attaching signs or use apartment words in business names; no explicit home labels | No new units |
 | Campaign Finance mailing addresses | Some public rows contain apartment-like mailing fields, but they are person-linked financial records rather than housing records | Anonymized PAD-match audit only; excluded from the catalog pending a separate policy decision |
 
 The Campaign Finance audit does not request or store names, employers, occupations,
