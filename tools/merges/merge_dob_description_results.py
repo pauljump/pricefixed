@@ -133,7 +133,7 @@ def main():
         catalog.execute(
             "INSERT INTO observations(observation_id,document_id,source,source_ref,observed_at,observation_kind,"
             "address,unit_label,status,raw_fields,evidence_grade) VALUES (?,?,?,?,?,?,?,?,?,?,?) "
-            "ON CONFLICT(source,source_ref,observed_at,observation_kind) DO UPDATE SET raw_fields=excluded.raw_fields",
+            "ON CONFLICT(observation_id) DO UPDATE SET raw_fields=excluded.raw_fields",
             (observation_id, document_id, args.source, source_ref, observed_at, "official_unit_label",
              address or None, label, "reported", payload, "source_document"),
         )

@@ -66,8 +66,8 @@ def main():
                 packet = json.loads(line)
                 packets[packet["id"]] = packet
     results = load_terminal_results(args.results)
-    if len(results) < len(packets):
-        missing = sum(packet_id not in results for packet_id in packets)
+    missing = sum(packet_id not in results for packet_id in packets)
+    if missing:
         raise SystemExit(
             f"Qwen run incomplete: {len(packets) - missing}/{len(packets)} terminal results"
         )

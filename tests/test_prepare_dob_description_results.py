@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -52,6 +53,33 @@ class DobCandidateBoundaryTest(unittest.TestCase):
             results = MODULE.load_terminal_results(path)
         self.assertEqual(set(results), {"retry", "done", "bad-json"})
         self.assertEqual(results["retry"]["status"], "ok")
+
+    def test_extra_results_cannot_hide_a_missing_packet(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            packets = root / "packets.jsonl"
+            results = root / "results.jsonl"
+            packets.write_text("".join(
+                json.dumps({
+                    "id": packet_id, "text": "APARTMENT 2A", "bbl": "1000000001",
+                    "candidate_labels": ["2A"], "target_address": "1 TEST ST",
+                    "source_url": "https://example.test", "source_ref": packet_id,
+                }) + "\n" for packet_id in ("present", "missing")
+            ))
+            results.write_text("".join(
+                json.dumps({
+                    "id": result_id, "status": "ok",
+                    "parsed": {"confidence": "high", "unit_labels": []},
+                }) + "\n" for result_id in ("present", "unrelated", "also-unrelated")
+            ))
+            completed = subprocess.run([
+                "python3", str(SCRIPT), "--packets", str(packets), "--results", str(results),
+                "--accepted", str(root / "accepted.csv"),
+                "--rejected", str(root / "rejected.csv"),
+                "--summary", str(root / "summary.json"),
+            ], capture_output=True, text=True)
+        self.assertNotEqual(completed.returncode, 0)
+        self.assertIn("Qwen run incomplete: 1/2 terminal results", completed.stderr)
 
 
 if __name__ == "__main__":

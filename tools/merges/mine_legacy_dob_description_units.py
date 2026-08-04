@@ -28,7 +28,13 @@ def make_bbl(borough, block, lot):
     lot_digits = "".join(char for char in str(lot or "") if char.isdigit())
     if not boro or not block_digits or not lot_digits:
         return ""
-    return boro + block_digits.zfill(5) + lot_digits.zfill(4)
+    block_number = int(block_digits)
+    lot_number = int(lot_digits)
+    if not 0 < block_number <= 99999 or not 0 < lot_number <= 9999:
+        return ""
+    # Legacy DOB sends already-padded values such as block=00271, lot=00047.
+    # Padding those strings directly creates an invalid 11-digit BBL.
+    return f"{boro}{block_number:05d}{lot_number:04d}"
 
 
 def query(offset, limit):
