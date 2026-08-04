@@ -21,13 +21,23 @@ DATASET = "kevu-8hby"
 API = f"https://data.cityofnewyork.us/resource/{DATASET}.json"
 
 
+def dataset_api(dataset):
+    return f"https://data.cityofnewyork.us/resource/{dataset}.json"
+
+
+def progress_source(dataset, year):
+    if dataset == DATASET:
+        return f"dof_historical_assessment_units_{year}"
+    return f"dof_historical_assessment_units_{dataset}_{year}"
+
+
 def house_number(value):
     parts = str(value or "").strip().split("-", 1)
     normalized = [part.lstrip("0") or "0" for part in parts]
     return "-".join(normalized)
 
 
-def query(year, offset, limit):
+def query(year, offset, limit, dataset=DATASET):
     fields = "bble,aptno,txcl,bldgcl,year4,hnum_lo,str_name,zip"
     classes = ",".join(f"'{value}'" for value in sorted(RESIDENTIAL_TAX_CLASSES))
     where = (
@@ -38,12 +48,15 @@ def query(year, offset, limit):
         "$select": fields, "$where": where, "$order": "bble",
         "$limit": limit, "$offset": offset,
     })
-    request = Request(f"{API}?{params}", headers={"User-Agent": "pricefixed-public-records/1.0"})
+    request = Request(
+        f"{dataset_api(dataset)}?{params}",
+        headers={"User-Agent": "pricefixed-public-records/1.0"},
+    )
     with urlopen(request, timeout=180) as response:
         return json.loads(response.read())
 
 
-def collect(stage, year, batch_size, pages=None):
+def collect(stage, year, batch_size, pages=None, dataset=DATASET):
     connection = sqlite3.connect(stage)
     connection.executescript("""
         PRAGMA journal_mode=WAL;
@@ -56,7 +69,7 @@ def collect(stage, year, batch_size, pages=None):
             updated_at TEXT NOT NULL
         );
     """)
-    source = f"dof_historical_assessment_units_{year}"
+    source = progress_source(dataset, year)
     state = connection.execute("SELECT offset,complete FROM progress WHERE source=?", (source,)).fetchone()
     offset = state[0] if state else 0
     if state and state[1]:
@@ -64,7 +77,7 @@ def collect(stage, year, batch_size, pages=None):
         return
     completed_pages = 0
     while True:
-        rows = query(year, offset, batch_size)
+        rows = query(year, offset, batch_size, dataset)
         output = []
         for row in rows:
             address = " ".join(part for part in (
@@ -99,10 +112,12 @@ def collect(stage, year, batch_size, pages=None):
     connection.close()
 
 
-def classify(stage, catalog_path, accepted_path, rejected_path, summary_path, year):
+def classify(
+    stage, catalog_path, accepted_path, rejected_path, summary_path, year, dataset=DATASET
+):
     stage_db = sqlite3.connect(f"file:{Path(stage).resolve()}?mode=ro", uri=True)
     state = stage_db.execute(
-        "SELECT complete FROM progress WHERE source=?", (f"dof_historical_assessment_units_{year}",)
+        "SELECT complete FROM progress WHERE source=?", (progress_source(dataset, year),)
     ).fetchone()
     if not state or state[0] != 1:
         raise SystemExit("historical DOF assessment mining is incomplete")
@@ -143,7 +158,7 @@ def classify(stage, catalog_path, accepted_path, rejected_path, summary_path, ye
             rejected.append((parid, aptno, designation or "", reason))
             continue
         source_ref = f"{parid}:{assessment_year}"
-        source_url = f"{API}?" + urlencode({
+        source_url = f"{dataset_api(dataset)}?" + urlencode({
             "$select": "bble,aptno,txcl,bldgcl,year4,hnum_lo,str_name,zip",
             "$where": f"bble='{parid}' AND year4='{assessment_year}'",
         })
@@ -167,7 +182,7 @@ def classify(stage, catalog_path, accepted_path, rejected_path, summary_path, ye
         writer.writerow(("unit_lot_bbl", "assessment_unit_label", "condo_unit_designation", "reason"))
         writer.writerows(rejected)
     summary = {
-        "dataset": DATASET, "assessment_year": year,
+        "dataset": dataset, "assessment_year": year,
         "stage_rows": len(accepted) + len(rejected), "net_new_candidates": len(accepted),
         "rejection_reasons": dict(sorted(reasons.items())), "catalog_writes": 0,
     }
@@ -183,13 +198,17 @@ def main():
     parser.add_argument("--rejected", required=True)
     parser.add_argument("--summary", required=True)
     parser.add_argument("--year", default="2017")
+    parser.add_argument("--dataset", default=DATASET)
     parser.add_argument("--batch-size", type=int, default=50000)
     parser.add_argument("--pages", type=int)
     args = parser.parse_args()
     if args.batch_size <= 0 or (args.pages is not None and args.pages <= 0):
         sys.exit("--batch-size and --pages must be positive")
-    collect(args.db, args.year, args.batch_size, args.pages)
-    classify(args.db, args.catalog_db, args.accepted, args.rejected, args.summary, args.year)
+    collect(args.db, args.year, args.batch_size, args.pages, args.dataset)
+    classify(
+        args.db, args.catalog_db, args.accepted, args.rejected, args.summary,
+        args.year, args.dataset,
+    )
 
 
 if __name__ == "__main__":

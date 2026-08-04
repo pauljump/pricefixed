@@ -82,6 +82,12 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
 - **DOB Complaints' `unit` column is not an apartment field.** A live metadata and
   value audit found 3.1 million nonblank rows, but values such as `MAN.`, `QNS.`, and
   `BKLYN` identify the DOB office or processing unit. It must never create homes.
+- **Asbestos Control's `ACM_UNIT` is a measurement field.** Live values are units such
+  as `Square Feet` and `Linear Feet`, not apartment identifiers.
+- **DOB NOW occupancy documents are not available to the unattended CLI.** The public
+  portal's Akamai layer returned HTTP 403 for scripted document retrieval. Keep the
+  ranked target queue, but do not report those documents as mined until an accessible
+  public endpoint exists.
 - **PAD address-count == PLUTO units_res is not a safe tiebreak for 2-family lots.**
   Tested against 62,347 candidates: only 4,585 (7.4%) were genuinely two dwellings on
   the same street ("28 JANE ST" / "30 JANE ST"). The other 57,762 were corner lots with
@@ -395,10 +401,11 @@ python3 tools/merges/mine_dof_assessment_unit_labels.py \
   --summary /data/dof-assessment-unit-labels-summary.json
 ```
 
-The historical 2017 DOF valuation snapshot is also auditable. It is held to a stricter
-rule: the BBL must still be an official unit lot, the tax row must report one
+The historical 2017 DOF valuation snapshots are also auditable. They are held to a
+stricter rule: the BBL must still be an official unit lot, the tax row must report one
 residential unit, and the current catalog must have neither a designation nor another
-unit identity on that lot:
+unit identity on that lot. The same command covers the separate Tax Class 1 archive
+by passing its dataset ID:
 
 ```bash
 python3 tools/merges/mine_dof_historical_assessment_unit_labels.py \
@@ -407,11 +414,19 @@ python3 tools/merges/mine_dof_historical_assessment_unit_labels.py \
   --accepted /data/dof-historical-assessment-accepted.csv \
   --rejected /data/dof-historical-assessment-rejected.csv \
   --summary /data/dof-historical-assessment-summary.json
+
+python3 tools/merges/mine_dof_historical_assessment_unit_labels.py \
+  --dataset m8p6-tp4b \
+  --db /data/dof-historical-tax-class-1-units.db \
+  --catalog-db /data/catalog.db \
+  --accepted /data/dof-historical-tax-class-1-accepted.csv \
+  --rejected /data/dof-historical-tax-class-1-rejected.csv \
+  --summary /data/dof-historical-tax-class-1-summary.json
 ```
 
-The August 2026 build found no net-new unit that passed those checks. That negative
-result is useful: older valuation labels must not revive retired parking/storage lots
-or create a second identity on a current condo unit lot.
+The August 2026 build found no net-new unit in either archive that passed those
+checks. That negative result is useful: older valuation labels must not revive
+retired parking/storage lots or create a second identity on a current condo unit lot.
 
 DOF's daily `CONDO_AREA` geometry can lead the weekly condominium-unit table. The
 delta miner accepts an absent unit BBL only when ACRIS confirms its apartment label,

@@ -6,7 +6,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from pricefixed.catalog import init_catalog_db
-from tools.merges.mine_dof_historical_assessment_unit_labels import classify, house_number, query
+from tools.merges.mine_dof_historical_assessment_unit_labels import (
+    classify, house_number, progress_source, query,
+)
 
 
 class HistoricalDofAssessmentUnitLabelTest(unittest.TestCase):
@@ -24,6 +26,17 @@ class HistoricalDofAssessmentUnitLabelTest(unittest.TestCase):
         self.assertIn("year4%3D%272017%27", url)
         self.assertIn("res_unit%3D1", url)
         self.assertIn("txcl+in", url)
+
+    @patch("tools.merges.mine_dof_historical_assessment_unit_labels.urlopen")
+    def test_query_can_audit_a_separate_historical_tax_class_table(self, urlopen):
+        response = urlopen.return_value.__enter__.return_value
+        response.read.return_value = b"[]"
+        self.assertEqual(query("2017", 0, 100, "m8p6-tp4b"), [])
+        self.assertIn("/m8p6-tp4b.json", urlopen.call_args.args[0].full_url)
+        self.assertEqual(
+            progress_source("m8p6-tp4b", "2017"),
+            "dof_historical_assessment_units_m8p6-tp4b_2017",
+        )
 
     def test_rejects_a_historical_alias_on_an_identified_unit_lot(self):
         with tempfile.TemporaryDirectory() as directory:
