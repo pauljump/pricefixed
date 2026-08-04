@@ -1,12 +1,14 @@
 {
   "included_sources": [
     "acris_property_legals",
+    "dcp_housing_project_description_units",
     "dob_now_approved_permits",
     "dob_approved_permit_description_units",
     "dob_now_certificates",
     "dob_ecb_violation_description_units",
     "dob_electrical_permit_detail_units",
     "dob_electrical_permit_description_units",
+    "dob_elevator_device_description_units",
     "dob_violation_description_units",
     "dob_now_job_description_units",
     "dob_now_job_filings",

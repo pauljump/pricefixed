@@ -376,6 +376,28 @@ python3 tools/local_model/finish_electrical_detail_queue.py \
   --work-dir /data/pricefixed-build
 ```
 
+DCP's housing-project table contains dated, BBL-backed descriptions of DOB-derived
+work. Apartment labels in those descriptions are treated as observed historical
+identities, not a claim that the apartment still exists today:
+
+```bash
+python3 tools/local_model/finish_dcp_housing_project_description_queue.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
+DOB elevator-device descriptions occasionally name an apartment. Because that
+table has no BBL, its collector accepts a row only when the physical address has
+one exact match in the official NYC PAD address spine:
+
+```bash
+python3 tools/local_model/finish_dob_elevator_detail_queue.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 When the conservative text parser improves, old staging databases are not silently
 reclassified. A final delta pass compares the current parser with each row's stored
 labels, sends only newly recognized and still-missing labels through local Qwen, and
