@@ -3,28 +3,75 @@ import re
 
 
 _MARKER = re.compile(
-    r"\b(?:APTS?\.?|APARTMENTS?|DWELLING\s+UNITS?|RESIDENTIAL\s+UNITS?)"
+    r"\b(?:APTS?\.?(?:'S)?|APARTMENTS?|DWELLING\s+UNITS?|RESIDENTIAL\s+UNITS?)"
     r"\s*(?:(?:NO|NOS)\.?\s*|#\s*)?",
     re.IGNORECASE,
 )
 _TOKEN = re.compile(r"[A-Z]?\d+(?:\s+[A-Z]\b|[A-Z0-9]*)?(?:(?:/|-)[A-Z0-9]+)*", re.IGNORECASE)
 _SEPARATOR = re.compile(
-    r"\s*(?:,|&|;|\.|\bAND\b)\s*"
+    r"\s*(?:,|&|\+|;|\.|AND\b)\s*"
     r"(?:(?:APTS?\.?|APARTMENTS?)\s*)?(?:(?:NO|NOS)\.?\s*|#\s*)?",
     re.IGNORECASE,
 )
 _PART = re.compile(r"(?P<prefix>[A-Z]*)(?P<number>\d+)(?P<suffix>[A-Z]*)", re.IGNORECASE)
+_INHERITED_SUFFIX = re.compile(r"[A-Z]\b", re.IGNORECASE)
+_SPACED_SUFFIX_LIST = re.compile(r"(?P<suffixes>(?:\s+[A-Z]\b){2,})", re.IGNORECASE)
+_CONCATENATED_PROSE = re.compile(
+    r"^(?P<label>[A-Z]{0,2}\d+[A-Z]{0,3}?)(?:"
+    r"INCLUDING|EXISTING|INSTALL(?:ATION)?|PROPOSED|MINOR|MNR|WITH|AND|ONLY"
+    r")[A-Z]*$",
+    re.IGNORECASE,
+)
+_TRAILING_NO = re.compile(r"^(?P<label>[A-Z]{0,2}\d+[A-Z]{0,3})NO$", re.IGNORECASE)
+_PROSE_AFTER_NO = re.compile(
+    r"\s*(?:CHANGE|WORK|INTERIOR|ALTERATION|RENOVATION|INSTALLATION|MODIFICATION|"
+    r"OCCUPANCY|USE|EGRESS|PROPOSED|NEW)\b",
+    re.IGNORECASE,
+)
+_THRU_RANGE = re.compile(
+    r"^(?P<prefix>[A-Z]{0,2})(?P<start>\d+)(?P<suffix>[A-Z]{1,2})"
+    r"THRU(?P<end>\d+)(?P<end_suffix>[A-Z]{1,2})$",
+    re.IGNORECASE,
+)
 
 
 def _plausible_label(label):
-    return not re.fullmatch(r"\d+(?:ST|ND|RD|TH)", label)
+    return not re.fullmatch(r"\d+(?:FL|FLOOR)", label)
 
 
-def _expand_token(token):
+def _expand_thru_range(token):
+    match = _THRU_RANGE.fullmatch(token)
+    if not match:
+        return None
+    if match.group("suffix") != match.group("end_suffix"):
+        return []
+    start = int(match.group("start"))
+    end = int(match.group("end"))
+    if end < start or end - start > 50:
+        return []
+    return [
+        f"{match.group('prefix')}{number}{match.group('suffix')}"
+        for number in range(start, end + 1)
+    ]
+
+
+def _expand_token(token, following=""):
     token = re.sub(r"\s+", "", token.upper())
     if not re.fullmatch(r"[A-Z0-9/-]+", token):
         return []
     if "/" not in token and "-" not in token:
+        trailing_no = _TRAILING_NO.fullmatch(token)
+        if trailing_no and _PROSE_AFTER_NO.match(following):
+            token = trailing_no.group("label")
+        expanded_range = _expand_thru_range(token)
+        if expanded_range is not None:
+            return expanded_range
+        prose = _CONCATENATED_PROSE.fullmatch(token)
+        if prose:
+            token = prose.group("label")
+        if (re.fullmatch(r"\d+(?:ST|ND|RD|TH)", token)
+                and re.match(r"\s*(?:FLOOR|FL|STORY)\b", following, re.IGNORECASE)):
+            return []
         return [token] if _plausible_label(token) else []
     parts = re.split(r"[/-]", token)
     first = _PART.fullmatch(parts[0])
@@ -67,15 +114,35 @@ def extract_explicit_unit_labels(text):
         token = _TOKEN.match(tail)
         if not token:
             continue
-        labels.extend(_expand_token(token.group(0)))
-        cursor = token.end()
+        raw_token = token.group(0)
+        labels.extend(_expand_token(raw_token, tail[token.end():]))
+        cursor = token.end() - (3 if raw_token.upper().endswith("AND") else 0)
         while True:
             separator = _SEPARATOR.match(tail, cursor)
             if not separator:
+                suffixes = _SPACED_SUFFIX_LIST.match(tail, cursor)
+                previous = _PART.fullmatch(labels[-1]) if labels else None
+                if suffixes and previous and previous.group("suffix"):
+                    labels.extend(
+                        previous.group("prefix") + previous.group("number") + suffix
+                        for suffix in re.findall(r"[A-Z]", suffixes.group("suffixes").upper())
+                    )
+                    cursor = suffixes.end()
+                    continue
                 break
             token = _TOKEN.match(tail, separator.end())
             if not token:
+                suffix = _INHERITED_SUFFIX.match(tail, separator.end())
+                previous = _PART.fullmatch(labels[-1]) if labels else None
+                if suffix and previous and previous.group("suffix"):
+                    labels.append(
+                        previous.group("prefix") + previous.group("number")
+                        + suffix.group(0).upper()
+                    )
+                    cursor = suffix.end()
+                    continue
                 break
-            labels.extend(_expand_token(token.group(0)))
-            cursor = token.end()
+            raw_token = token.group(0)
+            labels.extend(_expand_token(raw_token, tail[token.end():]))
+            cursor = token.end() - (3 if raw_token.upper().endswith("AND") else 0)
     return list(dict.fromkeys(label for label in labels if label))

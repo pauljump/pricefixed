@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.dedupe import normalize_unit
 from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
+from tools.merges.mine_dob_electrical_detail_units import extract_electrical_detail_labels
 
 
 def main():
@@ -30,6 +31,10 @@ def main():
         "--parser-delta-only", action="store_true",
         help="export only labels newly recognized by the current deterministic parser",
     )
+    parser.add_argument(
+        "--source-parser", choices=("default", "electrical_detail"), default="default",
+        help="deterministic grammar used to refresh labels from stored source text",
+    )
     args = parser.parse_args()
     source = sqlite3.connect(f"file:{Path(args.descriptions_db).resolve()}?mode=ro", uri=True)
     state = source.execute(
@@ -45,23 +50,28 @@ def main():
     id_fields = [field.strip() for field in args.id_field.split(",") if field.strip()]
     if not id_fields:
         raise SystemExit("--id-field must name at least one source field")
+    extractor = (
+        extract_electrical_detail_labels
+        if args.source_parser == "electrical_detail" else extract_explicit_unit_labels
+    )
     with output.open("w", encoding="utf-8") as handle:
         rows = source.execute(
             "SELECT job_filing_number,bbl,address,description,extracted_labels,filing_date "
-            "FROM descriptions WHERE status='explicit_candidate' ORDER BY job_filing_number"
+            "FROM descriptions ORDER BY job_filing_number"
         )
         for job, bbl, address, description, labels_json, filing_date in rows:
             if not bbl:
                 continue
             stored_labels = json.loads(labels_json)
+            current_labels = extractor(description)
             if args.parser_delta_only:
                 stored = {normalize_unit(label) for label in stored_labels}
                 labels = [
-                    label for label in extract_explicit_unit_labels(description)
+                    label for label in current_labels
                     if normalize_unit(label) not in stored
                 ]
             else:
-                labels = stored_labels
+                labels = current_labels
             missing = []
             for label in labels:
                 normalized = normalize_unit(label)

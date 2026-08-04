@@ -15,6 +15,17 @@ class ExplicitUnitMentionTest(unittest.TestCase):
             extract_explicit_unit_labels("APARTMENTS B701-B702-B703"),
             ["B701", "B702", "B703"],
         )
+        self.assertEqual(extract_explicit_unit_labels("APARTMENT 26 C&D"), ["26C", "26D"])
+        self.assertEqual(
+            extract_explicit_unit_labels("APARTMENT 12 C,D,E"),
+            ["12C", "12D", "12E"],
+        )
+        self.assertEqual(extract_explicit_unit_labels("DWELLING UNIT 13 D+E"), ["13D", "13E"])
+        self.assertEqual(
+            extract_explicit_unit_labels("APARTMENT 12 D E F WITH MINOR WORK"),
+            ["12D", "12E", "12F"],
+        )
+        self.assertEqual(extract_explicit_unit_labels("WORK AT APT'S 4NC"), ["4NC"])
 
     def test_rejects_ambiguous_compound_and_ignores_plain_words(self):
         self.assertEqual(extract_explicit_unit_labels("Renovation of Apartment 2/3D"), [])
@@ -28,6 +39,25 @@ class ExplicitUnitMentionTest(unittest.TestCase):
         self.assertEqual(extract_explicit_unit_labels("renovation of apt 8 as per plans"), ["8"])
         self.assertEqual(extract_explicit_unit_labels("work to apt 1R, 1st floor"), ["1R"])
         self.assertEqual(extract_explicit_unit_labels("apartment 3 including a bath"), ["3"])
+        self.assertEqual(extract_explicit_unit_labels("APT #2FLINCLUDING WORK"), [])
+        self.assertEqual(extract_explicit_unit_labels("apartment 2nd floor"), [])
+        self.assertEqual(extract_explicit_unit_labels("Apartment 4ND."), ["4ND"])
+
+    def test_splits_prose_concatenated_to_a_label(self):
+        self.assertEqual(extract_explicit_unit_labels("APT 8DEXISTING"), ["8D"])
+        self.assertEqual(extract_explicit_unit_labels("APT 6AINSTALL"), ["6A"])
+        self.assertEqual(extract_explicit_unit_labels("APT16CPROPOSED"), ["16C"])
+        self.assertEqual(extract_explicit_unit_labels("APT#2D,2E,2G,3HAND"), ["2D", "2E", "2G", "3H"])
+        self.assertEqual(extract_explicit_unit_labels("APT 12Dand 12E"), ["12D", "12E"])
+        self.assertEqual(extract_explicit_unit_labels("APT 5ANO CHANGE OF USE"), ["5A"])
+        self.assertEqual(extract_explicit_unit_labels("APT 8NO AND 8F"), ["8NO", "8F"])
+
+    def test_expands_compact_thru_ranges_with_matching_suffixes(self):
+        self.assertEqual(
+            extract_explicit_unit_labels("APT. 2ATHRU5A"),
+            ["2A", "3A", "4A", "5A"],
+        )
+        self.assertEqual(extract_explicit_unit_labels("APT. 2ATHRU5B"), [])
 
     def test_normalizes_single_hyphenated_suffix(self):
         self.assertEqual(extract_explicit_unit_labels("apartments 7-D and 7-E"), ["7D", "7E"])

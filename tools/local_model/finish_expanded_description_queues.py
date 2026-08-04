@@ -51,6 +51,12 @@ def main():
     python = sys.executable
     wait_for_pid(args.base_pipeline_pid)
 
+    run(python, root / "tools/merges/revalidate_description_observations.py",
+        "--packets", work / "dob-description-qwen-packets.jsonl",
+        "--catalog-db", catalog, "--source", "dob_now_job_description_units",
+        "--packet-id-prefix", "dob-description-",
+        "--summary", work / "dob-description-revalidation-summary.json", "--apply")
+
     run(python, root / "tools/merges/mine_dob_description_units.py",
         "--db", work / "dob-description-units.db", "--reclassify")
     run(python, root / "tools/local_model/export_dob_description_packets.py",

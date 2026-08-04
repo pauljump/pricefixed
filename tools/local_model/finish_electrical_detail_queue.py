@@ -41,7 +41,8 @@ def main():
         "--output", work / f"{stem}-packets.jsonl",
         "--progress-source", "dob_electrical_details_v3", "--dataset", "xmmq-y7za",
         "--id-field", "unique_id", "--packet-prefix", stem,
-        "--source-type", "dob_electrical_permit_detail")
+        "--source-type", "dob_electrical_permit_detail",
+        "--source-parser", "electrical_detail")
     run(python, root / "tools/local_model/run_qwen_extraction.py",
         "--input", work / f"{stem}-packets.jsonl",
         "--output", work / f"{stem}-results.jsonl", "--batch-size", "8")
