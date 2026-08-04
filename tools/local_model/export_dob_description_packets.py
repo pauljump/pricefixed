@@ -9,6 +9,7 @@ from urllib.parse import urlencode
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.dedupe import normalize_unit
+from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
 
 
 def main():
@@ -21,6 +22,10 @@ def main():
     parser.add_argument("--id-field", default="job_filing_number")
     parser.add_argument("--packet-prefix", default="dob-description")
     parser.add_argument("--source-type", default="dob_job_description")
+    parser.add_argument(
+        "--parser-delta-only", action="store_true",
+        help="export only labels newly recognized by the current deterministic parser",
+    )
     args = parser.parse_args()
     source = sqlite3.connect(f"file:{Path(args.descriptions_db).resolve()}?mode=ro", uri=True)
     state = source.execute(
@@ -40,8 +45,17 @@ def main():
         for job, bbl, address, description, labels_json, filing_date in rows:
             if not bbl:
                 continue
+            stored_labels = json.loads(labels_json)
+            if args.parser_delta_only:
+                stored = {normalize_unit(label) for label in stored_labels}
+                labels = [
+                    label for label in extract_explicit_unit_labels(description)
+                    if normalize_unit(label) not in stored
+                ]
+            else:
+                labels = stored_labels
             missing = []
-            for label in json.loads(labels_json):
+            for label in labels:
                 normalized = normalize_unit(label)
                 if normalized and not catalog.execute(
                     "SELECT 1 FROM units WHERE bbl=? AND normalized_unit=?", (bbl, normalized)

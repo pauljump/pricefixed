@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
+from tools.merges.mine_dob_electrical_detail_units import extract_electrical_detail_labels
 
 
 def normalize_unit(value):
@@ -22,11 +23,11 @@ def normalize_text(value):
     return " ".join(str(value or "").upper().split())
 
 
-def candidate_is_standalone(label, description):
+def candidate_is_standalone(label, description, extractor=extract_explicit_unit_labels):
     """Require the deterministic source grammar to reproduce the candidate."""
     key = normalize_unit(label)
     return bool(key) and key in {
-        normalize_unit(candidate) for candidate in extract_explicit_unit_labels(description)
+        normalize_unit(candidate) for candidate in extractor(description)
     }
 
 
@@ -50,7 +51,14 @@ def main():
     parser.add_argument("--accepted", required=True)
     parser.add_argument("--rejected", required=True)
     parser.add_argument("--summary", required=True)
+    parser.add_argument(
+        "--source-parser", choices=("default", "electrical_detail"), default="default"
+    )
     args = parser.parse_args()
+    extractor = (
+        extract_electrical_detail_labels
+        if args.source_parser == "electrical_detail" else extract_explicit_unit_labels
+    )
     packets = {}
     with open(args.packets, encoding="utf-8") as handle:
         for line in handle:
@@ -86,7 +94,7 @@ def main():
             reason = ""
             if not key or key not in candidate_keys:
                 reason = "label_not_in_deterministic_candidates"
-            elif not candidate_is_standalone(candidates[key], packet["text"]):
+            elif not candidate_is_standalone(candidates[key], packet["text"], extractor):
                 reason = "candidate_is_partial_token"
             elif not evidence or evidence not in description:
                 reason = "evidence_not_in_source_description"

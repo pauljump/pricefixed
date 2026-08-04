@@ -25,6 +25,20 @@ class DobCandidateBoundaryTest(unittest.TestCase):
         self.assertFalse(MODULE.candidate_is_standalone("B701-B702", "APARTMENT B701-B702-B703"))
         self.assertFalse(MODULE.candidate_is_standalone("2", "WORK IN APT 2 R ONLY"))
 
+    def test_accepts_electrical_detail_specific_candidates_with_source_parser(self):
+        from tools.merges.mine_dob_electrical_detail_units import extract_electrical_detail_labels
+
+        self.assertTrue(
+            MODULE.candidate_is_standalone(
+                "G", "16th Floor, Apartment G", extract_electrical_detail_labels
+            )
+        )
+        self.assertTrue(
+            MODULE.candidate_is_standalone(
+                "4M", "General wiring in Unit 4M", extract_electrical_detail_labels
+            )
+        )
+
     def test_transport_errors_do_not_count_as_terminal_results(self):
         rows = [
             {"id": "retry", "status": "error"},

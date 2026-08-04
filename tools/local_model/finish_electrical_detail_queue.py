@@ -50,7 +50,8 @@ def main():
         "--results", work / f"{stem}-results.jsonl",
         "--accepted", work / f"{stem}-accepted.csv",
         "--rejected", work / f"{stem}-rejected.csv",
-        "--summary", work / f"{stem}-summary.json")
+        "--summary", work / f"{stem}-summary.json",
+        "--source-parser", "electrical_detail")
     run(python, root / "tools/merges/merge_dob_description_results.py",
         "--csv", work / f"{stem}-accepted.csv", "--catalog-db", catalog,
         "--summary", work / f"{stem}-merge-summary.json",

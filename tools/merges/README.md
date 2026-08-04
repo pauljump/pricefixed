@@ -370,6 +370,18 @@ python3 tools/local_model/finish_electrical_detail_queue.py \
   --work-dir /data/pricefixed-build
 ```
 
+When the conservative text parser improves, old staging databases are not silently
+reclassified. A final delta pass compares the current parser with each row's stored
+labels, sends only newly recognized and still-missing labels through local Qwen, and
+keeps the original agency source on every accepted observation:
+
+```bash
+python3 tools/local_model/finish_description_parser_delta_queues.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 DOF's current property-assessment table also has an apartment label, but it mixes
 years, assessment periods, whole tax lots, and commercial condo units. Audit only the
 current final period against the already imported official condo-unit-lot spine:
