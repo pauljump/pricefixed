@@ -39,7 +39,7 @@ def main():
     run(python, root / "tools/local_model/export_dob_description_packets.py",
         "--descriptions-db", database, "--catalog-db", catalog,
         "--output", work / f"{stem}-packets.jsonl",
-        "--progress-source", "dob_electrical_details", "--dataset", "xmmq-y7za",
+        "--progress-source", "dob_electrical_details_v3", "--dataset", "xmmq-y7za",
         "--id-field", "unique_id", "--packet-prefix", stem,
         "--source-type", "dob_electrical_permit_detail")
     run(python, root / "tools/local_model/run_qwen_extraction.py",

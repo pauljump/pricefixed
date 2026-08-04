@@ -37,9 +37,15 @@ class DobElectricalDetailTest(unittest.TestCase):
         self.assertEqual(extract_electrical_detail_labels("Apartment 12 C"), ["12C"])
         self.assertEqual(extract_electrical_detail_labels("Apartment 417 517"), ["417", "517"])
         self.assertEqual(extract_electrical_detail_labels("Apt 31 CD"), ["31CD"])
+        self.assertEqual(extract_electrical_detail_labels("General Wiring in Unit 27"), ["27"])
+        self.assertEqual(extract_electrical_detail_labels("Unit TH"), ["TH"])
 
     def test_rejects_generic_equipment_units(self):
         self.assertEqual(extract_electrical_detail_labels("HVAC units and generator"), [])
+        self.assertEqual(extract_electrical_detail_labels("Compressor Unit only"), [])
+        self.assertEqual(extract_electrical_detail_labels("A/C UNIT ON THE ROOF"), [])
+        self.assertEqual(extract_electrical_detail_labels("split unit AC on first floor"), [])
+        self.assertEqual(extract_electrical_detail_labels("4 INDOOR UNITS"), [])
         self.assertEqual(extract_electrical_detail_labels("38 apts on these floors"), [])
         self.assertEqual(
             extract_electrical_detail_labels(

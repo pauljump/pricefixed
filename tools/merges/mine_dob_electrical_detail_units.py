@@ -26,15 +26,23 @@ DETAIL_WHERE = (
     "upper(floor_detail) like '%APT#%' OR upper(floor_detail) like '%APARTMENT%' OR "
     "upper(floor_detail) like '%RESIDENTIAL UNIT%' OR "
     "upper(floor_detail) like '%DWELLING UNIT%' OR "
+    "upper(floor_detail) like '%UNIT %' OR upper(floor_detail) like '%UNIT#%' OR "
+    "upper(floor_detail) like '%UNIT NO%' OR "
     "upper(item_detail) like '%APT %' OR upper(item_detail) like '%APT.%' OR "
     "upper(item_detail) like '%APT#%' OR upper(item_detail) like '%APARTMENT%' OR "
     "upper(item_detail) like '%RESIDENTIAL UNIT%' OR "
-    "upper(item_detail) like '%DWELLING UNIT%')"
+    "upper(item_detail) like '%DWELLING UNIT%' OR "
+    "upper(item_detail) like '%UNIT %' OR upper(item_detail) like '%UNIT#%' OR "
+    "upper(item_detail) like '%UNIT NO%')"
 )
 _PLAIN_UNIT = re.compile(
-    r"\bUNIT\s*(?:(?:NO|NUMBER)\.?\s*|#\s*)?([A-Z]?\d+[A-Z](?:[/-][A-Z0-9]+)*)\b",
+    r"\bUNIT\b\s*(?:(?:NO|NUMBER)\.?\s*|#\s*)?([A-Z]{0,3}\d{1,4}[A-Z]{0,4}(?:[/-][A-Z0-9]+)*)\b",
     re.IGNORECASE,
 )
+_PLAIN_LETTER_UNIT = re.compile(
+    r"\b(?i:UNIT)\b\s*(?:(?i:NO|NUMBER)\.?\s*|#\s*)?([A-Z]{1,3})\b"
+)
+_PLAIN_LETTER_STOP = {"AC", "AND", "FOR", "IN", "OF", "ON", "ONLY", "THE", "TO"}
 _LETTER_APARTMENT = re.compile(
     r"\b(?:APT\.?|APARTMENT)\s+(?:(?:NO|NUMBER)\.?\s*|#\s*)?([A-Z])\b",
     re.IGNORECASE,
@@ -57,7 +65,7 @@ _COMPACT_SUFFIXED = re.compile(r"\b[A-Z]?\d+[A-Z]\b", re.IGNORECASE)
 _COMPACT_LABEL = re.compile(r"\b[A-Z]?\d+[A-Z]?\b", re.IGNORECASE)
 _LIST_SEPARATOR = re.compile(r"\s*(?:,|\.|;|&|/|\bAND\b)\s*", re.IGNORECASE)
 _TRAILING_ACTION = re.compile(r"(?:\b(?:REWIRE|WIRE|WIRING)\b\s*){1,2}$", re.IGNORECASE)
-_SAFE_LABEL = re.compile(r"(?:[A-Z]{0,3}\d{1,4}[A-Z]{0,4}|[A-Z])", re.IGNORECASE)
+_SAFE_LABEL = re.compile(r"(?:[A-Z]{0,3}\d{1,4}[A-Z]{0,4}|[A-Z]{1,3})", re.IGNORECASE)
 _GLUED_NUMERIC_LABEL = re.compile(r"\d+[A-Z]+", re.IGNORECASE)
 _VOLTAGE_LABEL = re.compile(r"\d{2,4}V", re.IGNORECASE)
 
@@ -81,6 +89,10 @@ def extract_electrical_detail_labels(text):
     labels = extract_explicit_unit_labels(text)
     for match in _PLAIN_UNIT.finditer(text):
         labels.extend(extract_explicit_unit_labels(f"Apartment {match.group(1)}"))
+    labels.extend(
+        match.group(1) for match in _PLAIN_LETTER_UNIT.finditer(text)
+        if match.group(1) not in _PLAIN_LETTER_STOP
+    )
     labels.extend(match.group(1).upper() for match in _LETTER_APARTMENT.finditer(text))
     for match in _LETTER_APARTMENT_LIST.finditer(text):
         labels.extend((match.group(1).upper(), match.group(2).upper()))
@@ -197,7 +209,7 @@ def detail_text(row):
 
 
 def mine_details(connection, batch_size, page_limit):
-    source = "dob_electrical_details"
+    source = "dob_electrical_details_v3"
     state = connection.execute(
         "SELECT offset,complete FROM progress WHERE source=?", (source,)
     ).fetchone()
