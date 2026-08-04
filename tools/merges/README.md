@@ -323,6 +323,19 @@ python3 tools/local_model/finish_ecb_description_queue.py \
 The finisher waits for the DOB/OATH pipeline, exports only labels still absent from
 the catalog, runs the same serial local-Qwen verifier, and merges accepted evidence.
 
+The last bulk-text pass covers legacy DOB violation descriptions, HPD handyman work
+orders, and HPD open-market work orders whose structured apartment field is blank.
+It runs after DOB ECB and applies the same net-new and local-model gates:
+
+```bash
+python3 tools/local_model/finish_remaining_description_queues.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
+These collectors exclude owner, respondent, contractor, penalty, and payment fields.
+
 For an unattended run where the current DOB-NOW queue is already active, the queue
 orchestrator waits for that PID, verifies and merges it, exports the now-net-new
 legacy queue, and processes that queue serially with the same local endpoint:
