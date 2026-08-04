@@ -72,6 +72,20 @@ URL, observed date when available, method, and match reason.
 | DOB after-hours `enclosed_work` | A boolean flag | Excluded |
 | BSA project descriptions and DOB safety violations | Housing counts or generic project language; no deterministic apartment labels in the live marker audit | No new units |
 | Elevator safety data | Building device records, not apartment identities | Building evidence only |
+| Campaign Finance mailing addresses | Some public rows contain apartment-like mailing fields, but they are person-linked financial records rather than housing records | Anonymized PAD-match audit only; excluded from the catalog pending a separate policy decision |
+
+The Campaign Finance audit does not request or store names, employers, occupations,
+or payment details. It keeps only individual-payee mailing rows that resolve to one
+residential building through an exact PAD address and ZIP match. The August 4, 2026
+run found 4,637 matched unit labels: 2,737 were already in the catalog and 1,900 were
+held for policy review. None were written to the catalog.
+
+```bash
+python3 tools/merges/audit_campaign_finance_unit_addresses.py \
+  --db /data/campaign-finance-unit-address-audit.db \
+  --catalog-db /data/catalog.db \
+  --summary /data/campaign-finance-unit-address-audit-summary.json
+```
 
 ## What remains out of reach
 
