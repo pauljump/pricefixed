@@ -40,7 +40,14 @@ the repository. Its asset bundle should include:
 | `units.csv` | one canonical unit record per `(BBL, normalized unit label)` |
 | `unit_observations.csv` | source-attributed observations resolved to those units, with resolution method and confidence |
 | `sources.csv` | source name, source kind, and collection methodology |
+| `source-policy.json` | exact source allowlist and review scope used for the release |
 | `catalog.db` (optional) | full SQLite database for provenance and advanced analysis |
+
+The exporter defaults to [`release_sources.json`](release_sources.json). It exports a
+unit only when at least one resolved observation comes from a source in that policy,
+and exports only those supporting observations. Archive-only and listing-feed-only
+identities stay in the local research catalog unless their sources are reviewed and
+deliberately added to the policy.
 
 CSV files are UTF-8 with a header row and RFC 4180-compatible quoting. The exporter
 does not publish `source_documents.payload` or `observations.raw_fields`; those fields
@@ -82,7 +89,7 @@ python3 catalog_report.py --db /path/to/catalog.db --out pricefixed-catalog-YYYY
   --release-id YYYY-MM-DD --commit "$(git rev-parse HEAD)"
 ```
 
-These commands create the three CSV files, `manifest.json`, and
+These commands create the three CSV files, `source-policy.json`, `manifest.json`, and
 `quality-report.json`. Review the manifest and quality report, compress the directory,
 publish it as a GitHub Release asset, and link that release from the README. Do not
 publish a snapshot until its source licenses, freshness, and checksums have been
