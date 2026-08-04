@@ -5,10 +5,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 from tools.merges.audit_nyc_unit_text_markers import (
+    load_decisions,
     load_completed,
+    load_results,
     marker_where,
     query_count,
     text_fields,
+    unreviewed_nonzero,
 )
 
 
@@ -39,6 +42,32 @@ class AuditNycUnitTextMarkersTest(unittest.TestCase):
             path = Path(directory) / "results.jsonl"
             path.write_text(json.dumps({"dataset": "abcd-1234"}) + "\n")
             self.assertEqual(load_completed(path), {"abcd-1234"})
+
+    def test_requires_decisions_for_every_nonzero_result(self):
+        results = [
+            {"dataset": "reviewed", "status": "ok", "rows": 2},
+            {"dataset": "missing", "status": "ok", "rows": 1},
+            {"dataset": "zero", "status": "ok", "rows": 0},
+            {"dataset": "failed", "status": "error"},
+        ]
+        self.assertEqual(
+            unreviewed_nonzero(results, {"reviewed": {"decision": "collect"}}),
+            ["missing"],
+        )
+
+    def test_loads_and_validates_decision_register(self):
+        with tempfile.TemporaryDirectory() as directory:
+            decisions_path = Path(directory) / "decisions.json"
+            decisions_path.write_text(json.dumps({
+                "datasets": {
+                    "abcd-1234": {"decision": "exclude", "handling": "not a home"}
+                }
+            }))
+            self.assertIn("abcd-1234", load_decisions(decisions_path))
+
+            results_path = Path(directory) / "results.jsonl"
+            results_path.write_text(json.dumps({"dataset": "abcd-1234"}) + "\n")
+            self.assertEqual(load_results(results_path)[0]["dataset"], "abcd-1234")
 
 
 if __name__ == "__main__":

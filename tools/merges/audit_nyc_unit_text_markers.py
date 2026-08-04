@@ -14,6 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from tools.merges.audit_nyc_open_data_fields import BUILDING_FIELDS, TEXT_FIELD
 
 
+DEFAULT_DECISIONS = Path(__file__).resolve().parents[2] / "SOURCE_AUDIT_DECISIONS.json"
+
+
 def text_fields(dataset):
     types = dataset.get("types") or {}
     return [
@@ -75,10 +78,41 @@ def load_completed(path):
     return completed
 
 
+def load_results(path):
+    if not path.is_file():
+        return []
+    with path.open(encoding="utf-8") as handle:
+        return [json.loads(line) for line in handle if line.strip()]
+
+
+def load_decisions(path):
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    decisions = payload.get("datasets")
+    if not isinstance(decisions, dict):
+        raise ValueError("source audit decisions must contain a datasets object")
+    for dataset, decision in decisions.items():
+        if not isinstance(decision, dict) or decision.get("decision") not in {
+            "collect", "exclude",
+        }:
+            raise ValueError(f"invalid source audit decision for {dataset}")
+        if not decision.get("handling"):
+            raise ValueError(f"missing source audit handling note for {dataset}")
+    return decisions
+
+
+def unreviewed_nonzero(results, decisions):
+    return sorted({
+        result["dataset"] for result in results
+        if result.get("status") == "ok" and result.get("rows", 0) > 0
+        and result["dataset"] not in decisions
+    })
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inventory", required=True)
     parser.add_argument("--output", required=True)
+    parser.add_argument("--decisions", default=str(DEFAULT_DECISIONS))
     args = parser.parse_args()
     datasets = json.loads(Path(args.inventory).read_text(encoding="utf-8"))
     output = Path(args.output)
@@ -109,6 +143,13 @@ def main():
                 f"status={result['status']} rows={result.get('rows', 0)}",
                 flush=True,
             )
+    decisions = load_decisions(Path(args.decisions))
+    unreviewed = unreviewed_nonzero(load_results(output), decisions)
+    if unreviewed:
+        raise SystemExit(
+            "nonzero marker datasets need review: " + ", ".join(unreviewed)
+        )
+    print(f"all nonzero marker datasets have decisions in {args.decisions}", flush=True)
 
 
 if __name__ == "__main__":

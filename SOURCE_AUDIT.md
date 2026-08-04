@@ -22,6 +22,9 @@ The inventory command writes those two review sets to
 `building-unit-field-candidates.tsv` and `building-text-field-candidates.tsv`.
 `audit-summary.json` records their counts alongside the broader field-name lead
 lists, so a refresh can be checked without reconstructing the filters by hand.
+[`SOURCE_AUDIT_DECISIONS.json`](SOURCE_AUDIT_DECISIONS.json) records how every
+dataset with a live marker hit was handled. The marker audit exits with an error if
+a later refresh finds a nonzero dataset that is missing from that register.
 
 Anyone can refresh that inventory without a model:
 
