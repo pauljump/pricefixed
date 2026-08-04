@@ -42,6 +42,23 @@ class LocalQwenRunnerTest(unittest.TestCase):
         self.assertIn(MODULE.cache_key(records["ok"]), cached)
         self.assertNotIn("error", completed)
 
+    def test_resume_rejects_a_result_for_changed_model_inputs(self):
+        original = {
+            "id": "same-id", "source_type": "dob", "target_address": "1 MAIN ST",
+            "text": "APT 2A", "candidate_labels": ["2A"],
+        }
+        changed = dict(original, candidate_labels=["2B"])
+        row = {
+            "id": "same-id", "status": "ok", "parsed": {"unit_labels": []},
+            "input_fingerprint": MODULE.input_fingerprint(original),
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "results.jsonl"
+            output.write_text(json.dumps(row) + "\n", encoding="utf-8")
+            completed, cached = MODULE.load_existing_results(output, {"same-id": changed})
+        self.assertEqual(completed, set())
+        self.assertEqual(cached, {})
+
     def test_retry_succeeds_without_consuming_a_failed_attempt(self):
         calls = []
 

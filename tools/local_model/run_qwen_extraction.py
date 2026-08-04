@@ -7,6 +7,7 @@ The output is JSONL and is resumable by record id. This script never calls a
 cloud API and never writes to the canonical catalog.
 """
 import argparse
+import hashlib
 import json
 import re
 import sys
@@ -189,6 +190,12 @@ def cache_key(record):
     )
 
 
+def input_fingerprint(record):
+    """Stable digest for the model inputs that make a result safe to resume."""
+    material = json.dumps(cache_key(record), ensure_ascii=True, separators=(",", ":"))
+    return hashlib.sha256(material.encode("utf-8")).hexdigest()
+
+
 def load_existing_results(output, records_by_id):
     """Resume terminal results while leaving transport failures retryable."""
     completed = set()
@@ -202,8 +209,13 @@ def load_existing_results(output, records_by_id):
             result = json.loads(line)
             if result.get("status") not in {"ok", "invalid_json"}:
                 continue
-            completed.add(result["id"])
             record = records_by_id.get(result["id"])
+            if not record:
+                continue
+            prior_fingerprint = result.get("input_fingerprint")
+            if prior_fingerprint and prior_fingerprint != input_fingerprint(record):
+                continue
+            completed.add(result["id"])
             if record and result.get("status") == "ok":
                 cached[cache_key(record)] = result
     return completed, cached
@@ -341,6 +353,7 @@ def main():
                     "source_url": record.get("source_url", ""),
                     "model": args.model,
                     "base_url": args.base_url,
+                    "input_fingerprint": input_fingerprint(record),
                 }
                 key = cache_key(record)
                 prior = cached.get(key)
