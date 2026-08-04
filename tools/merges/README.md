@@ -347,6 +347,17 @@ python3 tools/local_model/finish_electrical_description_queue.py \
   --work-dir /data/pricefixed-build
 ```
 
+Approved-permit descriptions can contain unit labels missing from the application
+table. The collector excludes permits whose dedicated apartment field is populated,
+then runs only the still-net-new deterministic labels after all earlier queues merge:
+
+```bash
+python3 tools/local_model/finish_approved_permit_description_queue.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 DOF's current property-assessment table also has an apartment label, but it mixes
 years, assessment periods, whole tax lots, and commercial condo units. Audit only the
 current final period against the already imported official condo-unit-lot spine:
@@ -358,6 +369,41 @@ python3 tools/merges/mine_dof_assessment_unit_labels.py \
   --accepted /data/dof-assessment-unit-labels-accepted.csv \
   --rejected /data/dof-assessment-unit-labels-rejected.csv \
   --summary /data/dof-assessment-unit-labels-summary.json
+```
+
+The historical 2017 DOF valuation snapshot is also auditable. It is held to a stricter
+rule: the BBL must still be an official unit lot, the tax row must report one
+residential unit, and the current catalog must have neither a designation nor another
+unit identity on that lot:
+
+```bash
+python3 tools/merges/mine_dof_historical_assessment_unit_labels.py \
+  --db /data/dof-historical-assessment-units.db \
+  --catalog-db /data/catalog.db \
+  --accepted /data/dof-historical-assessment-accepted.csv \
+  --rejected /data/dof-historical-assessment-rejected.csv \
+  --summary /data/dof-historical-assessment-summary.json
+```
+
+The August 2026 build found no net-new unit that passed those checks. That negative
+result is useful: older valuation labels must not revive retired parking/storage lots
+or create a second identity on a current condo unit lot.
+
+DOF's daily `CONDO_AREA` geometry can lead the weekly condominium-unit table. The
+delta miner accepts an absent unit BBL only when ACRIS confirms its apartment label,
+or when the geometry has a unique explicit dwelling designation with a matching lot.
+It also rejects a designation already used by a sibling unit lot:
+
+```bash
+python3 tools/merges/mine_condo_area_delta.py \
+  --catalog-db /data/catalog.db \
+  --accepted /data/condo-area-accepted.csv \
+  --rejected /data/condo-area-rejected.csv \
+  --summary /data/condo-area-summary.json
+python3 tools/merges/merge_condo_area_delta.py \
+  --csv /data/condo-area-accepted.csv \
+  --catalog-db /data/catalog.db \
+  --summary /data/condo-area-merge-summary.json --apply
 ```
 
 Only residential tax classes on an exact official condo unit-lot BBL survive. A row

@@ -2,6 +2,7 @@
   "included_sources": [
     "acris_property_legals",
     "dob_now_approved_permits",
+    "dob_approved_permit_description_units",
     "dob_now_certificates",
     "dob_ecb_violation_description_units",
     "dob_electrical_permit_description_units",
@@ -27,6 +28,7 @@
     "hpd_violations_compact",
     "legacy_dob_job_description_units",
     "nyc_dof_condo_units",
+    "nyc_dof_condo_area_units",
     "nyc_evictions",
     "nyc_evictions_compact",
     "nyc_pad",
