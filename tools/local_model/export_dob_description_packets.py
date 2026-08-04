@@ -23,6 +23,10 @@ def main():
     parser.add_argument("--packet-prefix", default="dob-description")
     parser.add_argument("--source-type", default="dob_job_description")
     parser.add_argument(
+        "--dedupe-building-labels", action="store_true",
+        help="emit one representative packet per missing BBL/unit label",
+    )
+    parser.add_argument(
         "--parser-delta-only", action="store_true",
         help="export only labels newly recognized by the current deterministic parser",
     )
@@ -37,6 +41,10 @@ def main():
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)
     written = 0
+    seen_labels = set()
+    id_fields = [field.strip() for field in args.id_field.split(",") if field.strip()]
+    if not id_fields:
+        raise SystemExit("--id-field must name at least one source field")
     with output.open("w", encoding="utf-8") as handle:
         rows = source.execute(
             "SELECT job_filing_number,bbl,address,description,extracted_labels,filing_date "
@@ -60,12 +68,27 @@ def main():
                 if normalized and not catalog.execute(
                     "SELECT 1 FROM units WHERE bbl=? AND normalized_unit=?", (bbl, normalized)
                 ).fetchone():
+                    key = (bbl, normalized)
+                    if args.dedupe_building_labels and key in seen_labels:
+                        continue
+                    seen_labels.add(key)
                     missing.append(label)
             if not missing:
                 continue
-            url = f"https://data.cityofnewyork.us/resource/{args.dataset}.json?" + urlencode({
-                args.id_field: job
-            })
+            source_values = str(job).split("|")
+            if len(id_fields) == 1:
+                source_values = [str(job)]
+            elif len(source_values) != len(id_fields):
+                raise SystemExit(
+                    f"compound source ref {job!r} does not match --id-field {args.id_field!r}"
+                )
+            source_query = {
+                field: value for field, value in zip(id_fields, source_values) if value
+            }
+            url = (
+                f"https://data.cityofnewyork.us/resource/{args.dataset}.json?"
+                + urlencode(source_query)
+            )
             packet = {
                 "id": f"{args.packet_prefix}-{job}",
                 "source_ref": job,

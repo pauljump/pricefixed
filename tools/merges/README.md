@@ -410,6 +410,19 @@ python3 tools/local_model/finish_dwelling_unit_marker_delta_queues.py \
   --work-dir /data/pricefixed-build
 ```
 
+Two further direct-BBL sources carry a larger amount of unit evidence: DOB Limited
+Alteration Application work summaries and HPD violation descriptions whose dedicated
+apartment field is blank. The same pass also checks blank-unit NYCHA descriptions and
+DOB elevator-permit descriptions. Repeated violations for the same building and unit
+are deterministically reduced to one representative record before local review:
+
+```bash
+python3 tools/local_model/finish_additional_official_description_queues.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 When the conservative text parser improves, old staging databases are not silently
 reclassified. A final delta pass compares the current parser with each row's stored
 labels, sends only newly recognized and still-missing labels through local Qwen, and
