@@ -5,6 +5,7 @@
     "dob_approved_permit_description_units",
     "dob_now_certificates",
     "dob_ecb_violation_description_units",
+    "dob_electrical_permit_detail_units",
     "dob_electrical_permit_description_units",
     "dob_violation_description_units",
     "dob_now_job_description_units",

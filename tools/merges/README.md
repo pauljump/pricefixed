@@ -358,6 +358,18 @@ python3 tools/local_model/finish_approved_permit_description_queue.py \
   --work-dir /data/pricefixed-build
 ```
 
+The separate DOB NOW electrical-detail table can name apartments that are absent
+from the parent permit description. Its collector joins each detail row to the
+parent filing's BBL and address, rejects generic electrical equipment units, and
+sends only explicit, still-missing labels through the same local verifier:
+
+```bash
+python3 tools/local_model/finish_electrical_detail_queue.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 DOF's current property-assessment table also has an apartment label, but it mixes
 years, assessment periods, whole tax lots, and commercial condo units. Audit only the
 current final period against the already imported official condo-unit-lot spine:

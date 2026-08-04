@@ -22,6 +22,7 @@ class ExplicitUnitMentionTest(unittest.TestCase):
 
     def test_joins_space_separated_suffix(self):
         self.assertEqual(extract_explicit_unit_labels("plumbing work in apt 2 R only"), ["2R"])
+        self.assertEqual(extract_explicit_unit_labels("electrical work in apartment 12 C"), ["12C"])
 
     def test_does_not_take_prose_or_floor_ordinals_as_suffixes(self):
         self.assertEqual(extract_explicit_unit_labels("renovation of apt 8 as per plans"), ["8"])
