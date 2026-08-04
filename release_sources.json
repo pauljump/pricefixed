@@ -3,6 +3,7 @@
     "acris_property_legals",
     "dob_now_approved_permits",
     "dob_now_certificates",
+    "dob_ecb_violation_description_units",
     "dob_now_job_description_units",
     "dob_now_job_filings",
     "dob_now_jobs_compact",

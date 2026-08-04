@@ -306,6 +306,23 @@ python3 tools/local_model/export_dob_description_packets.py \
   --source-type oath_dob_violation_description
 ```
 
+Historical DOB ECB violations are a separate official bulk corpus. The collector
+keeps only the violation number, BBL fields, issue date, and violation description;
+it does not download respondent names, addresses, penalties, or balances:
+
+```bash
+python3 tools/merges/mine_ecb_description_units.py \
+  --db /data/ecb-dob-description-units.db
+
+python3 tools/local_model/finish_ecb_description_queue.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
+The finisher waits for the DOB/OATH pipeline, exports only labels still absent from
+the catalog, runs the same serial local-Qwen verifier, and merges accepted evidence.
+
 For an unattended run where the current DOB-NOW queue is already active, the queue
 orchestrator waits for that PID, verifies and merges it, exports the now-net-new
 legacy queue, and processes that queue serially with the same local endpoint:
