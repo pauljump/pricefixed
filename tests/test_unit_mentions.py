@@ -26,10 +26,16 @@ class ExplicitUnitMentionTest(unittest.TestCase):
             ["12D", "12E", "12F"],
         )
         self.assertEqual(extract_explicit_unit_labels("WORK AT APT'S 4NC"), ["4NC"])
+        self.assertEqual(
+            extract_explicit_unit_labels("WORK AT APT'S 4NC AND 4ND"),
+            ["4NC", "4ND"],
+        )
+        self.assertEqual(extract_explicit_unit_labels("APTS 2RR AND 2"), ["2RR", "2"])
 
     def test_rejects_ambiguous_compound_and_ignores_plain_words(self):
         self.assertEqual(extract_explicit_unit_labels("Renovation of Apartment 2/3D"), [])
         self.assertEqual(extract_explicit_unit_labels("CHAPTER 33 APPLIES"), [])
+        self.assertEqual(extract_explicit_unit_labels("Apartment 117689"), [])
 
     def test_joins_space_separated_suffix(self):
         self.assertEqual(extract_explicit_unit_labels("plumbing work in apt 2 R only"), ["2R"])
@@ -41,7 +47,7 @@ class ExplicitUnitMentionTest(unittest.TestCase):
         self.assertEqual(extract_explicit_unit_labels("apartment 3 including a bath"), ["3"])
         self.assertEqual(extract_explicit_unit_labels("APT #2FLINCLUDING WORK"), [])
         self.assertEqual(extract_explicit_unit_labels("apartment 2nd floor"), [])
-        self.assertEqual(extract_explicit_unit_labels("Apartment 4ND."), ["4ND"])
+        self.assertEqual(extract_explicit_unit_labels("Apartment 4ND."), [])
 
     def test_splits_prose_concatenated_to_a_label(self):
         self.assertEqual(extract_explicit_unit_labels("APT 8DEXISTING"), ["8D"])

@@ -35,8 +35,10 @@ _THRU_RANGE = re.compile(
 )
 
 
-def _plausible_label(label):
-    return not re.fullmatch(r"\d+(?:FL|FLOOR)", label)
+def _plausible_label(label, allow_ordinal=False):
+    if label.isdigit() and len(label) > 4:
+        return False
+    return allow_ordinal or not re.fullmatch(r"\d+(?:ST|ND|RD|TH|FL|FLOOR)", label)
 
 
 def _expand_thru_range(token):
@@ -55,7 +57,7 @@ def _expand_thru_range(token):
     ]
 
 
-def _expand_token(token, following=""):
+def _expand_token(token, following="", allow_ordinal=False):
     token = re.sub(r"\s+", "", token.upper())
     if not re.fullmatch(r"[A-Z0-9/-]+", token):
         return []
@@ -69,10 +71,7 @@ def _expand_token(token, following=""):
         prose = _CONCATENATED_PROSE.fullmatch(token)
         if prose:
             token = prose.group("label")
-        if (re.fullmatch(r"\d+(?:ST|ND|RD|TH)", token)
-                and re.match(r"\s*(?:FLOOR|FL|STORY)\b", following, re.IGNORECASE)):
-            return []
-        return [token] if _plausible_label(token) else []
+        return [token] if _plausible_label(token, allow_ordinal) else []
     parts = re.split(r"[/-]", token)
     first = _PART.fullmatch(parts[0])
     if not first or any(not part for part in parts):
@@ -143,6 +142,21 @@ def extract_explicit_unit_labels(text):
                     continue
                 break
             raw_token = token.group(0)
-            labels.extend(_expand_token(raw_token, tail[token.end():]))
+            previous = _PART.fullmatch(labels[-1]) if labels else None
+            current = _PART.fullmatch(re.sub(r"\s+", "", raw_token))
+            same_number_continuation = bool(
+                previous and current
+                and previous.group("prefix").upper() == current.group("prefix").upper()
+                and previous.group("number") == current.group("number")
+                and len(previous.group("suffix")) >= 2
+                and len(current.group("suffix")) >= 2
+                and previous.group("suffix")[0].upper() == current.group("suffix")[0].upper()
+            )
+            labels.extend(
+                _expand_token(
+                    raw_token, tail[token.end():],
+                    allow_ordinal=same_number_continuation,
+                )
+            )
             cursor = token.end() - (3 if raw_token.upper().endswith("AND") else 0)
     return list(dict.fromkeys(label for label in labels if label))
