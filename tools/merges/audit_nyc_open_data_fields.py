@@ -68,12 +68,18 @@ def normalize_result(item):
     }
 
 
-def candidate_rows(datasets, matcher):
+def candidate_rows(datasets, matcher, require_building=False, text_only=False):
     rows = []
     for dataset in datasets:
-        fields = [field for field in dataset["fields"] if matcher.search(field)]
+        fields = [
+            field for field in dataset["fields"]
+            if matcher.search(field)
+            and (not text_only or dataset.get("types", {}).get(field) == "Text")
+        ]
         if fields:
             identity = sorted(set(dataset["fields"]) & BUILDING_FIELDS)
+            if require_building and not identity:
+                continue
             rows.append((dataset["id"], dataset["name"], ",".join(identity), ",".join(fields)))
     return rows
 
@@ -113,8 +119,26 @@ def main():
     (out / "nyc-datasets.json").write_text(
         json.dumps(datasets, indent=2, ensure_ascii=True) + "\n", encoding="utf-8"
     )
-    write_tsv(out / "unit-field-candidates.tsv", candidate_rows(datasets, UNIT_FIELD))
-    write_tsv(out / "description-field-candidates.tsv", candidate_rows(datasets, TEXT_FIELD))
+    unit_rows = candidate_rows(datasets, UNIT_FIELD)
+    description_rows = candidate_rows(datasets, TEXT_FIELD)
+    building_unit_rows = candidate_rows(datasets, UNIT_FIELD, require_building=True)
+    building_text_rows = candidate_rows(
+        datasets, TEXT_FIELD, require_building=True, text_only=True
+    )
+    write_tsv(out / "unit-field-candidates.tsv", unit_rows)
+    write_tsv(out / "description-field-candidates.tsv", description_rows)
+    write_tsv(out / "building-unit-field-candidates.tsv", building_unit_rows)
+    write_tsv(out / "building-text-field-candidates.tsv", building_text_rows)
+    (out / "audit-summary.json").write_text(
+        json.dumps({
+            "datasets": len(datasets),
+            "unit_field_candidates": len(unit_rows),
+            "description_field_candidates": len(description_rows),
+            "building_unit_field_candidates": len(building_unit_rows),
+            "building_text_field_candidates": len(building_text_rows),
+        }, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     print(f"wrote {len(datasets)} NYC dataset schemas to {out}")
 
 

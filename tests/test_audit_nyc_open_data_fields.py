@@ -32,10 +32,34 @@ class AuditNycOpenDataFieldsTest(unittest.TestCase):
         datasets = [{
             "id": "abcd-1234", "name": "Homes",
             "fields": ["bbl", "apartment", "job_description"],
+            "types": {"bbl": "Text", "apartment": "Text", "job_description": "Text"},
         }]
         self.assertEqual(candidate_rows(datasets, UNIT_FIELD)[0][2:], ("bbl", "apartment"))
         self.assertEqual(
             candidate_rows(datasets, TEXT_FIELD)[0][2:], ("bbl", "job_description")
+        )
+
+    def test_can_limit_candidates_to_text_fields_with_building_identity(self):
+        datasets = [
+            {
+                "id": "with-building", "name": "Homes",
+                "fields": ["bbl", "description", "unit_count"],
+                "types": {"bbl": "Text", "description": "Text", "unit_count": "Number"},
+            },
+            {
+                "id": "without-building", "name": "People",
+                "fields": ["description"], "types": {"description": "Text"},
+            },
+        ]
+        self.assertEqual(
+            candidate_rows(
+                datasets, TEXT_FIELD, require_building=True, text_only=True
+            ),
+            [("with-building", "Homes", "bbl", "description")],
+        )
+        self.assertEqual(
+            candidate_rows(datasets, UNIT_FIELD, require_building=True),
+            [("with-building", "Homes", "bbl", "unit_count")],
         )
 
     @patch("tools.merges.audit_nyc_open_data_fields.urlopen")

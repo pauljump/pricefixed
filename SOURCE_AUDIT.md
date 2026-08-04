@@ -18,6 +18,11 @@ and a text-like field. All 112 queries completed; 37 had at least one marker hit
 Those hits were either added to a source-specific collector or assigned one of the
 exclusion reasons below after live value and parser checks.
 
+The inventory command writes those two review sets to
+`building-unit-field-candidates.tsv` and `building-text-field-candidates.tsv`.
+`audit-summary.json` records their counts alongside the broader field-name lead
+lists, so a refresh can be checked without reconstructing the filters by hand.
+
 Anyone can refresh that inventory without a model:
 
 ```bash
