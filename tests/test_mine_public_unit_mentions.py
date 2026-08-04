@@ -23,6 +23,15 @@ class _Response:
 
 
 class PublicUnitMentionQueryTest(unittest.TestCase):
+    def test_normalizes_already_padded_parcel_fields(self):
+        config = {"bbl": None, "boro": "boro", "block": "block", "lot": "lot"}
+        self.assertEqual(
+            MODULE.normalized_bbl(
+                {"boro": "3", "block": "00271", "lot": "00047"}, config
+            ),
+            "3002710047",
+        )
+
     def test_hpd_problems_only_queries_apartment_records(self):
         captured = {}
 

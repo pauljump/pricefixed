@@ -62,7 +62,10 @@ def normalized_bbl(row, config):
     block = "".join(char for char in str(row.get(config["block"]) or "") if char.isdigit())
     lot = "".join(char for char in str(row.get(config["lot"]) or "") if char.isdigit())
     if len(boro) == 1 and boro in "12345" and block and lot:
-        return boro + block.zfill(5) + lot.zfill(4)
+        block_number = int(block)
+        lot_number = int(lot)
+        if 0 < block_number <= 99999 and 0 < lot_number <= 9999:
+            return f"{boro}{block_number:05d}{lot_number:04d}"
     return ""
 
 
