@@ -398,6 +398,18 @@ python3 tools/local_model/finish_dob_elevator_detail_queue.py \
   --work-dir /data/pricefixed-build
 ```
 
+Some source filters originally looked only for `apt` or `apartment`, even though
+the shared parser also accepts labels after `dwelling unit` and `residential unit`.
+The delta runner downloads only those previously skipped rows, verifies them with
+local Qwen, and preserves each original agency source on merge:
+
+```bash
+python3 tools/local_model/finish_dwelling_unit_marker_delta_queues.py \
+  --base-pipeline-pid 12345 \
+  --catalog-db /data/catalog.db \
+  --work-dir /data/pricefixed-build
+```
+
 When the conservative text parser improves, old staging databases are not silently
 reclassified. A final delta pass compares the current parser with each row's stored
 labels, sends only newly recognized and still-missing labels through local Qwen, and
