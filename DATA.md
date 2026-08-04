@@ -49,6 +49,10 @@ and exports only those supporting observations. Archive-only and listing-feed-on
 identities stay in the local research catalog unless their sources are reviewed and
 deliberately added to the policy.
 
+[`SOURCE_AUDIT.md`](SOURCE_AUDIT.md) explains how NYC Open Data fields were reviewed,
+which kinds of records can name a home, and why tempting count or mailing fields are
+left out.
+
 CSV files are UTF-8 with a header row and RFC 4180-compatible quoting. The exporter
 does not publish `source_documents.payload` or `observations.raw_fields`; those fields
 may contain bulky or source-specific material and are not part of the stable public

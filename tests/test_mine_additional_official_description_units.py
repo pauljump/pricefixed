@@ -13,6 +13,7 @@ from tools.merges.mine_additional_official_description_units import (
 class AdditionalOfficialDescriptionTest(unittest.TestCase):
     def test_normalizes_direct_bbl_and_dates(self):
         self.assertEqual(normalize_bbl("1011717508.0"), "1011717508")
+        self.assertEqual(normalize_bbl("Brooklyn", "1241", "58"), "3012410058")
         self.assertEqual(normalize_bbl("bad"), "")
         self.assertEqual(observed_date("2025-06-16T00:00:00.000"), "2025-06-16")
         self.assertEqual(observed_date("06/16/2025"), "2025-06-16")
@@ -21,6 +22,11 @@ class AdditionalOfficialDescriptionTest(unittest.TestCase):
         clause = where_clause(SOURCES["hpd_violation_blank"])
         self.assertIn("apartment is null", clause)
         self.assertIn("novdescription", clause)
+
+    def test_landmark_complaints_use_tax_lot_components(self):
+        config = SOURCES["landmark_complaint"]
+        self.assertEqual(config["bbl"], ("borough", "block", "lot"))
+        self.assertIn("block is not null", where_clause(config))
 
     @patch("tools.merges.mine_additional_official_description_units.urlopen")
     def test_laa_query_uses_compound_stable_order(self, urlopen):

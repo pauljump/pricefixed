@@ -33,6 +33,7 @@
     "hpd_violations",
     "hpd_violations_compact",
     "legacy_dob_job_description_units",
+    "landmarks_complaint_description_units",
     "nyc_dof_condo_units",
     "nyc_dof_condo_area_units",
     "nyc_evictions",

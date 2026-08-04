@@ -18,6 +18,8 @@ QUEUES = (
      "nycha_violation_description", "nycha_violation_description_units"),
     ("elevator_application", "kfp4-dz4h", "job_filing_number",
      "dob_elevator_permit_description", "dob_elevator_permit_description_units"),
+    ("landmark_complaint", "ck4n-5h6x", "complaint",
+     "landmarks_complaint_description", "landmarks_complaint_description_units"),
 )
 
 

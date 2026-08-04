@@ -21,36 +21,59 @@ SOURCES = {
         "dataset": "xxbr-ypig", "id": ("job_number", "filing_number", "permit_number"),
         "text": "proposed_work_summary",
         "fields": ("bbl", "location_house_no", "location_street_name", "zip_code", "filing_date"),
-        "base": "bbl is not null", "address": ("location_house_no", "location_street_name"),
+        "base": "bbl is not null", "bbl": ("bbl",),
+        "address": ("location_house_no", "location_street_name"),
         "zip": "zip_code", "date": "filing_date",
     },
     "hpd_violation_blank": {
         "dataset": "wvxf-dwi5", "id": ("violationid",), "text": "novdescription",
         "fields": ("bbl", "housenumber", "streetname", "zip", "novissueddate"),
-        "base": "bbl is not null AND (apartment is null OR apartment='')",
+        "base": "bbl is not null AND (apartment is null OR apartment='')", "bbl": ("bbl",),
         "address": ("housenumber", "streetname"), "zip": "zip", "date": "novissueddate",
     },
     "nycha_violation_blank": {
         "dataset": "im9z-53hg", "id": ("viol_seq_no",), "text": "viol_desc",
         "fields": ("bbl", "phn", "str_nm", "zip", "insp_dt"),
         "base": "bbl is not null AND (actl_unit_insp is null OR actl_unit_insp='')",
+        "bbl": ("bbl",),
         "address": ("phn", "str_nm"), "zip": "zip", "date": "insp_dt",
     },
     "elevator_application": {
         "dataset": "kfp4-dz4h", "id": ("job_filing_number",), "text": "descriptionofwork",
         "fields": ("bbl", "house_number", "street_name", "zip", "filing_date"),
-        "base": "bbl is not null", "address": ("house_number", "street_name"),
+        "base": "bbl is not null", "bbl": ("bbl",),
+        "address": ("house_number", "street_name"),
         "zip": "zip", "date": "filing_date",
+    },
+    "landmark_complaint": {
+        "dataset": "ck4n-5h6x", "id": ("complaint",), "text": "work_reported",
+        "fields": ("borough", "block", "lot", "address", "street_name", "postcode", "date"),
+        "base": "borough is not null AND block is not null AND lot is not null",
+        "bbl": ("borough", "block", "lot"), "address": ("address", "street_name"),
+        "zip": "postcode", "date": "date",
     },
 }
 
+BOROUGH = {
+    "MANHATTAN": "1", "BRONX": "2", "BROOKLYN": "3", "QUEENS": "4",
+    "STATEN IS": "5", "STATEN ISLAND": "5",
+}
 
-def normalize_bbl(value):
-    text = str(value or "").strip()
-    if text.endswith(".0"):
-        text = text[:-2]
-    digits = "".join(char for char in text if char.isdigit())
-    return digits if len(digits) == 10 and digits[0] in "12345" else ""
+
+def normalize_bbl(*values):
+    if len(values) == 1:
+        text = str(values[0] or "").strip()
+        if text.endswith(".0"):
+            text = text[:-2]
+        digits = "".join(char for char in text if char.isdigit())
+        return digits if len(digits) == 10 and digits[0] in "12345" else ""
+    borough, block, lot = values
+    boro = BOROUGH.get(str(borough or "").strip().upper(), "")
+    block = "".join(char for char in str(block or "") if char.isdigit())
+    lot = "".join(char for char in str(lot or "") if char.isdigit())
+    if not boro or not block or not lot:
+        return ""
+    return boro + block.zfill(5)[-5:] + lot.zfill(4)[-4:]
 
 
 def observed_date(value):
@@ -146,7 +169,8 @@ def main():
                 for field in config["address"] if row.get(field)
             )
             output.append((
-                source_ref, normalize_bbl(row.get("bbl")), address,
+                source_ref,
+                normalize_bbl(*(row.get(field) for field in config["bbl"])), address,
                 str(row.get(config["zip"]) or ""), description,
                 observed_date(row.get(config["date"])), json.dumps(labels),
                 "explicit_candidate" if labels else "ambiguous_unit_word",
