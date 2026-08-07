@@ -7,7 +7,7 @@ Pricefixed has two public surfaces:
    catalog snapshot.
 
 The repository does not currently distribute a citywide snapshot. In particular,
-the local `catalog.db` used for the July 31, 2026 build is a 14.7 GB working database
+the local `catalog.db` used for the August 7, 2026 build is a 17 GB working database
 and is intentionally not committed to Git. Do not treat a count in project
 documentation as a downloadable dataset.
 
@@ -17,10 +17,14 @@ The current working build contains:
 
 | measure | count |
 |---|---:|
-| canonical units | 2,750,889 |
-| buildings | 948,147 |
-| observations | 7,181,360 |
-| official condo unit lots | 306,603 |
+| canonical units | 3,044,550 |
+| addressable units | 578,978 |
+| buildings | 1,147,182 |
+| addresses | 2,193,923 |
+| observations | 7,977,231 |
+| resolved unit observations | 5,418,176 |
+| unresolved unit observations | 2,172,515 |
+| official condo unit lots | 306,607 |
 | anonymous PLUTO capacity slots | 3,753,223 |
 
 "Canonical unit" means the project has retained a source-supplied unit label and

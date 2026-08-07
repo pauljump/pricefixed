@@ -24,9 +24,9 @@ canonical apartments.
 The current citywide build has **3,753,223 anonymous capacity slots** across the
 city. This is the complete count layer currently supported by the imported primary
 PLUTO records, and exceeds the 3,705,000 reporting benchmark because the two sources
-measure housing stock differently. It has **2,750,889 canonical units** with a
-source-supplied label and resolved BBL: **74.3% of the 3,705,000 housing-stock
-reporting denominator** and 73.3% of the imported PLUTO capacity. These numbers are
+measure housing stock differently. It has **3,044,550 canonical units** with a
+source-supplied label and resolved BBL: **82.2% of the 3,705,000 housing-stock
+reporting denominator** and 81.1% of the imported PLUTO capacity. These numbers are
 intentionally reported separately: a capacity slot answers "how many units does this
 source say the building has?"; a canonical unit answers "which apartment did a
 source identify?"
@@ -340,6 +340,25 @@ when an independent primary source confirms a BBL plus unit label.
 `catalog.db` contains `sources`, `source_documents`, `buildings`, `addresses`,
 `units`, `observations`, `entity_matches`, candidate BBLs, and audit links from a
 resolution to its corroborating evidence. The source databases remain intact.
+
+## Coverage-growth passes
+
+The August 7, 2026 local build reached **3,044,550 canonical units**. The last local
+Qwen mining run added **21,121 net-new units** from public official-description
+queues and parser-delta checks, then passed the repo's test suite (`150 tests`).
+The largest additions were:
+
+- LAA official descriptions: **13,612** net-new units.
+- HPD violation descriptions where the apartment field was blank: **6,420** net-new units.
+- Description parser deltas across already-mined public records: **1,087** net-new units.
+- Landmark complaint descriptions: **2** net-new units.
+- NYCHA blank and elevator-application queues: **0** net-new units in this run.
+
+The local model output was accepted only after deterministic candidate checks:
+source row IDs had to match the packet, model output had to carry the current
+fingerprint/status shape, evidence had to appear verbatim in the source text, and
+the proposed unit label had to be one of the deterministic candidates. Partial
+Antigravity/Gemini sidecar output was not merged into the trusted catalog.
 
 ## Coverage-growth pass (2026-07-30/31)
 
