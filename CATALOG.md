@@ -412,6 +412,18 @@ The audit reparses raw descriptions, repairs the known legacy BBL shape, and kee
 exact-address evidence separate from records that share a BBL across several
 addresses. It does not infer a complete roster or write any catalog rows.
 
+For a managed complex with a public availability feed, first build an address-level
+inventory. The inventory keeps ambiguous address-to-BBL matches visible and reports
+exact premise evidence separately from tax-lot unit coverage:
+
+```bash
+python3 tools/merges/build_complex_inventory.py \
+  --listings-db /path/to/listings.db \
+  --catalog-db /path/to/catalog.db \
+  --output /tmp/stuytown-inventory.json \
+  --csv /tmp/stuytown-inventory.csv
+```
+
 ## Exhaustion map
 
 The public-source frontier currently falls into three lanes:
