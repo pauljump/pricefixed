@@ -51,7 +51,7 @@ the queue from the reproducible local outputs with:
 ```bash
 python3 tools/merges/export_complex_unit_document_targets.py \
   --evidence /tmp/stuytown-unit-evidence-all-sources.json \
-  --output /tmp/stuytown-unit-document-targets-all-sources.csv
+  --out /tmp/stuytown-unit-document-targets-all-sources.csv
 ```
 
 ## Next source to pursue
@@ -62,3 +62,20 @@ document that names both the building address and apartment labels. A document
 that supplies only a total count should be retained as capacity evidence, not
 used to manufacture apartment rows.
 
+The DOB NOW/BIS handoff is currently a manual review step: DOB's public guidance
+directs users to search the portal by address or BIN, and the agency documents
+that DOB NOW has no external API for this workflow. The target CSV is therefore
+an acquisition queue, not a claim that the documents were downloaded. After a
+reviewer transcribes labels, the import CSV must include `address`, `bbl`,
+`unit_label`, `source_ref`, and `source_url`:
+
+```bash
+python3 tools/merges/import_unit_labels.py \
+  --catalog-db /data/catalog.db \
+  --csv /data/reviewed-unit-labels.csv
+```
+
+The importer rejects BBL-only rows and rows whose document address is not an
+exact official catalog address on that BBL. It writes those rejected rows to
+`<input>.rejected.csv` and creates both the BBL-wide source observation and the
+addressable premise/unit link for accepted rows.

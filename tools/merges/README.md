@@ -133,8 +133,11 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
     --csv /data/reviewed-unit-labels.csv
   ```
 
-  The import CSV must contain `bbl`, `unit_label`, `source_ref`, `source_url`,
-  and optionally `observed_at`. A count without a label is not importable.
+  The import CSV must contain `address`, `bbl`, `unit_label`, `source_ref`,
+  `source_url`, and optionally `observed_at`. The address must exactly match an
+  official catalog address on that BBL; BBL-only labels are rejected because a
+  tax lot can cover multiple premises. Rejected rows are written to
+  `<input>.rejected.csv` by default. A count without a label is not importable.
 - **Public DOF unit-address statements**: the official condo unit-lot table can be
   paired with the public DOF Statement of Account PDF endpoint. The miner keeps only
   the unit BBL, designation, property address, date, and source URL:
