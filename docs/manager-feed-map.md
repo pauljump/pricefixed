@@ -47,6 +47,32 @@ Sources:
 | Rose Associates | [NYBits manager profile](https://www.nybits.com/managers/rose.html) and Rose property sites | Many buildings, but no portfolio-wide public feed has been confirmed. | Candidate: sample the largest live property pages |
 | Greystar | Greystar property search | Public availability is exposed per community, not as one confirmed NYC-wide feed. | Candidate: identify the vendor and one stable community endpoint |
 
+## Who We Can Name Today
+
+These are the managers and operators for which we have a public feed or a
+public feed-shaped leasing system. This is stronger than a guess about a
+manager's software, but it still does **not** prove that the same source is the
+file NYBits receives.
+
+| Manager or operator | Evidence we can reproduce | Confidence |
+|---|---|---|
+| Beam Living | The StuyTown availability site exposes a unit JSON endpoint, and the `stuytown` adapter collects it. | Confirmed public feed |
+| TF Cornerstone | TFC exposes a portfolio-wide JSON file, and the `tfcornerstone` adapter collects it. | Confirmed public feed |
+| Durst Management | Durst availability is exposed through MRI ProspectConnect, collected by the `durst` adapter. | Confirmed public portal |
+| Ogden CAP Properties | Ogden CAP availability is exposed through MRI ProspectConnect, collected by the `ogdencap` adapter. | Confirmed public portal |
+| 9300 Realty | The existing SecureCafe configuration includes a 9300 Realty portfolio portal. | Confirmed vendor portal |
+| Rockrose Development | Rockrose's official Linc LIC page links applicants to a property-specific SecureCafe portal. | Confirmed vendor handoff; feed endpoint still needs validation |
+| ABJ Properties, Patoma, A&N Management, Downtown | Each has a public AppFolio listings page with embedded unit/map data, collected by the `appfolio` adapter. | Confirmed public feed-shaped pages |
+| Bozzuto Management | Bozzuto's public NYC search and community pages expose current availability and unit labels. | Confirmed public listings; feed endpoint unknown |
+| Brodsky Organization | Brodsky's public rentals page exposes current building/unit listings. | Confirmed public listings; feed endpoint unknown |
+| Rose Associates, Greystar, Two Trees | NYBits identifies these managers and their building portfolios, but we have not yet confirmed a stable public feed endpoint for them. | Manager confirmed; feed unknown |
+
+The missing column is **NYBits transport**. NYBits does not publish that
+column. The only reliable way to fill it is to observe the same manager's
+source over time, or obtain confirmation from NYBits or the manager. We should
+not turn a public availability page into a claim that the manager sends NYBits
+an XML feed.
+
 ## What We Should Do Next
 
 1. Use the [NYBits manager directory](https://www.nybits.com/managers/residential_property_managers.html)
