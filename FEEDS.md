@@ -2,6 +2,8 @@
 
 This is the plan for compiling every apartment in the city. Each row is a source and an adapter waiting to be written. The goal is not to hand-build all of them; it is to map them all so anyone, human or AI, can crank through them. See [`COMPILE.md`](COMPILE.md) for how to turn a row into a working adapter.
 
+For the manager-by-manager research queue, see [`docs/manager-feed-map.md`](docs/manager-feed-map.md). It separates confirmed public feeds from public listing pages and unverified vendor hypotheses.
+
 **The strategy, in order of leverage:**
 
 1. **Brokerages, for IDX/RLS-syndicated public listings.** A brokerage's own public
