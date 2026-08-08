@@ -430,6 +430,18 @@ premise evidence separately from tax-lot unit coverage. Addresses added only fro
 the resolved property BBL are marked as `anchor_bbl_catalog`; they are footprint
 addresses, not proof that every apartment in them has been observed.
 
+Once the footprint exists, build the deterministic unit-evidence matrix with the
+raw packet files. Exact-address labels and shared-BBL labels are emitted separately:
+
+```bash
+python3 tools/merges/build_complex_unit_evidence.py \
+  --inventory /tmp/stuytown-full-inventory.json \
+  --catalog-db /path/to/catalog.db \
+  --packets /path/to/dob-description-qwen-packets.jsonl \
+  --packets /path/to/dob-electrical-description-packets.jsonl \
+  --output /tmp/stuytown-unit-evidence.json
+```
+
 ## Exhaustion map
 
 The public-source frontier currently falls into three lanes:
