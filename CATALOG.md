@@ -377,14 +377,25 @@ address-count is not a safe proxy for unit count on 2-family lots), and what's l
 
 This establishes the method, not complete inventory coverage. The next additions are:
 
-1. Add direct unit observations from property-specific DOB occupancy documents and
+1. Use the NYS voter file only if a current file is already lawfully downloadable;
+   do not spend project time on a formal request unless that decision changes. See
+   [`docs/missing-units-roadmap.md`](docs/missing-units-roadmap.md).
+2. Add direct unit observations from property-specific DOB occupancy documents and
    other public document series that contain an apartment label plus a resolvable BBL.
-2. Capture raw source documents on every scrape going forward, including price-history
+3. Capture raw source documents on every scrape going forward, including price-history
    snapshots, so all new history receives `source_document` evidence grade.
-3. Record neighboring-unit patterns only as hypotheses with supporting evidence; do
+4. Record neighboring-unit patterns only as hypotheses with supporting evidence; do
    not upgrade them to canonical units until a primary source confirms BBL + label.
-4. Publish catalog coverage as counts and freshness by source, never as an invented
+5. Publish catalog coverage as counts and freshness by source, never as an invented
    completeness percentage.
+
+## Checkpoint before location logic
+
+The broad, easy public-record mining pass is closed at the August 7, 2026 build. The
+trusted catalog contains only source-backed unit labels; no neighboring-unit or
+building-count inference was used to inflate the 3,044,550 total. The next location
+logic phase should start from this committed state, produce hypotheses separately,
+and merge a new unit only when an independent source confirms its BBL and label.
 
 ## Exhaustion map
 

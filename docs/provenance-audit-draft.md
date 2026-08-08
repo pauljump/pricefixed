@@ -22,6 +22,12 @@ Current local build as of August 7, 2026:
 | Official condo unit lots | 306,607 |
 | Anonymous PLUTO capacity slots | 3,753,223 |
 
+The broad, easy source-mining phase is closed at this checkpoint. The trusted build
+does not use neighboring-unit or building-count inference to manufacture canonical
+rows. The remaining checklist below is release and provenance hardening; location
+logic is a separate follow-on phase and must keep hypotheses distinct from confirmed
+units.
+
 ---
 
 ## 2. Source Categories
@@ -110,9 +116,11 @@ We welcome new public record sources and listing adapters, but all additions mus
 
 ---
 
-## 6. Open Questions & TODO List
+## 6. Release Audit Backlog
 
-To bring the pricefixed codebase and dataset to a fully audited open-source release, the following tasks remain:
+To bring the pricefixed codebase and dataset to a fully audited open-source release,
+the following tasks remain. These are release tasks, not additional trusted unit
+mining:
 
 * [ ] **Base catalog source coverage audit**: Perform a full audit of all existing rows in `catalog.db` to tag un-sourced or legacy-imported units.
 * [ ] **Source coverage table generation**: Create an automated script that outputs an exact breakdown of unit counts by primary source attribution.
