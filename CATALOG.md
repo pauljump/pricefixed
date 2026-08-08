@@ -442,6 +442,14 @@ python3 tools/merges/build_complex_unit_evidence.py \
   --output /tmp/stuytown-unit-evidence.json
 ```
 
+Export the addresses that still need an exact unit-bearing document:
+
+```bash
+python3 tools/merges/export_complex_unit_document_targets.py \
+  --evidence /tmp/stuytown-unit-evidence.json \
+  --out /tmp/stuytown-unit-document-targets.csv
+```
+
 ## Exhaustion map
 
 The public-source frontier currently falls into three lanes:
