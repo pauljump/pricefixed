@@ -30,7 +30,7 @@ For the manager-by-manager research queue, see [`docs/manager-feed-map.md`](docs
 
 ## Tier 0 — Shipped (the reference implementations)
 
-Nine live. Copy these when building new ones.
+Ten live. Copy these when building new ones.
 
 | Source | Mechanism | Difficulty | Terms | Est. units | Status |
 |---|---|---|---|---|---|
@@ -43,6 +43,7 @@ Nine live. Copy these when building new ones.
 | Ogden CAP | MRI ProspectConnect | medium | | ~50 | ✅ |
 | Durst | MRI ProspectConnect | medium | ✅ | ~30 live | ✅ |
 | Glenwood | two-hop HTML scrape | medium | | ~30 | ✅ |
+| Dermot Company | public Nestio API called by official building pages | easy | | current listings across 17 confirmed NY properties | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
@@ -55,7 +56,7 @@ highest-leverage work left.
 | **MRI ProspectConnect** | Durst, Ogden CAP, others | CSRF + POST search per community code | 🔨 shipped for 2; find more communities |
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |
-| **Funnel / Nestio** | Two Trees, Moinian, others | `nestiolistings.com/api/v2/` | 🔬 |
+| **Funnel / Nestio** | Dermot, Two Trees, Moinian, others | `nestiolistings.com/api/v2/` | 🔨 Dermot shipped; enumerate others |
 | **RealPage / On-Site** | large operators | On-Site availability API | 🔬 |
 | **Rent Manager / Buildium** | long tail of small operators | per-vendor API | 🔬 |
 

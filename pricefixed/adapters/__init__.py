@@ -3,6 +3,7 @@ register it here. Keep the map alphabetical."""
 from .appfolio import AppFolioAdapter
 from .avalonbay import AvalonBayAdapter
 from .corcoran import CorcoranSource
+from .dermot import DermotAdapter
 from .durst import DurstAdapter
 from .elliman import EllimanSource
 from .glenwood import GlenwoodAdapter
@@ -19,6 +20,7 @@ ADAPTERS = {
         AppFolioAdapter,
         AvalonBayAdapter,
         CorcoranSource,
+        DermotAdapter,
         DurstAdapter,
         EllimanSource,
         GlenwoodAdapter,

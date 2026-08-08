@@ -37,6 +37,7 @@ Sources:
 | RentCafe / SecureCafe properties already found | Per-property `securecafe.com/onlineleasing/.../availableunits.aspx` pages | Public HTML tables with unit, square feet, rent, and availability | Shipped in `securecafe`; more portals still need enumeration |
 | AppFolio operators already found | Public `{company}.appfolio.com/listings` pages | Public listing/map data embedded in the page | Shipped in `appfolio`; more NYC companies still need enumeration |
 | Durst and Ogden CAP | MRI ProspectConnect community pages | Public community availability after the site search flow | Shipped in `durst` and `ogdencap` |
+| Dermot Company | [`dermotcompany.com/state/new-york`](https://www.dermotcompany.com/state/new-york) → public `nestiolistings.com/api/v2/listings/all` calls | Current listings with exact unit labels, exact street address, price, and availability date for 17 confirmed NY communities | Shipped in `dermot`; this is not a complete roster |
 
 ## Manager-Specific Paths To Test
 
@@ -66,6 +67,7 @@ file NYBits receives.
 | 9300 Realty | The existing SecureCafe configuration includes a 9300 Realty portfolio portal. | Confirmed vendor portal |
 | Rockrose Development | Rockrose's official Linc LIC page links applicants to a property-specific SecureCafe portal. | Confirmed vendor handoff; feed endpoint still needs validation |
 | ABJ Properties, Patoma, A&N Management, Downtown | Each has a public AppFolio listings page with embedded unit/map data, collected by the `appfolio` adapter. | Confirmed public feed-shaped pages |
+| Dermot Company | Official building pages expose community IDs and call the public Nestio availability endpoint; 17 New York properties are configured. | Confirmed public feed |
 | Bozzuto Management | Bozzuto's public NYC search and community pages expose current availability and unit labels. | Confirmed public listings; feed endpoint unknown |
 | Brodsky Organization | Brodsky's public rentals page exposes current building/unit listings. | Confirmed public listings; feed endpoint unknown |
 | Rose Associates, Greystar, Two Trees | NYBits identifies these managers and their building portfolios, but we have not yet confirmed a stable public feed endpoint for them. | Manager confirmed; feed unknown |
