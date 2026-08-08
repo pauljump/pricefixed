@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 
 from ..engine.crosswalk import build_crosswalk_pad, normalize_address
 from ..engine.dedupe import normalize_unit
+from ..engine.identifiers import normalize_bbl
 from ..record.core import BOROUGHS, boro_clause, socrata
 from ..record.violations import iso_date, make_bbl
 from .xlsx import read_xlsx_rows
@@ -135,11 +136,7 @@ def _id(prefix, *parts):
 
 def _normalize_bbl(raw):
     """Normalize a numeric NYC BBL to its 10-digit text representation."""
-    try:
-        value = int(float(raw))
-    except (TypeError, ValueError):
-        return None
-    return f"{value:010d}" if 1_000_000_000 <= value <= 5_999_999_999 else None
+    return normalize_bbl(raw)
 
 
 def init_catalog_db(path):

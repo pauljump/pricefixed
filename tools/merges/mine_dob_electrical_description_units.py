@@ -12,6 +12,7 @@ from urllib.request import Request, urlopen
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from pricefixed.engine.unit_mentions import extract_explicit_unit_labels
+from pricefixed.engine.identifiers import normalize_bbl as normalize_identifier_bbl
 
 DATASET = "dm9a-ab7w"
 API = f"https://data.cityofnewyork.us/resource/{DATASET}.json"
@@ -23,8 +24,7 @@ WHERE = (
 
 
 def normalize_bbl(value):
-    digits = "".join(char for char in str(value or "") if char.isdigit())
-    return digits if len(digits) == 10 and digits[0] in "12345" else ""
+    return normalize_identifier_bbl(value) or ""
 
 
 def observed_date(value):

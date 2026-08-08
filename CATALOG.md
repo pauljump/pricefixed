@@ -397,6 +397,21 @@ building-count inference was used to inflate the 3,044,550 total. The next locat
 logic phase should start from this committed state, produce hypotheses separately,
 and merge a new unit only when an independent source confirms its BBL and label.
 
+For a specific building, use the read-only source audit before changing the catalog:
+
+```bash
+python3 tools/merges/audit_building_unit_sources.py \
+  --bbl 1009780001 \
+  --address "3 PETER COOPER ROAD" \
+  --packets /path/to/packets.jsonl \
+  --packets /path/to/approved-permit-all.json \
+  --output /tmp/building-audit.json
+```
+
+The audit reparses raw descriptions, repairs the known legacy BBL shape, and keeps
+exact-address evidence separate from records that share a BBL across several
+addresses. It does not infer a complete roster or write any catalog rows.
+
 ## Exhaustion map
 
 The public-source frontier currently falls into three lanes:
