@@ -75,8 +75,8 @@ python3 tools/merges/import_unit_labels.py \
   --csv /data/reviewed-unit-labels.csv
 ```
 
-Create a manual review worksheet with exact-address BIS links and the DOB NOW
-public-portal entry point:
+Create a manual review worksheet with exact-address BIS links, the BBL building
+map, and the DOB NOW public-portal entry point:
 
 ```bash
 python3 tools/merges/export_dob_document_review_queue.py \

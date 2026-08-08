@@ -14,6 +14,7 @@ FIELDS = (
     "property", "address", "normalized_address", "resolved_bbl", "listing_count",
     "direct_address_unit_count", "catalog_bbl_unit_count", "packet_exact_hit_count",
     "inventory_origin", "next_source", "bis_property_profile_url",
+    "bis_bbl_building_map_url",
     "dob_now_public_portal_url", "review_status", "document_url", "evidence_type",
     "unit_label", "exact_address_match", "notes",
 )
@@ -41,6 +42,20 @@ def bis_profile_url(address, borough="1"):
     return f"https://a810-bisweb.nyc.gov/bisweb/PropertyProfileOverviewServlet?{query}"
 
 
+def bis_bbl_building_map_url(bbl, borough="1"):
+    """Return the BIS building-on-lot map URL for a 10-digit BBL."""
+    value = str(bbl or "").strip()
+    if len(value) != 10 or not value.isdigit():
+        return ""
+    query = urlencode({
+        "requestid": "1",
+        "allborough": borough,
+        "allblock": str(int(value[1:6])),
+        "alllot": str(int(value[6:])),
+    })
+    return f"https://a810-bisweb.nyc.gov/bisweb/PropertyBrowseByBBLServlet?{query}"
+
+
 def export_queue(targets_path, output_path, borough="1"):
     rows = []
     with Path(targets_path).open(newline="", encoding="utf-8") as handle:
@@ -48,6 +63,9 @@ def export_queue(targets_path, output_path, borough="1"):
             address = source.get("address", "")
             row = {field: source.get(field, "") for field in FIELDS}
             row["bis_property_profile_url"] = bis_profile_url(address, borough)
+            row["bis_bbl_building_map_url"] = bis_bbl_building_map_url(
+                source.get("resolved_bbl", ""), borough,
+            )
             row["dob_now_public_portal_url"] = DOB_NOW_PUBLIC_PORTAL
             row["review_status"] = "unreviewed"
             if not row["bis_property_profile_url"]:

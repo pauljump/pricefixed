@@ -23,6 +23,8 @@ class DobDocumentReviewQueueTest(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertIn("houseno=342", rendered["bis_property_profile_url"])
         self.assertIn("street=1+AVENUE", rendered["bis_property_profile_url"])
+        self.assertIn("allblock=978", rendered["bis_bbl_building_map_url"])
+        self.assertIn("alllot=1", rendered["bis_bbl_building_map_url"])
         self.assertEqual(rendered["review_status"], "unreviewed")
         self.assertEqual(rendered["unit_label"], "")
         self.assertEqual(rendered["exact_address_match"], "")

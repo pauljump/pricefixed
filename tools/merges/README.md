@@ -218,10 +218,11 @@ capacity. The summary reports counts by status, borough, and building class.
     --out /data/dob-document-review-queue.csv
   ```
 
-  BIS links are generated from the target address using the official Manhattan
-  address-search route. If a target cannot be parsed into a house number and
-  street, it remains visible as `unparseable_address` instead of receiving a
-  guessed URL.
+  BIS links are generated from the target address and BBL using the official
+  Manhattan address-search and building-on-lot routes. The BBL map is useful
+  when one tax lot contains multiple BINs and premises. If a target cannot be
+  parsed into a house number and street, it remains visible as
+  `unparseable_address` instead of receiving a guessed URL.
 
 Validate the completed DOF address evidence before any catalog import:
 
