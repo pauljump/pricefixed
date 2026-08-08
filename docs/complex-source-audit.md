@@ -75,6 +75,20 @@ python3 tools/merges/import_unit_labels.py \
   --csv /data/reviewed-unit-labels.csv
 ```
 
+Create a manual review worksheet with exact-address BIS links and the DOB NOW
+public-portal entry point:
+
+```bash
+python3 tools/merges/export_dob_document_review_queue.py \
+  --targets /tmp/stuytown-unit-document-targets-all-sources.csv \
+  --out /tmp/stuytown-dob-document-review-queue.csv
+```
+
+The 2026-08-08 run produced 228 review rows and 0 unparseable addresses. The
+worksheet deliberately leaves `unit_label`, `document_url`, and
+`exact_address_match` blank for human review; no document is treated as
+evidence until those fields are filled from the source itself.
+
 The importer rejects BBL-only rows and rows whose document address is not an
 exact official catalog address on that BBL. It writes those rejected rows to
 `<input>.rejected.csv` and creates both the BBL-wide source observation and the

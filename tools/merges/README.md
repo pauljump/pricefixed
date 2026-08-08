@@ -206,6 +206,23 @@ capacity. The summary reports counts by status, borough, and building class.
     --out /data/dob-target-description-evidence.csv
   ```
 
+- **Create the manual DOB document queue**: add exact-address BIS property-profile
+  links and the DOB NOW public-portal entry point to each unresolved target. This
+  is a review worksheet only; it does not fetch documents or create units. A
+  reviewer must record the document URL, evidence type, exact-address match, and
+  unit label before using `import_unit_labels.py`:
+
+  ```bash
+  python3 tools/merges/export_dob_document_review_queue.py \
+    --targets /data/complex-unit-document-targets.csv \
+    --out /data/dob-document-review-queue.csv
+  ```
+
+  BIS links are generated from the target address using the official Manhattan
+  address-search route. If a target cannot be parsed into a house number and
+  street, it remains visible as `unparseable_address` instead of receiving a
+  guessed URL.
+
 Validate the completed DOF address evidence before any catalog import:
 
 ```bash
