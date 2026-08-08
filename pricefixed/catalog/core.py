@@ -79,6 +79,12 @@ DOB_NOW_PERMITS_SELECT = (
     "work_on_floor,apt_condo_no_s,approved_date,issued_date,expired_date,permit_status,"
     "work_type,job_description,zip_code"
 )
+DOB_NOW_CERTIFICATES_DATASET = "pkdm-hqz6"
+DOB_NOW_CERTIFICATES_SELECT = (
+    "job_filing_name,job_type,bin,borough,house_no,street_name,block,lot,zip_code,"
+    "submitted_date,c_of_o_status,c_of_o_sequence,c_of_o_filing_type,c_of_o_issuance_date,"
+    "application_number,number_of_dwelling_units,c_of_o_number,bbl"
+)
 HPD_REGISTRATIONS_DATASET = "tesw-yqqr"
 HPD_REGISTRATIONS_SELECT = (
     "registrationid,buildingid,boroid,boro,housenumber,streetname,zip,block,lot,bin,"
@@ -100,12 +106,22 @@ NON_DWELLING_UNIT_LABELS = {
     "BASEMENT", "CELLAR", "ROOF", "PUBLIC HALL", "PUBLIC AREA", "HALLWAY",
     "STAIRWAY", "STAIRWELL", "ELEVATOR", "ENTIRE BUILDING", "BUILDING WIDE",
     "BLDG", "BUILDING", "MEDICAL", "COMMERCIAL", "RETAIL", "OFFICE", "PARKING", "STORAGE", "RESIDENTIAL",
+    # HPD fields are short and often contain truncated versions of the same
+    # common-area values.
+    "BASE", "BASEM", "BASEME", "BSMT", "BSMNT", "BLD", "BLDG.", "BUILDI",
+    "BUILD", "ENT", "ENTIRE", "LOBBY", "ALL", "NA", "N/A", "ANON", "PVT",
 }
 
 # The archived Vayo all-NYC-unit export contains a small number of scraper
 # artifacts in its otherwise unit-bearing rows. They are retained nowhere as
 # apartments; the raw archive remains the source of record for audit purposes.
 VAYO_NON_UNIT_LABELS = {"FINISHES", "MANAGEMENT"}
+
+# DOF documents that co-op sales may put the apartment after a comma in the
+# address while leaving apartment_number empty. Only accept compact labels with
+# a digit (or a small set of explicit non-numeric labels); never parse a freeform
+# address tail into a unit.
+_DOF_ADDRESS_UNIT = re.compile(r"^(?:[A-Z]?\d[A-Z0-9]{0,6}|\d{1,4}[A-Z]{0,4}|PH|PENTHOUSE)$")
 
 
 def _now():
@@ -1805,17 +1821,30 @@ class Catalog:
             observed_at = iso_date(row.get("sale_date"))
             if not bbl or not observed_at:
                 continue
-            raw_label = row.get("apartment_number")
-            label_key = str(raw_label or "").strip().upper()
-            normalized_label = normalize_unit(raw_label)
             raw_address = str(row.get("address") or "").strip()
-            # Co-op sale addresses often repeat the apartment after a final comma.
             address = raw_address
+            raw_label = row.get("apartment_number")
+            source_label = raw_label
+            label_source = "apartment_number"
+            normalized_label = normalize_unit(raw_label)
+            # Co-op sale addresses often repeat the apartment after a final comma.
+            # The field is official evidence, but the parser is intentionally narrow.
             if normalized_label and "," in raw_address:
                 head, tail = raw_address.rsplit(",", 1)
                 if normalize_unit(tail) == normalized_label:
                     address = head.strip()
-            source_ref = _id("sale", bbl, observed_at, raw_address, raw_label, row.get("sale_price"))
+            elif not normalized_label and "," in raw_address:
+                head, tail = raw_address.rsplit(",", 1)
+                candidate = normalize_unit(tail)
+                if head.strip() and _DOF_ADDRESS_UNIT.fullmatch(candidate):
+                    address = head.strip()
+                    raw_label = tail.strip()
+                    normalized_label = candidate
+                    label_source = "address_suffix"
+            label_key = str(raw_label or "").strip().upper()
+            # Keep the source identity tied to the published columns so a rerun
+            # upgrades an existing unresolved row instead of duplicating it.
+            source_ref = _id("sale", bbl, observed_at, raw_address, source_label, row.get("sale_price"))
             document_id = _id("doc", source, source_ref, retrieved_at)
             payload = json.dumps(row, default=str, sort_keys=True)
             self.conn.execute(
@@ -1863,8 +1892,13 @@ class Catalog:
                     "unit_label=excluded.unit_label,last_seen=excluded.last_seen",
                     (unit_id, bbl, raw_label, normalized_label, now, now),
                 )
+                rationale = "direct DOF sale BBL plus apartment number"
+                method = "official_bbl_and_unit_label"
+                if label_source == "address_suffix":
+                    rationale = "DOF sale address explicitly includes a comma-delimited apartment label"
+                    method = "official_bbl_and_address_unit_label"
                 self._match(observation_id, "unit", unit_id, "resolved", 1.0,
-                            "official_bbl_and_unit_label", "direct DOF sale BBL plus apartment number")
+                            method, rationale)
                 units += 1
                 resolved += 1
             observations += 1
@@ -2116,6 +2150,60 @@ class Catalog:
             ("job_filing_number", "work_permit", "issued_date", "apt_condo_no_s"),
             limit, boro, offset,
         )
+
+    def import_dob_now_certificates(self, limit=None, boro=None, offset=0):
+        """Import DOB NOW certificates as building-level capacity evidence.
+
+        Certificates report a dwelling-unit count but do not provide apartment
+        labels. They therefore enrich building evidence only and never create
+        canonical unit rows.
+        """
+        where = "borough='%s'" % BOROUGHS[boro][1].title() if boro else None
+        rows = socrata(DOB_NOW_CERTIFICATES_DATASET, select=DOB_NOW_CERTIFICATES_SELECT,
+                       where=where, order="c_of_o_issuance_date DESC", limit=limit, offset=offset)
+        source = "dob_now_certificates"
+        self._source(source, "public_record", "NYC DOB NOW Certificates of Occupancy")
+        retrieved_at = _now()
+        observations = resolved = unresolved = 0
+        for row in rows:
+            source_ref = str(row.get("c_of_o_number") or row.get("application_number") or row.get("job_filing_name") or "")
+            if not source_ref:
+                continue
+            bbl = _normalize_bbl(row.get("bbl")) or make_bbl(row.get("borough"), row.get("block"), row.get("lot"))
+            observed_at = iso_date(row.get("c_of_o_issuance_date")) or iso_date(row.get("submitted_date")) or retrieved_at[:10]
+            address = " ".join(str(value).strip() for value in (row.get("house_no"), row.get("street_name")) if value) or None
+            payload = json.dumps(row, default=str, sort_keys=True)
+            document_id = _id("doc", source, source_ref, retrieved_at)
+            self.conn.execute(
+                "INSERT OR IGNORE INTO source_documents "
+                "(document_id,source,source_ref,retrieved_at,payload,payload_kind) VALUES (?,?,?,?,?,?)",
+                (document_id, source, source_ref, retrieved_at, payload, "nyc_open_data_row"),
+            )
+            observation_id = _id("obs", source, source_ref, observed_at, "official_certificate_of_occupancy")
+            self.conn.execute(
+                "INSERT INTO observations "
+                "(observation_id,document_id,source,source_ref,observed_at,observation_kind,address,status,raw_fields,evidence_grade) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?) ON CONFLICT(source,source_ref,observed_at,observation_kind) DO UPDATE SET "
+                "document_id=excluded.document_id,address=excluded.address,status=excluded.status,raw_fields=excluded.raw_fields,"
+                "evidence_grade=excluded.evidence_grade",
+                (observation_id, document_id, source, source_ref, observed_at,
+                 "official_certificate_of_occupancy", address, row.get("c_of_o_status"), payload, "source_document"),
+            )
+            if bbl:
+                self._ensure_building(bbl, source)
+                self._match(observation_id, "building", bbl, "resolved", 1.0, "official_bbl",
+                            "DOB NOW certificate supplies BBL or borough-block-lot")
+                resolved += 1
+            else:
+                self._match(observation_id, "building", None, "unresolved", 0.0, "official_bbl",
+                            "DOB NOW certificate has no usable BBL")
+                unresolved += 1
+            observations += 1
+        self.conn.commit()
+        return {"dob_certificate_offset": offset, "dob_certificate_rows": len(rows),
+                "dob_certificate_observations": observations,
+                "dob_certificate_resolved_buildings": resolved,
+                "dob_certificate_unresolved_buildings": unresolved}
 
     def import_hpd_registration_coverage(self, limit=None, boro=None, offset=0):
         """Create an immutable registered-rental coverage snapshot.

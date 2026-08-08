@@ -241,7 +241,9 @@ python3 catalog.py --source vayo_corcoran_archive --vayo-db /path/to/corcoran.db
 Additional direct public unit-observation imports:
 
 ```bash
-# DOF sales: BBL, sale date/price, and apartment number when reported.
+# DOF sales: BBL, sale date/price, and apartment number when reported. The
+# importer also accepts a narrow, explicit apartment suffix after the final
+# comma in the official address field, which DOF uses for some co-op sales.
 python3 catalog.py --source annualized_sales --boro MN --limit 1000 --db catalog.db
 
 # Current DOF rolling sales: derives BBL from official borough/block/lot fields.
@@ -255,6 +257,10 @@ python3 catalog.py --source dob_now_jobs --boro MN --limit 1000 --db catalog.db
 
 # DOB NOW approved permits: a separate dated permit record with apartment/condo labels.
 python3 catalog.py --source dob_now_permits --boro MN --limit 1000 --db catalog.db
+
+# DOB NOW Certificates of Occupancy: building-level certificate and dwelling-count evidence.
+# This source never creates apartment rows because it has no apartment-label field.
+python3 catalog.py --source dob_now_certificates --boro MN --limit 1000 --db catalog.db
 
 # OSE's dated short-term-rental registration/listing spreadsheet.
 python3 catalog.py --source ose_str_snapshot --snapshot /path/to/STR.xlsx --snapshot-date 2026-01-07 --db catalog.db
@@ -372,6 +378,8 @@ The public-source frontier currently falls into three lanes:
 - **Bulk building/count context:** PLUTO and HPD Multiple Dwelling Registrations can
   measure the residential tax-lot and registered-rental-building universe. Their
   `unitsres`/registration fields are denominators and diagnostics, never unit rosters.
+  DOB NOW Certificates of Occupancy add another official building-level count and
+  certificate history, but still do not identify individual apartments.
   `hpd_registration_coverage` stores an immutable run with `partial` status when
   capped and joins its BBLs to PLUTO context already imported into the catalog.
 - **Targeted public document retrieval:** BIS/DOB NOW Certificates of Occupancy,
