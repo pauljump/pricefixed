@@ -49,6 +49,7 @@ def create_catalog_db(path):
         "INSERT INTO addresses VALUES (?,?,?,?)",
         [
             ("3 PETER COOPER RD", "1009780001", "3 PETER COOPER ROAD", "10010"),
+            ("4 PETER COOPER RD", "1009780001", "4 PETER COOPER ROAD", "10010"),
             ("1 STUYVESANT OVAL", "1009720001", "1 STUYVESANT OVAL", "10009"),
             ("1 STUYVESANT OVAL", "1009990001", "1 STUYVESANT OVAL", "10009"),
             ("2 STUYVESANT OVAL", "1009720001", "2 STUYVESANT OVAL", "10009"),
@@ -96,6 +97,23 @@ class ComplexInventoryTest(unittest.TestCase):
         stuy = rows[("Stuyvesant Town", "1 STUYVESANT OVAL")]
         self.assertEqual(stuy["resolved_bbl"], "1009720001")
         self.assertEqual(stuy["resolution"], "property_anchor_disambiguation")
+
+    def test_can_include_catalog_only_anchor_addresses(self):
+        with tempfile.TemporaryDirectory() as directory:
+            listings = Path(directory) / "listings.db"
+            catalog = Path(directory) / "catalog.db"
+            create_listings_db(listings)
+            create_catalog_db(catalog)
+            report = build_inventory(
+                listings, catalog, include_anchor_bbl_addresses=True
+            )
+        rows = {(row["property"], row["normalized_address"]): row for row in report["rows"]}
+        self.assertIn(("Peter Cooper Village", "4 PETER COOPER RD"), rows)
+        self.assertEqual(rows[("Peter Cooper Village", "4 PETER COOPER RD")]["listing_count"], 0)
+        self.assertEqual(
+            rows[("Peter Cooper Village", "4 PETER COOPER RD")]["inventory_origin"],
+            "anchor_bbl_catalog",
+        )
 
 
 if __name__ == "__main__":

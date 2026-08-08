@@ -421,8 +421,14 @@ python3 tools/merges/build_complex_inventory.py \
   --listings-db /path/to/listings.db \
   --catalog-db /path/to/catalog.db \
   --output /tmp/stuytown-inventory.json \
-  --csv /tmp/stuytown-inventory.csv
+  --csv /tmp/stuytown-inventory.csv \
+  --include-anchor-bbl-addresses
 ```
+
+The inventory keeps ambiguous address-to-BBL matches visible and reports exact
+premise evidence separately from tax-lot unit coverage. Addresses added only from
+the resolved property BBL are marked as `anchor_bbl_catalog`; they are footprint
+addresses, not proof that every apartment in them has been observed.
 
 ## Exhaustion map
 

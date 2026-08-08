@@ -76,6 +76,17 @@ def _listing_rows(connection, properties):
     )
 
 
+def _anchor_address_rows(connection, bbls):
+    rows = []
+    for chunk in _chunks(bbls):
+        placeholders = ",".join("?" for _ in chunk)
+        rows.extend(connection.execute(
+            f"SELECT normalized,bbl,address,zipcode FROM addresses WHERE bbl IN ({placeholders})",
+            tuple(chunk),
+        ).fetchall())
+    return rows
+
+
 def _anchor_bbls(groups, addresses):
     """Learn one BBL anchor per property from unambiguous address matches."""
     anchors = {}
@@ -99,7 +110,12 @@ def _resolve(property_name, candidates, anchor):
     return None, "ambiguous_catalog_address"
 
 
-def build_inventory(listings_db, catalog_db, properties=DEFAULT_PROPERTIES):
+def build_inventory(
+    listings_db,
+    catalog_db,
+    properties=DEFAULT_PROPERTIES,
+    include_anchor_bbl_addresses=False,
+):
     listings = sqlite3.connect(listings_db)
     catalog = sqlite3.connect(catalog_db)
     try:
@@ -125,6 +141,22 @@ def build_inventory(listings_db, catalog_db, properties=DEFAULT_PROPERTIES):
             catalog, {normalized for rows in groups.values() for normalized in rows}
         )
         anchors = _anchor_bbls(groups, addresses)
+        if include_anchor_bbl_addresses:
+            for property_name, bbl in anchors.items():
+                for normalized, row_bbl, address, zipcode in _anchor_address_rows(catalog, [bbl]):
+                    group = groups[property_name].setdefault(normalized, {
+                        "property": property_name,
+                        "address": address,
+                        "normalized_address": normalized,
+                        "listing_count": 0,
+                        "listing_unit_labels": set(),
+                        "listing_source_ids": set(),
+                        "inventory_origin": "anchor_bbl_catalog",
+                    })
+                    group.setdefault("inventory_origin", "active_feed")
+            addresses, buildings, bbl_units, premise_units = _catalog_indexes(
+                catalog, {normalized for rows in groups.values() for normalized in rows}
+            )
         output_rows = []
         for property_name, rows in sorted(groups.items()):
             for normalized_address, row in sorted(rows.items()):
@@ -164,6 +196,7 @@ def build_inventory(listings_db, catalog_db, properties=DEFAULT_PROPERTIES):
                         "direct_address_evidence_premise"
                         if exact_units else "no_exact_address_evidence"
                     ),
+                    "inventory_origin": row.get("inventory_origin", "active_feed"),
                 }
                 output_rows.append(row_out)
         return {
@@ -177,6 +210,12 @@ def build_inventory(listings_db, catalog_db, properties=DEFAULT_PROPERTIES):
             "ambiguous_address_count": sum(row["resolution"] == "ambiguous_catalog_address" for row in output_rows),
             "addressable_evidence_count": sum(bool(row["exact_premise_unit_labels"]) for row in output_rows),
             "direct_address_evidence_count": sum(bool(row["direct_address_unit_labels"]) for row in output_rows),
+            "active_feed_address_count": sum(
+                row["inventory_origin"] == "active_feed" for row in output_rows
+            ),
+            "anchor_bbl_catalog_only_address_count": sum(
+                row["inventory_origin"] == "anchor_bbl_catalog" for row in output_rows
+            ),
             "rows": output_rows,
         }
     finally:
@@ -190,7 +229,7 @@ def write_csv(path, rows):
         "listing_unit_labels", "candidate_bbls", "resolved_bbl", "resolution",
         "property_anchor_bbl", "catalog_bbl_unit_count", "exact_premise_unit_labels",
         "exact_premise_unit_count", "direct_address_unit_labels",
-        "direct_address_unit_count", "source_status",
+        "direct_address_unit_count", "source_status", "inventory_origin",
     ]
     with Path(path).open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
@@ -212,9 +251,16 @@ def main():
     parser.add_argument("--output", required=True, help="JSON inventory path")
     parser.add_argument("--csv", help="Optional flat address inventory path")
     parser.add_argument("--property", dest="properties", action="append", default=[])
+    parser.add_argument(
+        "--include-anchor-bbl-addresses", action="store_true",
+        help="Include catalog addresses on the resolved property BBL anchors",
+    )
     args = parser.parse_args()
     properties = tuple(args.properties) if args.properties else DEFAULT_PROPERTIES
-    report = build_inventory(args.listings_db, args.catalog_db, properties)
+    report = build_inventory(
+        args.listings_db, args.catalog_db, properties,
+        include_anchor_bbl_addresses=args.include_anchor_bbl_addresses,
+    )
     output = Path(args.output)
     output.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     if args.csv:
