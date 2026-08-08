@@ -79,3 +79,46 @@ The importer rejects BBL-only rows and rows whose document address is not an
 exact official catalog address on that BBL. It writes those rejected rows to
 `<input>.rejected.csv` and creates both the BBL-wide source observation and the
 addressable premise/unit link for accepted rows.
+
+ACRIS can be used as an unattended evidence pass for the same queue:
+
+```bash
+python3 tools/merges/mine_acris_gap_targets.py \
+  --targets /tmp/stuytown-unit-document-targets-all-sources.csv \
+  --out /tmp/stuytown-acris-gap-evidence.csv
+```
+
+The collector preserves the complex target fields and checkpoints by exact
+`(BBL, address)`, so shared-BBL addresses are never skipped or conflated.
+
+DOB NOW job descriptions are a separate direct-evidence lane. The targeted
+collector filters to jobs with no direct apartment field, keeps only exact
+source-address matches, and emits the verbatim description plus deterministic
+parser result:
+
+```bash
+python3 tools/merges/mine_dob_target_descriptions.py \
+  --targets /tmp/stuytown-unit-document-targets-all-sources.csv \
+  --out /tmp/stuytown-dob-description-evidence.csv
+```
+
+Rows marked `explicit_candidate` are review candidates, not automatically a
+complete roster. Rows marked `ambiguous_description` remain visible without a
+unit label and cannot create a canonical unit.
+
+## Targeted API results
+
+The bounded passes on 2026-08-08 produced the following evidence summary:
+
+| Pass | Result |
+| :--- | :--- |
+| ACRIS exact-address unit rows over all 228 unresolved addresses | 228 `no_unit_rows`; 0 unit labels |
+| DOB job descriptions over the 228 unresolved addresses | 11 exact-address observations across 5 addresses; 0 explicit labels, all ambiguous construction/mechanical descriptions |
+| DOB job descriptions over the full 358-address footprint | 737 observations, including 681 explicit candidates across 115 addresses; no new explicit labels for the 228-address unresolved queue |
+
+The DOB description API is therefore exhausted for the current unresolved
+footprint. Its positive rows remain useful dated observations, but they do not
+fill the queue. The next source attempt must retrieve a unit-bearing occupancy
+document or equivalent address-specific primary record through BIS/DOB NOW
+manual review; building counts and the existing description candidates do not
+justify copying a floorplan or completing the roster by pattern.

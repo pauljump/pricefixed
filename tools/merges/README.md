@@ -178,7 +178,9 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
 
   Rows retain the target BBL/address, unit-lot BBL, unit label, ACRIS document ID,
   observation date, query URL, and collection status. Failed or empty targets stay
-  in the corpus for later review.
+  in the corpus for later review. The collector checkpoints by exact target address,
+  not just BBL, because one tax lot may contain several addressable premises; it also
+  accepts the complex target queue's `resolved_bbl` column.
 - **Prepare the review queue**: after collection, make a smaller ranked file for
   follow-up research or local-model triage. This does not change the catalog:
 
@@ -191,6 +193,18 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
 
 The output keeps only targets without ACRIS unit rows and sorts them by unresolved
 capacity. The summary reports counts by status, borough, and building class.
+
+- **Targeted DOB job-description collection**: for a small exact-address queue,
+  fetch only the DOB NOW jobs for the target BBLs, require an exact source-address
+  match, and preserve the verbatim description alongside the deterministic parser
+  result. This is evidence preparation only; explicit candidates still need review
+  before any catalog merge, and ambiguous descriptions have no unit label:
+
+  ```bash
+  python3 tools/merges/mine_dob_target_descriptions.py \
+    --targets /data/complex-unit-document-targets.csv \
+    --out /data/dob-target-description-evidence.csv
+  ```
 
 Validate the completed DOF address evidence before any catalog import:
 

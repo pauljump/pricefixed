@@ -14,14 +14,31 @@ from pathlib import Path
 from urllib.parse import urlencode
 from urllib.request import urlopen
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from pricefixed.engine.crosswalk import normalize_address
+
 
 API = "https://data.cityofnewyork.us/resource/8h5j-fqxa.json"
 ADDRESS_RE = re.compile(r"^\s*(\d+[A-Z]?(?:-\d+[A-Z]?)?)\s+(.+?)\s*$", re.IGNORECASE)
 
 
+def target_bbl(target):
+    """Accept the standard gap queue and complex queues with resolved_bbl."""
+    return str(target.get("bbl") or target.get("resolved_bbl") or "").strip()
+
+
+def target_key(target):
+    """Checkpoint one exact address, never one shared BBL."""
+    bbl = target_bbl(target)
+    normalized = normalize_address(target.get("address") or "")
+    return f"{bbl}|{normalized or str(target.get('address') or '').strip().upper()}"
+
+
 def query_target(target):
-    bbl = str(target["bbl"]).zfill(10)
+    raw_bbl = target_bbl(target)
+    bbl = raw_bbl.zfill(10)
     address = str(target["address"] or "").strip().upper()
+    target = {**target, "bbl": bbl}
     match = ADDRESS_RE.match(address)
     if not match:
         return [{**target, "unit_lot_bbl": "", "unit_label": "", "document_id": "",
@@ -83,12 +100,17 @@ def main():
     completed = set()
     if output.exists():
         with output.open(encoding="utf-8", newline="") as handle:
-            completed = {row["bbl"] for row in csv.DictReader(handle)}
-    targets = [target for target in targets if target["bbl"] not in completed]
+            completed = {target_key(row) for row in csv.DictReader(handle)}
+    targets = [target for target in targets if target_key(target) not in completed]
     output.parent.mkdir(parents=True, exist_ok=True)
     write_header = not output.exists() or output.stat().st_size == 0
     with output.open("a", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=fields)
+        input_fields = list(targets[0].keys()) if targets else []
+        if output.exists() and output.stat().st_size:
+            with output.open(encoding="utf-8", newline="") as existing:
+                input_fields = next(csv.reader(existing), input_fields)
+        fields = tuple(dict.fromkeys([*input_fields, *fields]))
+        writer = csv.DictWriter(handle, fieldnames=fields, extrasaction="ignore")
         if write_header:
             writer.writeheader()
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
