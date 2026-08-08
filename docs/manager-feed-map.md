@@ -7,6 +7,9 @@ also accept listings posted by hand. The public manager directory is therefore
 useful for finding who manages a building, but it is not the source of truth
 for every apartment.
 
+For the separate investigation of NYBits's public code fingerprints, feed
+instructions, and public GitHub evidence, see [`nybits-deep-dive.md`](nybits-deep-dive.md).
+
 Sources:
 
 - [NYBits manager directory](https://www.nybits.com/managers/residential_property_managers.html)
