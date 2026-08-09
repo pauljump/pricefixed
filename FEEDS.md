@@ -48,7 +48,7 @@ Ten live. Copy these when building new ones.
 | Spherexx / AdKast (Marquis, Kings & Queens) | official page + public paginated AJAX | medium | | current listings across 2 confirmed portals | ✅ |
 | C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
 | Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
-| Manhattan Skyline Management | public `/api/units` feed + linked official unit detail pages | medium | | current listings with exact address on detail pages | ✅ |
+| Olnick Rentals | official rentals index + explicit project availability pages | medium | | current listings with exact address and apartment label | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 

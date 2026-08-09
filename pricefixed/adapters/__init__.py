@@ -12,6 +12,7 @@ from .glenwood import GlenwoodAdapter
 from .manhattanskyline import ManhattanSkylineAdapter
 from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
+from .olnick import OlnickAdapter
 from .securecafe import SecureCafeAdapter
 from .spherexx import SpherexxAdapter
 from .stonehenge import StonehengeAdapter
@@ -33,6 +34,7 @@ ADAPTERS = {
         ManhattanSkylineAdapter,
         NooklynAdapter,
         OgdenCapAdapter,
+        OlnickAdapter,
         SecureCafeAdapter,
         SpherexxAdapter,
         StonehengeAdapter,
