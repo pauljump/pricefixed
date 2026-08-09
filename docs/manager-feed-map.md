@@ -39,6 +39,8 @@ Sources:
 | Durst and Ogden CAP | MRI ProspectConnect community pages | Public community availability after the site search flow | Shipped in `durst` and `ogdencap` |
 | Dermot Company | [`dermotcompany.com/state/new-york`](https://www.dermotcompany.com/state/new-york) → public `nestiolistings.com/api/v2/listings/all` calls | Current listings with exact unit labels, exact street address, price, and availability date for 17 confirmed NY communities | Shipped in `dermot`; this is not a complete roster |
 | Bozzuto — The Capitol | [Official property page](https://www.bozzuto.com/apartments-for-rent/ny/new-york/the-capitol) → [`thecapitolchelsea.securecafe.com`](https://thecapitolchelsea.securecafe.com/onlineleasing/the-capitol/availableunits.aspx) | Current SecureCafe rows with exact unit labels, rent, square feet, and availability date | Shipped as `securecafe`; one confirmed Bozzuto property, not the whole portfolio |
+| Marquis Apartments and Kings & Queens Apartments | Official availability pages → public `/ajax/getunitlist.asp` responses | Current rows with exact street addresses, apartment labels, prices, and availability | Shipped in `spherexx`; 2 confirmed portals, not a complete roster |
+| C+C Apartment Management | [`ccmanagers.com/availability`](https://ccmanagers.com/availability/) | Public table with exact street address, apartment label, rent, and availability date | Shipped in `ccmanagers`; current table is not a complete roster |
 
 ## Manager-Specific Paths To Test
 
@@ -50,7 +52,7 @@ Sources:
 | RXR and Extell | Official property sites and their individual leasing pages | Likely mixed property-by-property vendor paths. Do not treat the RentCafe hypothesis as confirmed until an official property page links to a specific public portal. | Candidate: map one property per manager |
 | Two Trees and Moinian | Official property sites | Likely Funnel/Nestio-style or property-specific listing pages. No universal public endpoint has been confirmed. | Candidate: identify one live property path first |
 | Rose Associates | [NYBits manager profile](https://www.nybits.com/managers/rose.html) and Rose property sites | Many buildings, but no portfolio-wide public feed has been confirmed. | Candidate: sample the largest live property pages |
-| Greystar | Greystar property search | Public availability is exposed per community, not as one confirmed NYC-wide feed. | Candidate: identify the vendor and one stable community endpoint |
+| Greystar | Greystar property search | Official NYC search reaches individual community pages. A tested community page exposes floorplans and a building unit count, but no apartment labels in the public response. | Candidate: unit-bearing endpoint still missing; do not ingest floorplans/counts |
 
 ## Who We Can Name Today
 
