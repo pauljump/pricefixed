@@ -7,6 +7,7 @@ from tools.manager_feed_discovery import (
     select_public_links,
 )
 from tools.build_leasing_path_registry import evidence_level, flatten
+from tools.build_feed_provenance_queue import build_queue
 
 
 class ManagerFeedDiscoveryTest(unittest.TestCase):
@@ -80,6 +81,29 @@ class ManagerFeedDiscoveryTest(unittest.TestCase):
         self.assertEqual(rows[0]["vendor_hints"], ["appfolio"])
         self.assertNotIn("feed_status", rows[0])
         self.assertEqual(evidence_level({"error": "timeout"}), "public_link_unchecked")
+
+    def test_prioritizes_large_managers_without_public_paths(self):
+        rows = build_queue(
+            [{
+                "manager_name": "Large Manager",
+                "manager_slug": "large",
+                "profile_url": "https://www.nybits.com/managers/large.html",
+                "buildings_managed": 80,
+                "managed_rentals": 120,
+                "official_website_url": "https://large.example",
+            }, {
+                "manager_name": "Small Manager",
+                "manager_slug": "small",
+                "profile_url": "https://www.nybits.com/managers/small.html",
+                "buildings_managed": 2,
+                "managed_rentals": 1,
+            }],
+            [],
+        )
+        self.assertEqual(rows[0]["manager_slug"], "large")
+        self.assertEqual(rows[0]["investigation_priority"], "high")
+        self.assertIn("nybits_private_or_manual_transport_possible", rows[0]["hypotheses"])
+        self.assertEqual(rows[0]["nybits_transport_status"], "unknown")
 
 
 if __name__ == "__main__":

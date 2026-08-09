@@ -34,6 +34,15 @@ python3 tools/build_leasing_path_registry.py \
   --output data/public_leasing_paths.jsonl
 ```
 
+To build the manager-level private-feed investigation queue:
+
+```bash
+python3 tools/build_feed_provenance_queue.py \
+  --managers data/manager_feed_registry.jsonl \
+  --paths data/public_leasing_paths.jsonl \
+  --output data/feed_provenance_queue.jsonl
+```
+
 Use `--limit N` while developing. The runner is intentionally sequential and
 rate-limited. Page discovery follows only links whose visible text or URL
 clearly indicates a property, rental, availability, or leasing page, plus
@@ -91,3 +100,8 @@ availability, or vendor links exposed by the official sites:
 This is evidence about public site paths. It is not yet a claim that every
 manager uses one of those vendors, or that NYBits receives the same data by the
 same transport.
+
+The provenance queue makes that uncertainty explicit. It prioritizes large
+managers with no public path, vendor-linked managers whose NYBits transport is
+still unknown, and managers with failed public paths. Its hypotheses are
+research targets, not findings.
