@@ -49,6 +49,7 @@ Ten live. Copy these when building new ones.
 | C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
 | Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
 | Olnick Rentals | official rentals index + explicit project availability pages | medium | | current listings with exact address and apartment label | ✅ |
+| Lisa Management | official Next.js residential page with paginated embedded apartment records | easy | | current listings with exact address and apartment label | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 

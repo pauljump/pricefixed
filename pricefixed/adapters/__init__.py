@@ -9,6 +9,7 @@ from .dermot import DermotAdapter
 from .durst import DurstAdapter
 from .elliman import EllimanSource
 from .glenwood import GlenwoodAdapter
+from .lisamgmt import LisaManagementAdapter
 from .manhattanskyline import ManhattanSkylineAdapter
 from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
@@ -31,6 +32,7 @@ ADAPTERS = {
         DurstAdapter,
         EllimanSource,
         GlenwoodAdapter,
+        LisaManagementAdapter,
         ManhattanSkylineAdapter,
         NooklynAdapter,
         OgdenCapAdapter,
