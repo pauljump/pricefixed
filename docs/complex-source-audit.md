@@ -160,6 +160,9 @@ The bounded passes on 2026-08-08 produced the following evidence summary:
 | Legacy DOB descriptions over the 228 unresolved addresses | 400 observations across 36 addresses; 0 explicit labels; 192 targets had no exact source rows |
 | BIS C/O certificates for BIN 1082886 / target 627 East 14 Street | 11 certificates; certificate faces identify 629 East 14 Street / BIN 1082771 and expose no apartment labels |
 | BIS C/O certificates for BIN 1082869 / target 272 First Avenue | 23 certificates; section-level addresses and apartment counts, 0 apartment identities |
+| BIS C/O certificates for BIN 1082884 / target 535 East 14 Street | 2 certificates; section-level apartment counts, 0 apartment identities |
+| BIS C/O index for BIN 1082864 / target 312 First Avenue | No certificates on file |
+| BIS C/O certificates for BIN 1082885 / target 521 East 14 Street | 5 certificates; 2 exact section-level records, 3 identity/garage conflicts, 0 apartment identities |
 
 The DOB description API is therefore exhausted for the current unresolved
 footprint. Its positive rows remain useful dated observations, but they do not
