@@ -47,12 +47,30 @@ def _evidence_excerpt(text):
     return re.sub(r"\s+", " ", text[start:end]).strip()
 
 
+def _capacity_table_labels(text):
+    """Find occupancy-table row codes that resemble apartment labels.
+
+    Scanned/structured C/O schedules commonly render rows such as
+    ``APARTMENTS 001 74 O.G.``. The three-digit token is a use/row code next
+    to a live-load value, not an addressable apartment. Keep this correction
+    local to the C/O document pass; ordinary DOB descriptions may legitimately
+    name numeric apartments.
+    """
+    pattern = re.compile(
+        r"\bAPARTMENTS?\s+(?P<label>0\d{2})\s+\d{1,5}\s+"
+        r"(?:[A-Z]\.?\s*[-/]?\s*\d+|O\.?\s*G\.?)\b",
+        re.IGNORECASE,
+    )
+    return {match.group("label").upper() for match in pattern.finditer(str(text or ""))}
+
+
 def parse_pdf_text(manifest_row, text):
     """Return candidate rows from extracted text; no row is import-ready by default."""
     target_address = manifest_row.get("target_address", "")
     target_norm = normalize_address(target_address)
     text_match = bool(target_norm and target_norm in _search_text(text))
-    labels = extract_explicit_unit_labels(text)
+    labels = [label for label in extract_explicit_unit_labels(text)
+              if label.upper() not in _capacity_table_labels(text)]
     scope = manifest_row.get("identity_scope", "")
     if scope == "bbl_mismatch":
         status = "bbl_mismatch"

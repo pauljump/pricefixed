@@ -50,6 +50,28 @@ class ExtractDOBPdfCandidatesTest(unittest.TestCase):
             self.assertEqual(text, "OCR CERTIFICATE")
             self.assertEqual(used, sidecar)
 
+    def test_c_of_o_capacity_row_code_is_not_an_apartment_label(self):
+        row = {
+            "property": "Peter Cooper Village",
+            "target_address": "350 1 AVE",
+            "target_bbl": "1009780001",
+            "bis_premise": "350 1 AVENUE",
+            "bis_bbl": "1009780001",
+            "source_ref": "bis-co:1083679:co",
+            "source_url": "index",
+            "document_url": "doc",
+            "identity_scope": "exact_premise",
+        }
+        text = (
+            "CERTIFICATE OF OCCUPANCY\n350 1 AVENUE\n"
+            "PERMISSIBLE USE AND OCCUPANCY\n"
+            "APARTMENTS\n001\n74\nO.G.\n"
+            "APARTMENTS PER FLOOR\nEIGHT (8) APARTMENTS PER FLOOR"
+        )
+        result = parse_pdf_text(row, text)
+        self.assertEqual(result[0]["unit_label"], "")
+        self.assertEqual(result[0]["status"], "no_explicit_unit_label")
+
 
 if __name__ == "__main__":
     unittest.main()

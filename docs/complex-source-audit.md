@@ -193,3 +193,9 @@ The next distinct BIN, `1083683` for `400 E 23 ST`, listed three older C/O
 scans. Their faces identified different business premises and block references
 and supplied no apartment labels. No units were added; the capture record and
 checksums are in [`docs/bis-1083683-capture.md`](bis-1083683-capture.md).
+
+The separate DOB NOW public portal was also checked by BIN for `1083679`. It
+exposed one approved Schedule of Occupancy request with 21 floor/use rows, but
+no apartment labels in the public grid; the schedule detail remained in a
+loading state during capture. This is a second occupancy/count lane, not a new
+unit source. See [`docs/dob-now-schedule-1083679.md`](dob-now-schedule-1083679.md).
