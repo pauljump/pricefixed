@@ -27,7 +27,11 @@ Run order, each step depends on the last:
 6. `merge_condo_unit_lots.py` — direct pass over `official_unit_lots` (DOF's condo unit
    registry, imported earlier): every `unit_lot_bbl` with a real `unit_designation` and
    zero named units gets one. This is DOF's own tax registration of the individual unit,
-   the strongest evidence tier used all session, not an inference.
+   the strongest evidence tier used all session, not an inference. The merge is
+   idempotent: it skips unit-lot rows that already have a
+   `dof_condo_unit_lots_direct` observation, preserving prior non-dwelling or
+   tax-class classifications. In the 2026-08-09 backlog run it added 7,698 units,
+   preserved 34,113 prior observations, and withheld 11 non-unit designations.
 
 **Result: 514,306 -> 2,750,889 canonical units** (12.4% -> 74.3% of the 3,705,000
 citywide target).

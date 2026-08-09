@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,678 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,322** homes that are counted by the city
+Current local build: **3,052,376 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **652,624** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -50,10 +50,40 @@ These lots remain unresolved. The official condo designation alone is not enough
 to classify a home when the current assessment roll and historical fallback both
 lack a tax-class record.
 
+### DOF direct unit-lot backlog and Statement-of-Account follow-up (2026-08-09)
+
+The direct DOF condo unit-lot pass was completed without replaying prior
+observations. It added **7,698** canonical units from official unit-lot BBLs with
+non-empty DOF designations. The catalog retained **34,113** prior direct
+observations whose rows were already classified or otherwise resolved, and withheld
+11 remaining non-unit designations (`RM`, `UNIT`, `APT`, `SUITE`, and `*`). The
+capacity layer did not change. The merge is now idempotent: it skips an existing
+`dof_condo_unit_lots_direct` observation instead of trying to create a duplicate or
+discarding its prior classification.
+
+The targeted Statement-of-Account checks did not provide a new canonical roster:
+
+- Condo base BBL `3072790231` returned 480 address-bearing rows, but all were
+  outside the named-unit layer after the existing tax-class review; none were
+  imported as units.
+- Bases `1000510014` and `4050100028` returned 174 and 157 rows respectively
+  without an address (`No data found` on the sampled public PDFs); none were
+  imported.
+
+These results are retained as bounded source-audit evidence, not converted into
+building-wide identities. The existing
+[`tools/merges/merge_dof_unit_lot_classifications.py`](../tools/merges/merge_dof_unit_lot_classifications.py)
+remains the canonical Statement-of-Account bridge for validated residential
+address/unit observations.
+
+The high-capacity ACRIS check for `9 METROPOLITAN OVAL` found 68 distinct exact
+address labels, all already present in the catalog; net-new was zero. No duplicate
+ACRIS import was performed.
+
 ### DOF Statement-of-Account property-address bridge
 
 The deterministic merge at
-[`tools/merges/merge_dof_unit_addresses.py`](../tools/merges/merge_dof_unit_addresses.py)
+[`tools/merges/merge_dof_unit_lot_classifications.py`](../tools/merges/merge_dof_unit_lot_classifications.py)
 handles validated DOF Statement-of-Account rows only when the unit-lot BBL and
 unit designation already exist in `official_unit_lots` and the same BBL/unit
 identity already exists in the catalog. It adds the statement's exact property
