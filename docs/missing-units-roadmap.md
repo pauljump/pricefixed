@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,628 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,372** homes that are counted by the city
+Current local build: **3,044,673 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **660,327** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -189,6 +189,22 @@ payload preserves the complete official property and listing records, the page
 URL, API URL, and retrieval time. Importing these rows produced **2 net-new
 canonical units**; the remaining labels were already present through other
 source paths. This is current vacancy evidence, not a complete Rudin roster.
+
+### Related Rentals official NYC unit-detail pages (2026-08-09)
+
+Related's official search returned 94 current New York City cards across eight
+pages. The search cards describe floor-plan categories, so they were not treated
+as apartments by themselves. Each linked detail page was fetched and accepted
+only when its official `entity` record contained an explicit unit ID and its
+property header contained an exact street address. The bounded run also queried
+official DOB NOW filings by premise; 55 rows had a unique address→BBL crosswalk,
+which is stored separately as `dob_now_job_filings` evidence.
+
+The reproducible adapter is [`pricefixed/adapters/relatedrentals.py`](../pricefixed/adapters/relatedrentals.py).
+It retained 94 explicit unit-detail observations and added **45 net-new
+canonical units** after catalog deduplication. The remaining labels were already
+represented or remain unresolved where the address maps to multiple BBLs. This
+is current vacancy evidence, not a complete Related Rentals roster.
 
 ## NYS voter file lane
 

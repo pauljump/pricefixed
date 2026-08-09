@@ -52,6 +52,7 @@ Twenty live. Copy these when building new ones.
 | Lisa Management | official Next.js residential page with paginated embedded apartment records | easy | | current listings with exact address and apartment label | ✅ |
 | Rockrose | official residential building pages with explicit selected-listing cards | easy | | 46 current selected listings across 13 NYC properties | ✅ |
 | Rudin Residential | official availability page + public `/api/properties-json` | easy | | current listings with exact property address and apartment label | ✅ |
+| Related Rentals | official paginated NYC search + explicit unit detail pages | easy | | current listings with exact address and apartment label | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
@@ -94,7 +95,7 @@ highest-leverage work left.
 
 | Source | Est. units | Mechanism | Status |
 |---|---|---|---|
-| Related Rentals | ~5,000 | Drupal/React hybrid, paginated DOM | 🔬 (rebuilt recently; will rot) |
+| Related Rentals | ~5,000 | official paginated search + unit detail pages | ✅ |
 | LeFrak | ~4,600 | Spherexx server-rendered HTML | 🔨 |
 | Rudin | ~2,400 | official `/api/properties-json` availability feed | ✅ |
 | UDR | ~2,600 | official `apartments-pricing` pages with apartment-specific JSON-LD | ✅ |

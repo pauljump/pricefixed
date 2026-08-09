@@ -16,6 +16,7 @@ from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
 from .olnick import OlnickAdapter
 from .rockrose import RockroseAdapter
+from .relatedrentals import RelatedRentalsAdapter
 from .rudin import RudinAdapter
 from .securecafe import SecureCafeAdapter
 from .spherexx import SpherexxAdapter
@@ -43,6 +44,7 @@ ADAPTERS = {
         OgdenCapAdapter,
         OlnickAdapter,
         RockroseAdapter,
+        RelatedRentalsAdapter,
         RudinAdapter,
         SecureCafeAdapter,
         SpherexxAdapter,
