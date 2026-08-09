@@ -50,6 +50,26 @@ These lots remain unresolved. The official condo designation alone is not enough
 to classify a home when the current assessment roll and historical fallback both
 lack a tax-class record.
 
+### NYC Open Data schema refresh (2026-08-09)
+
+The deterministic `audit_nyc_open_data_fields.py` inventory was refreshed against
+the live NYC Open Data catalog and compared with the August 3 source audit. It found
+2,396 datasets, 87 unit-field candidates, and 34 building-unit candidates. There
+were zero new unit-bearing or building-unit candidate dataset IDs. The only new
+description candidate was a donations-comments field and is unrelated to housing.
+The ACRIS, DOB, HPD, eviction, and other housing datasets surfaced by the inventory
+are already in the source map and prior mining passes. This lane is therefore
+closed for now; rerunning the full catalog scan without a changed schema or dataset
+is duplicate work.
+
+Reproducible refresh command:
+
+```bash
+python3 tools/merges/audit_nyc_open_data_fields.py \
+  --out-dir /tmp/pricefixed-open-data-audit.nVQLKA \
+  --page-size 1000
+```
+
 ## NYS voter file lane
 
 Use this lane only if a voter file is already lawfully downloadable or if Paul later
