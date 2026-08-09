@@ -4,6 +4,7 @@ from tools.manager_feed_discovery import (
     classify_vendor,
     extract_manager_entries,
     extract_official_website,
+    select_public_links,
 )
 
 
@@ -39,6 +40,22 @@ class ManagerFeedDiscoveryTest(unittest.TestCase):
             ["securecafe", "appfolio"],
         )
         self.assertEqual(classify_vendor(["https://example.com/about"]), [])
+
+    def test_selects_explicit_property_and_vendor_links_only(self):
+        links = [
+            {"url": "https://example.com/properties/one", "text": "Apartments"},
+            {"url": "https://example.com/about", "text": "About us"},
+            {"url": "https://foo.appfolio.com/listings", "text": "Apply now"},
+            {"url": "https://facebook.com/example", "text": "Apartments"},
+            {"url": "https://example.com/apartments/brochure.pdf", "text": "Apartment brochure"},
+            {"url": "https://example.com/apartment-photo.jpg", "text": "Apartment photo"},
+        ]
+        rows = select_public_links(links, "https://example.com", "https://example.com/")
+        self.assertEqual([row["url"] for row in rows], [
+            "https://foo.appfolio.com/listings",
+            "https://example.com/properties/one",
+        ])
+        self.assertEqual(rows[0]["page_kind"], "vendor_portal")
 
 
 if __name__ == "__main__":

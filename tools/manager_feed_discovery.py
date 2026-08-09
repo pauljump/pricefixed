@@ -3,8 +3,10 @@
 
 The default run only reads the public NYBits manager index and manager profiles.
 With --probe-websites it performs one bounded GET of each distinct official
-website and records vendor fingerprints visible in that homepage. It never
-follows links, probes guessed endpoints, or accesses account-only areas.
+website and records vendor fingerprints visible in that homepage. With
+--discover-pages it follows a small number of explicit property, rental,
+availability, and leasing links exposed by those pages. It never probes guessed
+endpoints or accesses account-only areas.
 """
 from __future__ import annotations
 
@@ -27,6 +29,58 @@ DIRECTORY_URL = urljoin(NYBITS_BASE, "managers/residential_property_managers.htm
 
 USER_AGENT = "pricefixed-manager-feed-discovery/1.0 (+public research; contact via repository)"
 MAX_BODY_BYTES = 600_000
+MAX_PAGE_LINKS = 12
+
+PAGE_KEYWORDS = (
+    "apartment",
+    "apartments",
+    "availability",
+    "available",
+    "building",
+    "buildings",
+    "community",
+    "communities",
+    "floorplan",
+    "floor-plan",
+    "floor plan",
+    "homes",
+    "lease",
+    "leasing",
+    "listings",
+    "properties",
+    "property",
+    "rent",
+    "rental",
+    "rentals",
+    "residential",
+    "units",
+    "vacancies",
+    "vacancy",
+)
+
+SKIP_KEYWORDS = (
+    "about",
+    "blog",
+    "career",
+    "contact",
+    "cookie",
+    "privacy",
+    "terms",
+)
+
+ASSET_SUFFIXES = (
+    ".css",
+    ".gif",
+    ".ico",
+    ".jpeg",
+    ".jpg",
+    ".js",
+    ".pdf",
+    ".png",
+    ".svg",
+    ".webp",
+    ".xml",
+)
 
 VENDOR_PATTERNS = {
     "securecafe": ("securecafe.com", "rentcafe.com"),
@@ -171,6 +225,105 @@ def classify_vendor(values: list[str]) -> list[str]:
     return [vendor for vendor, patterns in VENDOR_PATTERNS.items() if any(pattern in joined for pattern in patterns)]
 
 
+def _same_site(hostname: str | None, official_host: str | None) -> bool:
+    if not hostname or not official_host:
+        return False
+    hostname = hostname.lower().removeprefix("www.")
+    official_host = official_host.lower().removeprefix("www.")
+    return hostname == official_host or hostname.endswith("." + official_host)
+
+
+def _page_kind(text: str, url: str, vendor_hints: list[str]) -> str:
+    if vendor_hints:
+        return "vendor_portal"
+    value = f"{text} {url}".lower()
+    if any(word in value for word in ("availability", "available", "vacanc", "units")):
+        return "availability"
+    if any(word in value for word in ("lease", "leasing", "rent", "rental")):
+        return "leasing"
+    return "property"
+
+
+def select_public_links(
+    links: list[dict[str, str]], official_url: str, source_url: str
+) -> list[dict[str, str | list[str]]]:
+    """Keep explicit public property/leasing links from one already-fetched page."""
+    official_host = urlparse(official_url).hostname
+    selected = []
+    seen = set()
+    for link in links:
+        url = link.get("url", "").split("#", 1)[0].rstrip("/")
+        parsed = urlparse(url)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            continue
+        if parsed.path.lower().endswith(ASSET_SUFFIXES):
+            continue
+        vendor_hints = classify_vendor([url, link.get("text", "")])
+        same_site = _same_site(parsed.hostname, official_host)
+        value = f"{link.get('text', '')} {parsed.path} {parsed.query}".lower()
+        has_page_keyword = any(keyword in value for keyword in PAGE_KEYWORDS)
+        has_skip_keyword = any(keyword in value for keyword in SKIP_KEYWORDS)
+        if not vendor_hints and not same_site:
+            continue
+        if has_skip_keyword and not vendor_hints:
+            continue
+        if not has_page_keyword and not vendor_hints:
+            continue
+        if url in seen:
+            continue
+        seen.add(url)
+        selected.append(
+            {
+                "url": url,
+                "source_url": source_url,
+                "anchor_text": " ".join(link.get("text", "").split()),
+                "page_kind": _page_kind(link.get("text", ""), url, vendor_hints),
+                "vendor_hints": vendor_hints,
+            }
+        )
+    kind_order = {"vendor_portal": 0, "availability": 1, "leasing": 2, "property": 3}
+    selected.sort(key=lambda item: (kind_order.get(item["page_kind"], 9), item["url"]))
+    return selected[:MAX_PAGE_LINKS]
+
+
+def discover_public_pages(url: str, max_pages: int = 8) -> list[dict]:
+    """Follow at most two hops of explicit public property/leasing links."""
+    _, homepage_final, homepage_html, homepage_error = fetch_public(url, timeout=10.0)
+    if homepage_error:
+        return []
+
+    official_url = homepage_final
+    queue = select_public_links(parse_links(homepage_html, homepage_final), official_url, homepage_final)
+    results = []
+    seen = {homepage_final.rstrip("/")}
+    while queue and len(results) < max_pages:
+        candidate = queue.pop(0)
+        candidate_url = str(candidate["url"])
+        if candidate_url in seen:
+            continue
+        seen.add(candidate_url)
+        status, final_url, html, error = fetch_public(candidate_url, timeout=10.0)
+        vendor_hints = classify_vendor([candidate_url, final_url, html[:MAX_BODY_BYTES]])
+        result = {
+            **candidate,
+            "http_status": status or None,
+            "final_url": final_url,
+            "vendor_hints": sorted(set(candidate["vendor_hints"] + vendor_hints)),
+            "content_sha256": hashlib.sha256(html.encode()).hexdigest() if html else None,
+            "error": error,
+        }
+        results.append(result)
+        if error:
+            continue
+        if candidate["page_kind"] == "vendor_portal":
+            continue
+        next_links = select_public_links(parse_links(html, final_url), official_url, final_url)
+        for next_link in next_links:
+            if next_link["url"] not in seen:
+                queue.append(next_link)
+    return results
+
+
 def probe_website(url: str) -> dict:
     # A dead manager link should not hold up the whole census for 30 seconds.
     status, final_url, html, error = fetch_public(url, timeout=10.0)
@@ -245,6 +398,14 @@ def discover(args) -> list[dict]:
             row["vendor_hints_from_website"] = row.get("website_vendor_hints", [])
             if row.get("website_final_url") and row["website_final_url"] not in row["evidence_urls"]:
                 row["evidence_urls"].append(row["website_final_url"])
+        if args.discover_pages and website_url:
+            row["public_page_candidates"] = discover_public_pages(
+                website_url, max_pages=args.max_pages
+            )
+            for page in row["public_page_candidates"]:
+                evidence_url = page.get("final_url") or page.get("url")
+                if evidence_url and evidence_url not in row["evidence_urls"]:
+                    row["evidence_urls"].append(evidence_url)
         rows.append(row)
         print(f"[{number}/{len(selected)}] {entry['manager_name']}", file=sys.stderr)
         time.sleep(args.delay)
@@ -257,9 +418,22 @@ def main(argv=None) -> int:
     parser.add_argument("--limit", type=int, help="Only keep the first N managers after sorting")
     parser.add_argument("--delay", type=float, default=1.0, help="Seconds between public requests (default: 1)")
     parser.add_argument("--probe-websites", action="store_true", help="Fetch each distinct official homepage once")
+    parser.add_argument(
+        "--discover-pages",
+        action="store_true",
+        help="Follow explicit public property/leasing links from official sites",
+    )
+    parser.add_argument(
+        "--max-pages",
+        type=int,
+        default=8,
+        help="Maximum linked pages to check per manager (default: 8)",
+    )
     args = parser.parse_args(argv)
     if args.delay < 0.2:
         parser.error("--delay must be at least 0.2 seconds")
+    if args.max_pages < 1:
+        parser.error("--max-pages must be at least 1")
 
     rows = discover(args)
     args.output.parent.mkdir(parents=True, exist_ok=True)
