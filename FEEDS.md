@@ -53,6 +53,7 @@ Twenty live. Copy these when building new ones.
 | Rockrose | official residential building pages with explicit selected-listing cards | easy | | 46 current selected listings across 13 NYC properties | ✅ |
 | Rudin Residential | official availability page + public `/api/properties-json` | easy | | current listings with exact property address and apartment label | ✅ |
 | Related Rentals | official paginated NYC search + explicit unit detail pages | easy | | current listings with exact address and apartment label | ✅ |
+| Mirador Real Estate (Pan Am availability link) | public Luxury Presence GraphQL availability feed | easy | | 41 current NYC listings with exact listed address and apartment label | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
@@ -103,7 +104,7 @@ highest-leverage work left.
 | Bozzuto | ~2,000 | Algolia index | 🔨 |
 | Two Trees | ~2,000 | Nestio (see platform) | 🔬 |
 | Rockrose / RXR / Extell | official property pages plus RentCafe where linked | Rockrose selected listing cards are collected; linked RentCafe remains property-specific | 🔨 |
-| Pan Am Equities | ~1,000 | WordPress DOM | 🔬 |
+| Pan Am Equities / Mirador Real Estate | ~1,000 | Pan Am's official `AVAILABILITIES` link → Mirador public GraphQL feed | ✅ current Mirador feed; not a complete Pan Am roster |
 
 ## Tier 3 — Broker marketplaces (the small-landlord tail)
 

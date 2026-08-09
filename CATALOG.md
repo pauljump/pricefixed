@@ -24,7 +24,7 @@ canonical apartments.
 The current citywide build has **3,753,223 anonymous capacity slots** across the
 city. This is the complete count layer currently supported by the imported primary
 PLUTO records, and exceeds the 3,705,000 reporting benchmark because the two sources
-measure housing stock differently. It has **3,044,673 canonical units** with a
+measure housing stock differently. It has **3,044,678 canonical units** with a
 source-supplied label and resolved BBL: **82.2% of the 3,705,000 housing-stock
 reporting denominator** and 81.1% of the imported PLUTO capacity. These numbers are
 intentionally reported separately: a capacity slot answers "how many units does this
@@ -346,8 +346,8 @@ resolution to its corroborating evidence. The source databases remain intact.
 The August 7, 2026 local build reached **3,044,550 canonical units**. Subsequent
 2026-08-09 SecureCafe and Rockrose captures added 47 net-new source-backed units;
 a Greystar and UDR capture added 20 more, Rudin and Spherexx imports added 11 more,
-and Related Rentals added 45 more, bringing the current build to **3,044,673
-canonical units**. The last local
+and Related Rentals added 45 more. The Mirador public availability feed added 5
+net-new units, bringing the current build to **3,044,678 canonical units**. The last local
 Qwen mining run added **21,121 net-new units** from public official-description
 queues and parser-delta checks, then passed the repo's test suite (`150 tests`).
 The largest additions were:
@@ -397,7 +397,7 @@ This establishes the method, not complete inventory coverage. The next additions
 
 The broad, easy public-record mining pass is closed at the August 7, 2026 build. The
 trusted catalog contains only source-backed unit labels; no neighboring-unit or
-building-count inference was used to inflate the 3,044,673 total. The next location
+building-count inference was used to inflate the 3,044,678 total. The next location
 logic phase should start from this committed state, produce hypotheses separately,
 and merge a new unit only when an independent source confirms its BBL and label.
 

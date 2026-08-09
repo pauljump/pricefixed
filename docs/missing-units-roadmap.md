@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,673 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,327** homes that are counted by the city
+Current local build: **3,044,678 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **660,322** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -49,6 +49,20 @@ python3 tools/merges/audit_dof_unclassified_unit_lots.py \
 These lots remain unresolved. The official condo designation alone is not enough
 to classify a home when the current assessment roll and historical fallback both
 lack a tax-class record.
+
+### DOF Statement-of-Account property-address bridge
+
+The deterministic merge at
+[`tools/merges/merge_dof_unit_addresses.py`](../tools/merges/merge_dof_unit_addresses.py)
+handles validated DOF Statement-of-Account rows only when the unit-lot BBL and
+unit designation already exist in `official_unit_lots` and the same BBL/unit
+identity already exists in the catalog. It adds the statement's exact property
+address as a bridge and records the public source URL, statement date, raw
+extraction method, and resolved addressable-unit link. An address by itself is
+rejected and cannot create a canonical unit.
+
+The merge writes rejected candidates and a JSON summary, making accepted and
+rejected populations auditable without silently broadening the catalog.
 
 ### NYC Open Data schema refresh (2026-08-09)
 
@@ -205,6 +219,25 @@ It retained 94 explicit unit-detail observations and added **45 net-new
 canonical units** after catalog deduplication. The remaining labels were already
 represented or remain unresolved where the address maps to multiple BBLs. This
 is current vacancy evidence, not a complete Related Rentals roster.
+
+### Mirador public GraphQL availability (2026-08-09)
+
+Pan Am Equities' official availability navigation points to Mirador Real Estate's
+public properties page. Its public Luxury Presence GraphQL feed returned 45 active
+records in the bounded pull; four were Connecticut records and were excluded, and
+41 NYC records were retained. The adapter
+[`pricefixed/adapters/mirador.py`](../pricefixed/adapters/mirador.py) accepts a row
+only when `addressLine1` contains an unambiguous street premise plus an apartment
+label. It preserves the stable API ID, exact listed address, detail URL, complete
+API record, query variables, and retrieval timestamp. Building descriptions,
+counts, and floorplans are not expanded.
+
+The 41 rows cover 20 premises. Official DOB NOW queries produced unique BBLs for
+15 premises, covering 35 rows; those crosswalks are stored as separate evidence.
+The catalog import resolved 37 of 41 listing observations, left three ambiguous
+and one unresolved, and added **5 net-new canonical units**, moving the build from
+3,044,673 to **3,044,678**. This is current vacancy evidence, not a complete
+Mirador or Pan Am roster.
 
 ## NYS voter file lane
 

@@ -12,6 +12,7 @@ from .glenwood import GlenwoodAdapter
 from .greystar import GreystarAdapter
 from .lisamgmt import LisaManagementAdapter
 from .manhattanskyline import ManhattanSkylineAdapter
+from .mirador import MiradorAdapter
 from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
 from .olnick import OlnickAdapter
@@ -40,6 +41,7 @@ ADAPTERS = {
         GreystarAdapter,
         LisaManagementAdapter,
         ManhattanSkylineAdapter,
+        MiradorAdapter,
         NooklynAdapter,
         OgdenCapAdapter,
         OlnickAdapter,
