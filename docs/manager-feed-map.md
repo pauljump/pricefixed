@@ -42,6 +42,7 @@ Sources:
 | Marquis Apartments and Kings & Queens Apartments | Official availability pages → public `/ajax/getunitlist.asp` responses | Current rows with exact street addresses, apartment labels, prices, and availability | Shipped in `spherexx`; 2 confirmed portals, not a complete roster |
 | C+C Apartment Management | [`ccmanagers.com/availability`](https://ccmanagers.com/availability/) | Public table with exact street address, apartment label, rent, and availability date | Shipped in `ccmanagers`; current table is not a complete roster |
 | Brodsky Organization | [`brodsky.com/rentals`](https://www.brodsky.com/rentals) → explicit apartment detail pages with JSON-LD | Current listings with exact street address, apartment label, price, and availability | Shipped in `brodsky`; current index had 6 listings, not a complete roster |
+| Manhattan Skyline Management | [`manhattanskyline.com/api/units`](https://manhattanskyline.com/api/units) → official unit detail pages | Current unit API rows joined to exact street addresses from each official detail page; rows without exact addresses are rejected | Shipped in `manhattanskyline`; 27 accepted from the current 28-row API response |
 | Manhattan Skyline Management | [`manhattanskyline.com/rentals`](https://manhattanskyline.com/rentals) → public `/api/units` rows → linked unit detail pages | Current API rows with explicit unit labels; official detail pages supply exact street address for accepted rows | Shipped in `manhattanskyline`; current feed had 27 accepted listings and 1 rejected row whose page supplied only “Manhattan East” |
 
 ## Manager-Specific Paths To Test
@@ -75,6 +76,7 @@ file NYBits receives.
 | Dermot Company | Official building pages expose community IDs and call the public Nestio availability endpoint; 17 New York properties are configured. | Confirmed public feed |
 | Bozzuto Management | The Capitol's official page links to a public SecureCafe availability page with current exact unit labels. | Confirmed public feed for The Capitol; portfolio incomplete |
 | Brodsky Organization | Brodsky's public rentals page exposes current building/unit listings. | Confirmed public listings; feed endpoint unknown |
+| Manhattan Skyline Management | The public unit API exposes unit labels and current asking terms; official detail pages supply exact street addresses. | Confirmed public feed with address validation; current vacancies only |
 | Rose Associates, Greystar, Two Trees | NYBits identifies these managers and their building portfolios, but we have not yet confirmed a stable public feed endpoint for them. | Manager confirmed; feed unknown |
 
 The missing column is **NYBits transport**. NYBits does not publish that

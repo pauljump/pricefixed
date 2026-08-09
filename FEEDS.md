@@ -43,6 +43,7 @@ Ten live. Copy these when building new ones.
 | Ogden CAP | MRI ProspectConnect | medium | | ~50 | ✅ |
 | Durst | MRI ProspectConnect | medium | ✅ | ~30 live | ✅ |
 | Glenwood | two-hop HTML scrape | medium | | ~30 | ✅ |
+| Manhattan Skyline | public unit API + official detail pages | medium | | current listings from 28 API rows | ✅ |
 | Dermot Company | public Nestio API called by official building pages | easy | | current listings across 17 confirmed NY properties | ✅ |
 | Spherexx / AdKast (Marquis, Kings & Queens) | official page + public paginated AJAX | medium | | current listings across 2 confirmed portals | ✅ |
 | C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
