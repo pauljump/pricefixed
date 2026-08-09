@@ -45,6 +45,7 @@ Sources:
 | Manhattan Skyline Management | [`manhattanskyline.com/api/units`](https://manhattanskyline.com/api/units) → official unit detail pages | Current unit API rows joined to exact street addresses from each official detail page; rows without exact addresses are rejected | Shipped in `manhattanskyline`; 27 accepted from the current 28-row API response |
 | Olnick Rentals | [`olnickrentals.com`](https://olnickrentals.com/) → explicit project availability pages | Current rows with exact street address, apartment label, bedroom/bath, square feet, and asking rent | Shipped in `olnick`; current public pages had 11 accepted listings across five project pages, not a complete roster |
 | Lisa Management | [`lisamgmt.com/residential`](https://www.lisamgmt.com/residential) → paginated public Next.js page data | Current rows with exact street address, apartment label, rent, bedroom/bath, ZIP, and property metadata | Shipped in `lisamgmt`; current feed had 20 accepted listings across two pages, not a complete roster |
+| Moinian Group | Official residential pages expose a Nestio-powered `/data/listings/` search handoff | The official site page loads, but the public listings request returned HTTP 403 and the browser page produced no listing rows during the 2026-08-09 check | Candidate: public API handoff confirmed; access blocked |
 
 ## Manager-Specific Paths To Test
 

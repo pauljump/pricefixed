@@ -29,6 +29,27 @@ This is the source order for the remaining gap:
    historical listings. Good for units that were marketed; weak for quiet
    owner-occupied homes.
 
+### DOF unclassified-unit fallback audit
+
+The current DOF assessment classification left 1,099 official condo unit lots as
+`tax_class_not_found`. A bounded historical check queried those exact BBLs in the
+official `kevu-8hby` assessment table for 2015, 2016, and 2017. It produced 3,297
+review rows, all `no_historical_match`, with zero historical residential tax-class
+matches. The audit output is `/tmp/dof-unclassified-historical-audit.csv`; the
+reproducible tool is:
+
+```bash
+python3 tools/merges/audit_dof_unclassified_unit_lots.py \
+  --input /data/dof-unit-lot-tax-classes-final.csv \
+  --out /tmp/dof-unclassified-historical-audit.csv \
+  --summary /tmp/dof-unclassified-historical-audit-summary.json \
+  --years 2015,2016,2017
+```
+
+These lots remain unresolved. The official condo designation alone is not enough
+to classify a home when the current assessment roll and historical fallback both
+lack a tax-class record.
+
 ## NYS voter file lane
 
 Use this lane only if a voter file is already lawfully downloadable or if Paul later

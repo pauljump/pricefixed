@@ -287,6 +287,21 @@ The command uses the current final roll first, then checks Finance's historical
 assessment table for unit lots that have since been dropped or renumbered. It is
 evidence preparation only and makes no catalog writes.
 
+For the residual `tax_class_not_found` rows, audit exact BBLs against bounded
+historical assessment years without upgrading any result:
+
+```bash
+python3 tools/merges/audit_dof_unclassified_unit_lots.py \
+  --input /data/dof-unit-lot-tax-classes-final.csv \
+  --out /data/dof-unclassified-historical-audit.csv \
+  --summary /data/dof-unclassified-historical-audit-summary.json \
+  --years 2015,2016,2017
+```
+
+The output preserves the exact historical SoQL URL and raw row. It is review-only;
+no historical absence can create a unit or turn an official unit designation into
+a residential classification.
+
 Review the summary, then merge residential addresses and remove tax-class-4 lots
 from the canonical homes table. The dry run is the default:
 
