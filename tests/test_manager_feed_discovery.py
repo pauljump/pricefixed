@@ -6,6 +6,7 @@ from tools.manager_feed_discovery import (
     extract_official_website,
     select_public_links,
 )
+from tools.build_leasing_path_registry import evidence_level, flatten
 
 
 class ManagerFeedDiscoveryTest(unittest.TestCase):
@@ -56,6 +57,29 @@ class ManagerFeedDiscoveryTest(unittest.TestCase):
             "https://example.com/properties/one",
         ])
         self.assertEqual(rows[0]["page_kind"], "vendor_portal")
+
+    def test_flattens_public_paths_without_overclaiming_feed_status(self):
+        rows = flatten([{
+            "manager_name": "Alpha Management",
+            "manager_slug": "alpha",
+            "profile_url": "https://www.nybits.com/managers/alpha.html",
+            "checked_at": "2026-08-08T00:00:00+00:00",
+            "public_page_candidates": [{
+                "url": "https://alpha.appfolio.com/listings",
+                "final_url": "https://alpha.appfolio.com/listings",
+                "source_url": "https://alpha.example/rentals",
+                "page_kind": "vendor_portal",
+                "vendor_hints": ["appfolio"],
+                "http_status": 200,
+                "error": None,
+                "anchor_text": "Available apartments",
+            }],
+        }])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["evidence_level"], "public_vendor_portal")
+        self.assertEqual(rows[0]["vendor_hints"], ["appfolio"])
+        self.assertNotIn("feed_status", rows[0])
+        self.assertEqual(evidence_level({"error": "timeout"}), "public_link_unchecked")
 
 
 if __name__ == "__main__":

@@ -26,6 +26,14 @@ python3 tools/manager_feed_discovery.py \
   --max-pages 8
 ```
 
+To create a flat, reviewable path queue from the nested manager registry:
+
+```bash
+python3 tools/build_leasing_path_registry.py \
+  --input data/manager_feed_registry.jsonl \
+  --output data/public_leasing_paths.jsonl
+```
+
 Use `--limit N` while developing. The runner is intentionally sequential and
 rate-limited. Page discovery follows only links whose visible text or URL
 clearly indicates a property, rental, availability, or leasing page, plus
@@ -65,13 +73,18 @@ These are hints from public pages, not claims about the private transport NYBits
 receives. The registry keeps those facts separate so each hint can become a
 confirmed provider record after a focused follow-up.
 
+The flat path file uses `evidence_level` values such as `public_page`,
+`public_page_vendor_hint`, `public_vendor_portal`, and
+`public_link_unchecked`. None of these labels claim that NYBits receives the
+same data or uses the same transport.
+
 ## Linked-Page Snapshot
 
-The bounded crawl on 2026-08-08 checked 88 explicit property, leasing,
+The expanded bounded crawl on 2026-08-08 checked 193 explicit property, leasing,
 availability, or vendor links exposed by the official sites:
 
-- 78 linked pages returned a public HTTP response.
-- 15 of the 31 managers produced at least one usable linked-page result.
+- 182 linked pages returned a public HTTP response.
+- 16 of the 31 managers produced at least one usable linked-page result.
 - Vendor fingerprints appeared in linked evidence for SecureCafe, AppFolio,
   MRI ProspectConnect, Funnel/Nestio, and RealPage/On-Site.
 
