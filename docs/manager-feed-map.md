@@ -57,6 +57,10 @@ Sources:
 | Two Trees and Moinian | Official property sites | Likely Funnel/Nestio-style or property-specific listing pages. No universal public endpoint has been confirmed. | Candidate: identify one live property path first |
 | Rose Associates | [NYBits manager profile](https://www.nybits.com/managers/rose.html) and Rose property sites | Many buildings, but no portfolio-wide public feed has been confirmed. | Candidate: sample the largest live property pages |
 | Greystar | Greystar property search | Official NYC search reaches individual community pages. A tested community page exposes floorplans and a building unit count, but no apartment labels in the public response. | Candidate: unit-bearing endpoint still missing; do not ingest floorplans/counts |
+| Algin Management | [Official Algin site](https://alginny.com/availabilities) → [`alginny.appfolio.com/listings`](https://alginny.appfolio.com/listings) | The public AppFolio page was checked and returned an empty `markers` array; no current exact unit rows were available to ingest. | Public AppFolio handoff checked; no current rows |
+| UES Management | [Yorkshire available apartments](https://www.uesmgmt.com/yorkshire-floorplans) and [Lexington available apartments](https://www.uesmgmt.com/lexington-floorplans) | Official pages publish floorplan categories and inquiry links, but no apartment labels or exact unit rows. | Page checked; do not expand floorplans into units |
+| Monarch Realty Holdings | [Official availability page](https://www.monarchrealtyholdings.com/availability) | The official page is a static availability/contact page with no apartment rows, unit labels, or public feed endpoint. | Page checked; no current rows |
+| Rose Associates | [Official Rose site](http://www.rentrose.com/) | The public home page exposes community navigation but no current unit-bearing availability feed. HTTPS host validation also failed during the registry crawl; the HTTP page remained readable for this bounded check. | Public site checked; unit feed still missing |
 
 ## Who We Can Name Today
 
