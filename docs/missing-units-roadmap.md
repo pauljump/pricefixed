@@ -80,6 +80,19 @@ The high-capacity ACRIS check for `9 METROPOLITAN OVAL` found 68 distinct exact
 address labels, all already present in the catalog; net-new was zero. No duplicate
 ACRIS import was performed.
 
+A deterministic scan of the top 100 capacity-gap targets produced 643 ACRIS legal
+unit rows across 31 targets; 65 targets had no unit rows and 4 had addresses that
+the current query parser could not safely decompose. Exact `(unit-lot BBL, label)`
+comparison found 20 labels not already present, but the remainder includes
+building-level labels and apparent parking, storage, garage, or combined labels.
+Those rows remain a review queue; no ACRIS row was promoted from this batch without
+an identity-level check.
+
+The live Spherexx/AdKast availability pass returned 34 explicit listings, including
+two LeFrak City units joined to the official LeFrak building directory. Eleven
+resolved to unit identities already in the catalog and 23 remained ambiguous or
+unresolved. The repeat import was idempotent and added zero net-new canonical units.
+
 ### DOF Statement-of-Account property-address bridge
 
 The deterministic merge at
