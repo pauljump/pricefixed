@@ -44,6 +44,8 @@ Ten live. Copy these when building new ones.
 | Durst | MRI ProspectConnect | medium | ✅ | ~30 live | ✅ |
 | Glenwood | two-hop HTML scrape | medium | | ~30 | ✅ |
 | Dermot Company | public Nestio API called by official building pages | easy | | current listings across 17 confirmed NY properties | ✅ |
+| Spherexx / AdKast (Marquis, Kings & Queens) | official page + public paginated AJAX | medium | | current listings across 2 confirmed portals | ✅ |
+| C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
@@ -57,6 +59,7 @@ highest-leverage work left.
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |
 | **Funnel / Nestio** | Dermot, Two Trees, Moinian, others | `nestiolistings.com/api/v2/` | 🔨 Dermot shipped; enumerate others |
+| **Spherexx / AdKast** | Marquis, Kings & Queens, LeFrak | public `/ajax/getunitlist.asp` | 🔨 base shipped; enumerate confirmed pages |
 | **RealPage / On-Site** | large operators | On-Site availability API | 🔬 |
 | **Rent Manager / Buildium** | long tail of small operators | per-vendor API | 🔬 |
 

@@ -2,6 +2,7 @@
 register it here. Keep the map alphabetical."""
 from .appfolio import AppFolioAdapter
 from .avalonbay import AvalonBayAdapter
+from .ccmanagers import CCManagersAdapter
 from .corcoran import CorcoranSource
 from .dermot import DermotAdapter
 from .durst import DurstAdapter
@@ -10,6 +11,7 @@ from .glenwood import GlenwoodAdapter
 from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
 from .securecafe import SecureCafeAdapter
+from .spherexx import SpherexxAdapter
 from .stonehenge import StonehengeAdapter
 from .stuytown import StuyTownAdapter
 from .tfcornerstone import TFCornerstoneAdapter
@@ -19,6 +21,7 @@ ADAPTERS = {
     for a in (
         AppFolioAdapter,
         AvalonBayAdapter,
+        CCManagersAdapter,
         CorcoranSource,
         DermotAdapter,
         DurstAdapter,
@@ -27,6 +30,7 @@ ADAPTERS = {
         NooklynAdapter,
         OgdenCapAdapter,
         SecureCafeAdapter,
+        SpherexxAdapter,
         StonehengeAdapter,
         StuyTownAdapter,
         TFCornerstoneAdapter,
