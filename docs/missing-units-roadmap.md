@@ -269,6 +269,22 @@ and one unresolved, and added **5 net-new canonical units**, moving the build fr
 3,044,673 to **3,044,678**. This is current vacancy evidence, not a complete
 Mirador or Pan Am roster.
 
+### LeFrak City public Spherexx unit options (2026-08-09)
+
+LeFrak City's official availability page exposes two public AJAX responses:
+`getpropertybuildinglist.asp` identifies available building options and
+`getpropertyunitlist.asp` identifies explicit unit options. The bounded pull
+returned `8D` at `97-28 57th Avenue` (Panama) and `4B` at `97-30 57th East
+Avenue` (United States). The official [LeFrak building directory](https://www.lefrakcity.com/buildings/)
+supplied those exact premises; the adapter does not turn the portfolio's
+building count, floorplans, or option patterns into additional units.
+
+The two rows were imported as current vacancy observations with their raw option
+HTML, stable `data-unit-id`, source URLs, retrieval timestamp, and an independent
+DOB NOW address crosswalk retained in `raw_json`. The public options did not
+provide reliable rent, bedroom, bathroom, or square-foot fields, so those remain
+null. This is a current-vacancy feed, not a complete LeFrak roster.
+
 ## NYS voter file lane
 
 Use this lane only if a voter file is already lawfully downloadable or if Paul later

@@ -45,7 +45,7 @@ Twenty live. Copy these when building new ones.
 | Glenwood | two-hop HTML scrape | medium | | ~30 | ✅ |
 | Manhattan Skyline | public unit API + official detail pages | medium | | current listings from 28 API rows | ✅ |
 | Dermot Company | public Nestio API called by official building pages | easy | | current listings across 17 confirmed NY properties | ✅ |
-| Spherexx / AdKast (Marquis, Kings & Queens) | official page + public paginated AJAX | medium | | current listings across 2 confirmed portals | ✅ |
+| Spherexx / AdKast (Marquis, Kings & Queens, LeFrak City) | official page + public paginated or building/unit AJAX | medium | | current listings across 3 confirmed portals | ✅ |
 | C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
 | Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
 | Olnick Rentals | official rentals index + explicit project availability pages | medium | | current listings with exact address and apartment label | ✅ |
@@ -67,7 +67,7 @@ highest-leverage work left.
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |
 | **Funnel / Nestio** | Dermot, Two Trees, Moinian, others | `nestiolistings.com/api/v2/` | 🔨 Dermot shipped; enumerate others |
-| **Spherexx / AdKast** | Marquis, Kings & Queens, LeFrak | public `/ajax/getunitlist.asp` | 🔨 base shipped; enumerate confirmed pages |
+| **Spherexx / AdKast** | Marquis, Kings & Queens, LeFrak City | public `/ajax/getunitlist.asp` plus LeFrak's building/unit option endpoints | ✅ three confirmed portals; current vacancies only |
 | **RealPage / On-Site** | large operators | On-Site availability API | 🔬 |
 | **Rent Manager / Buildium** | long tail of small operators | per-vendor API | 🔬 |
 
@@ -97,7 +97,7 @@ highest-leverage work left.
 | Source | Est. units | Mechanism | Status |
 |---|---|---|---|
 | Related Rentals | ~5,000 | official paginated search + unit detail pages | ✅ |
-| LeFrak | ~4,600 | Spherexx server-rendered HTML | 🔨 |
+| LeFrak / LeFrak City | ~4,600 | official building directory + public Spherexx AJAX unit options | ✅ current LeFrak City portal; portfolio incomplete |
 | Rudin | ~2,400 | official `/api/properties-json` availability feed | ✅ |
 | UDR | ~2,600 | official `apartments-pricing` pages with apartment-specific JSON-LD | ✅ |
 | Rose Associates | ~3,000 | own portal | 🔬 |
