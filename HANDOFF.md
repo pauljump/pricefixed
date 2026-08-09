@@ -1,181 +1,174 @@
-# HANDOFF — the self-maintaining toolkit build
+# Pricefixed handoff
 
-**Status: foundation landed, 6 enrichers + 3 spine pieces remain.** This doc is written
-so any agent (Codex or Claude) can pick up exactly where we stopped. Read it top to
-bottom, then `AGENTS.md`, `COMPILE.md`, and `pricefixed/enrichment/core.py`.
+Updated 2026-08-09 at the requested archive point.
 
-Session stopped mid-fan-out because the account hit its usage limit, not because of any
-blocker. Everything below is decided and scoped; it's execution from here.
+## Repository state
 
----
+- Repository: `/Users/mini-home/Desktop/unwalled`
+- Branch: `agent/acris-backlog-runner`
+- Latest commit: `ad86050 Document ranked ACRIS and Spherexx review`
+- The tracked worktree is clean at this handoff. The unrelated
+  `/Users/mini-home/Desktop/unwalled/soannoying/` directory was not touched.
+- Local SQLite databases and caches are ignored build artifacts. Do not treat them
+  as a committed release; verify their counts before relying on them.
 
-## The mission (why this build exists)
+## Mission and non-negotiable evidence rules
 
-pricefixed is turning from "a pile of scrapers" into **the gold-standard toolkit an AI
-agent can one-shot a whole NYC inventory from, and that keeps itself provably fresh.**
-An open data project normally earns trust from a brand. pricefixed has none by design
-("no company, just open source"). So trust comes from something else: **visible,
-continuous, agent-run maintenance.** You trust it because you can watch it keep itself
-alive and verified, in the open, on a heartbeat. Maintenance is the product.
+Pricefixed is building an open, traceable NYC housing catalog. A canonical unit may
+be created only when a retained source supplies an explicit unit label tied to an
+exact premise and a defensible BBL resolution. The core chain is:
 
-The database itself is a LATER phase. This phase perfects the TOOLS that build and
-maintain it.
-
-### Locked decisions (do not relitigate)
-
-- **Coverage number: meter internal, counts external.** The coverage % (built vs the
-  mapped universe) is the INTERNAL finish-line meter an agent drives toward zero. The
-  PUBLIC surface (README) shows raw live counts + freshness only ("6,401 live, verified
-  2h ago"), never a % against "every apartment" — a public denominator invites a fight
-  and undercuts the honesty that IS the trust model.
-- **Enrichment: do them all, public sources only.** Build all seven; state openly we add
-  more on request. Enrichment stays strictly on public civic data (same category as the
-  building record). The rent history + pricing model stay PRIVATE, elsewhere. Never let a
-  closed-rent or private-index source into this repo.
-- **Promise the method, not completeness.** The confidence write-up promises "point an
-  agent here and it builds the inventory, here's roughly how long," never "we have every
-  apartment." Confidence lives in the machine and the map.
-- **Alert channel: GitHub issues.** The monitor opens/updates a GitHub issue on drift;
-  GitHub emails Paul. Keeps the heartbeat visible in the repo.
-- **Nothing autonomous spends.** The only automated piece is the free HTTP monitor. It
-  never fires an LLM. When something breaks, Paul (with CLI Claude/Codex) triggers the
-  fix. The monitor's job is to alert with a ready-to-run fix recipe, not to self-heal.
-- **Stdlib only.** No third-party deps, ever. This shaped enrichment: geometry is
-  hand-rolled (`haversine`, `point_in_polygon` in `enrichment/core.py`).
-- **Commit hygiene: stage files EXPLICITLY, never `git add -A`.** Concurrent sessions
-  work this repo.
-
----
-
-## DONE (committed locally, commit `enrichment: layer foundation + transit...`, NOT pushed)
-
-- **Spine geo columns.** `pricefixed/record/core.py` — `BUILDING_COLUMNS` gained
-  `latitude, longitude, community_district, census_tract`; the `init_record_db` ALTER
-  loop adds them to fresh + existing dbs. `pricefixed/record/pluto.py` now selects and
-  stores them (`latitude, longitude, cd, ct2010`).
-- **Enrichment layer base** — `pricefixed/enrichment/core.py`. Read this first; it's the
-  contract. Provides: `EnrichmentSource` (subclass, set `name`/`description`/`join_key`/
-  `columns`, implement `enrich(conn, limit, boro)`), the `building_enrichment` table
-  (bbl PK, extensible columns via `ensure_columns`), `upsert_enrichment`,
-  `buildings_with_points` / `buildings_with_areas` iterators, `haversine`,
-  `point_in_polygon(lat, lng, ring)` (ring = list of `(lng, lat)` GeoJSON order),
-  `census_geoid(boro, tract)`.
-- **Self-registering registry** — `pricefixed/enrichment/__init__.py`. Drop an
-  `EnrichmentSource` file in the folder and it auto-registers into `ENRICHERS`. A broken
-  or drifted adapter is skipped with a warning, never fatal. No central list to edit.
-- **Transit enricher (1 of 7), verified** — `pricefixed/enrichment/transit.py`. Nearest
-  subway + walk distance from MTA dataset `39hk-dx4f` (496 stations). Self-verify:
-  396/400 Manhattan buildings enriched, max distance 2992m (Battery tip), sane. Use it
-  as the TEMPLATE for the point-join enrichers.
-
-Everything is additive: the 12 feeds, the record layer, and the CI healthcheck are
-untouched and still pass. `python3 -c "import pricefixed"` and the enrichment registry
-import clean.
-
----
-
-## TODO — the six remaining enrichers
-
-Each is ONE new file `pricefixed/enrichment/<name>.py` with an `EnrichmentSource`
-subclass. It auto-registers — do NOT edit `__init__.py`. Match `core.py`'s comment style
-(teach the WHY/mechanism). **VERIFY dataset ids and field names LIVE** (curl / a quick
-fetch) before coding — do not trust the hints below blindly. **Self-verify bar: an
-adapter is not done until it runs on the sample and attaches sane values to >0 buildings
-(no all-null, no all-same-value bugs).** The harness pattern (swap the name/boro):
-
-```python
-import pricefixed.record.core as rc
-from pricefixed.record.pluto import PlutoSource
-conn = rc.init_record_db('/tmp/enr_X.db')
-PlutoSource().run(conn, limit=400, boro=1)          # pick a borough where the signal is dense
-from pricefixed.enrichment.X import XSource
-XSource().run(conn, boro=1)
-# then SELECT from building_enrichment and eyeball the values
+```text
+BBL / tax lot -> official premise address -> apartment or unit label -> dated observations
 ```
 
-| name | class | join_key | source (VERIFY live) | columns | sample |
-|---|---|---|---|---|---|
-| **energy** | `EnergySource` | `bbl` | NYC LL84/LL97 Energy & Water Disclosure (keyed by BBL — the clean bbl-join reference). Field names are very long; BBL comes plain `4006520042` AND hyphenated `1-01206-0001`, normalize both to 10-digit. | `energy_star_score`, `site_eui`, `ghg_intensity` | boro=1, limit 2000 (disclosure only covers >25k sqft, low match rate is expected) |
-| **demographics** | `DemographicsSource` | `area` | Census ACS 5-year `api.census.gov/data/{year}/acs/acs5` (keyless at low volume; the earlier run saw a 302 redirect — follow it / use the resolved host). Vars: `B19013_001E` (median hh income), `B25064_001E` (median gross rent), `B25003_003E`/`B25003_001E` (renter/total occ). Query per county: state=36, counties MN=061 BX=005 BK=047 QN=081 SI=085, `&for=tract:*&in=state:36+county:XXX`. Join via `census_geoid(bbl_first_digit, census_tract)`. Treat sentinel negatives (-666666666) as null. | `median_household_income`, `median_gross_rent`, `pct_renter_occupied` | boro=3, limit 600 |
-| **flood** | `FloodSource` | `point` (PIP) | FEMA NFHL / NYC flood-zone polygon dataset (Socrata returns geometry as GeoJSON in `the_geom`). Parse rings, `point_in_polygon` each building; MultiPolygon = OR over rings; bbox-prefilter per polygon for speed. Watch coordinate order (lng,lat). | `flood_zone` (e.g. "AE"), `in_floodplain` (0/1) | boro=4 (Queens, waterfront); PASS = most tagged AND a nonzero subset in-floodplain (all-0 or all-1 = bug) |
-| **schools** | `SchoolsSource` | `point` (PIP) | NYC DOE school-zone polygon datasets (ES zone, with district/DBN label + GeoJSON geometry). PIP each building. OK to fill just one column if only one dataset is clean. | `school_district` (int), `elem_school_zone` | boro=3 (Brooklyn districts ~13–23,32) |
-| **safety** | `SafetySource` | `area` | NYPD complaint data aggregated per precinct via Socrata server-side `$select=addr_pct_cd,count(1)&$group=addr_pct_cd` (one small query, NOT millions of rows). Map building→precinct via NYC "Police Precincts" polygon dataset + `point_in_polygon`. | `police_precinct` (int), `precinct_complaints_ytd` (int) | boro=1 (Manhattan precincts 1–34) |
-| **amenities** | `AmenitiesSource` | `point` | OpenStreetMap Overpass API (`overpass-api.de/api/interpreter`). CRITICAL: do NOT query per building. One bbox query for all `shop=supermarket/grocery`, `leisure=park`, `amenity=restaurant` (`out center;` for ways), then count within radius locally via `haversine`. Backoff/mirror on rate-limit. | `grocery_within_500m`, `parks_within_800m`, `restaurants_within_400m` | boro=1, limit 150 (small, Overpass-friendly) |
+A BBL can contain multiple addresses. A BBL-wide label is therefore not valid for
+every address on that lot. Keep exact-address evidence separate from shared-BBL
+evidence. Building counts, floorplans, repeated patterns, and model guesses may be
+stored as capacity or hypotheses, but never as fake canonical apartments.
 
-If an adapter genuinely can't self-verify in stdlib at a workable size (flood/schools/
-safety are the hard tier), do NOT ship broken code — write the best version, mark its
-ledger status `recon`, and put the precise blocker + what a production build needs in its
-`fix_recipe`. That honesty IS the design.
+The named-unit layer and the anonymous capacity layer are separate. PLUTO capacity
+slots answer how many residential positions a source reports; they do not identify
+apartments.
 
-Also add a CLI `enrich.py` at repo root, mirroring `build_record.py` (`--source`,
-`--list`, `--status`, `--boro`, `--limit`, `--db record.db`), iterating `ENRICHERS`.
+## Committed catalog position
 
----
+The committed documentation currently reports:
 
-## TODO — the three spine pieces (the actual "gold standard" payload)
+- **3,052,376** canonical units with source-supplied labels and resolved BBLs.
+- **3,753,223** anonymous PLUTO capacity slots.
+- **3,705,000** NYC housing-stock reporting benchmark.
+- Approximately **652,624** benchmark homes not yet represented by named,
+  resolved canonical units.
 
-### 1. The ledger — `sources.json` + `pricefixed/ledger.py`
+These are deliberately different denominators. The remaining gap is a
+source-acquisition problem, not permission to manufacture records.
 
-The single source of truth. One machine-readable file, everything renders from it.
+## What is complete
 
-`sources.json`: array of rows, one per source across ALL kinds:
-```json
-{ "id": "transit", "kind": "enrichment", "tier": "enrichment",
-  "title": "Nearest subway", "mechanism": "MTA 39hk-dx4f + haversine",
-  "difficulty": "easy", "join_key": "point", "est_units": null,
-  "status": "shipped", "fix_recipe": "re-verify dataset 39hk-dx4f field names; ...",
-  "terms": false }
+Recent bounded, reproducible work is committed in this sequence:
+
+- `15a4f59` — idempotent DOF unit-lot backlog.
+- `443392a` — Mirador public GraphQL availability plus DOF address bridge.
+- `084ea1a` — Related Rentals unit-detail feed.
+- `9264de5` — LeFrak City Spherexx availability.
+- `ad86050` — ranked ACRIS and Spherexx review documentation.
+
+The repository already contains deterministic adapters for the shipped public
+listing lanes, including StuyTown, TF Cornerstone, AvalonBay, SecureCafe,
+AppFolio, MRI ProspectConnect, Nestio/Dermot, Rockrose, Rudin, Related Rentals,
+Mirador, Spherexx, UDR, and the other entries in `FEEDS.md`.
+
+## LeFrak City checkpoint
+
+The Spherexx adapter in
+[`pricefixed/adapters/spherexx.py`](pricefixed/adapters/spherexx.py) now covers
+three confirmed portals: Marquis, Kings & Queens, and LeFrak City. The bounded
+LeFrak pull found exactly two current explicit unit options:
+
+- `8D` at `97-28 57th Avenue` (Panama)
+- `4B` at `97-30 57th East Avenue` (United States)
+
+The adapter joins public Spherexx unit options to exact addresses in LeFrak's
+official building directory, preserves raw option HTML, stable `data-unit-id`
+values, source URLs, retrieval time, and DOB NOW crosswalk evidence. It does not
+expand LeFrak's building count, floorplans, or option patterns into a roster.
+The lane is current-vacancy evidence, not complete portfolio coverage.
+
+Relevant source documentation is in
+[`docs/missing-units-roadmap.md`](docs/missing-units-roadmap.md),
+[`docs/manager-feed-map.md`](docs/manager-feed-map.md), and
+[`FEEDS.md`](FEEDS.md). The parser test is in
+[`tests/test_spherexx.py`](tests/test_spherexx.py).
+
+## Local reconciliation that was started after the last commit
+
+An audit found that the ignored `listings.db` did not yet contain rows from several
+already-shipped adapters. A bounded refresh was run to reconcile those existing
+lanes; it was not a new source-discovery pass and should not be counted as citywide
+coverage progress.
+
+The resulting active listing database reported **6,671** rows. The refreshed adapter
+results were:
+
+| Adapter | Current rows | Interpretation |
+|---|---:|---|
+| Brodsky | 6 | Existing/current feed rows |
+| C+C | 1 | Existing/current feed row |
+| Dermot | 89 | Existing/current feed rows |
+| Greystar | 8 | Existing/current feed rows |
+| Lisa Management | 20 | Existing/current feed rows |
+| Manhattan Skyline | 27 | Existing/current feed rows |
+| Olnick | 11 | Existing/current feed rows |
+| Rockrose | 46 | Existing/current feed rows |
+| UDR | 23 | 23 new rows in the local listings snapshot |
+
+Most of these were updates or rows already present. Only UDR produced a meaningful
+new listing count in that pass. A listings refresh is not itself a canonical-unit
+claim; catalog resolution still has to validate exact address, explicit unit label,
+and BBL evidence.
+
+The command below was run against
+`/Users/mini-home/pricefixed-build/catalog.db` and completed, reporting:
+
+```text
+listings                       9328
+observations                   21343
+units                          3891
+resolved_unit_observations     9716
+unresolved_unit_observations   11627
 ```
-Seed it from FEEDS.md (feeds + record + the mapped/unbuilt rows) + the 7 enrichers.
-`kind` ∈ feed|record|enrichment. `status` ∈ shipped|mapped|recon.
 
-`ledger.py` responsibilities:
-- **Reconcile** `sources.json` against the live registries (`ADAPTERS`,
-  `RECORD_SOURCES`, `ENRICHERS`) — flag drift (in code but not ledger, or vice versa).
-- **Live counts + freshness**: feeds from `listings.db` (pull_log), record from
-  `record.db` (record_source_log), enrichment from `building_enrichment` /
-  `enrichment_source_log`. Freshness = last pulled_at per source.
-- **`coverage` command (INTERNAL view)**: built vs mapped universe, and the unbuilt rows
-  ranked by units-per-effort. This is the finish-line meter. Percentage lives HERE only.
-- **`render` (PUBLIC view)**: rewrite a README table of live counts + freshness. NO
-  percentage. This is the trust surface.
-- **Self-verify bar** (`verify.py` or a ledger method): per-kind proof run on a small
-  sample — feed: rows>0 & all active & no closed-status leak; record: rows>0;
-  enrichment: enriched>0 & values in range. A source isn't "shipped" until proof passes.
+The expensive final catalog status query was interrupted before the post-import
+canonical total was re-read. On resume, measure that value first; do not infer a
+canonical delta from the listing-row count.
 
-### 2. The one-shot build spec — `BUILD_EVERYTHING.md`
+## Next productive work
 
-Agent-agnostic (Claude or Codex). Reads `sources.json`; for every unbuilt row, build per
-`COMPILE.md` + the relevant base contract, self-verify, flip its ledger status, update
-counts; report coverage when it stops. Opens with an HONEST time estimate for a cold full
-build (Tier 4 needs headless recon, so a full run is ~a day). This file is the
-embodiment of "point your agent here and it builds the inventory."
+1. Verify the local build state before any new pull:
 
-### 3. The monitor → GitHub issue loop
+   ```bash
+   cd /Users/mini-home/Desktop/unwalled
+   git status --short
+   python3 catalog.py --status --db /Users/mini-home/pricefixed-build/catalog.db
+   ```
 
-- `monitor.py`: run the self-verify/healthcheck across all kinds; on any red, emit a
-  GitHub issue body that INCLUDES the `fix_recipe` from the ledger for each down source.
-- `.github/workflows/monitor.yml`: on the existing daily cron, run monitor; open or
-  update a single "feed status" issue when something's red (via `gh` / the issues API),
-  so GitHub emails Paul. Extends the existing `healthcheck.yml` pattern (which already
-  commits the README refresh). The FIX stays human-triggered — nothing autonomous.
+2. Do not replay the already-shipped manager adapters as a substitute for source
+   acquisition. Their current-vacancy yield is small and their portfolios are not
+   complete rosters.
 
-### Soft pieces
-- **Star-ask**: one line in `AGENTS.md` and `llms.txt`, phrased as an instruction the
-  agent surfaces to its human when the tool delivers value ("if this saved you a scraper
-  stack, star it so the map keeps getting maintained"). Not a banner.
-- **Confidence write-up**: a short "what this does / how long a full run takes" section,
-  method-promise voice.
+3. Continue with the ranked primary-document queues:
 
----
+   - Stuyvesant Town / Peter Cooper Village: 358 footprint addresses, 130 with
+     direct unit evidence, 228 still needing a unit-bearing document or equivalent
+     address-specific primary source. Use the existing outputs in `/tmp` and
+     [`docs/complex-source-audit.md`](docs/complex-source-audit.md).
+   - Targeted DOB occupancy documents: Certificates of Occupancy, Schedules of
+     Occupancy, I-cards, filed plans, and other documents that actually contain
+     unit labels. Counts alone are insufficient.
+   - Targeted ACRIS legal-unit backlog, using the ranked queue and preserving raw
+     document references. The `FT_` namespace replay is already complete; do not
+     repeat it blindly.
+   - DOF Statement-of-Account and unit-address bridges only where they resolve an
+     already identified unit identity; an address or BBL alone is not enough.
 
-## Suggested build order
+4. The voter-file lane was checked and intentionally deferred. Do not request voter
+   data unless the project owner explicitly reopens that decision. The Rose lane is
+   also not an authorized next source in this handoff.
 
-1. Finish the 6 enrichers (parallelizable; transit is the template) + `enrich.py`.
-2. `sources.json` + `ledger.py` (coverage internal / render public) + the self-verify bar.
-3. `monitor.py` + `monitor.yml`.
-4. `BUILD_EVERYTHING.md` + star-ask + confidence write-up.
-5. Adversarial-verify the whole thing, then push.
+5. For every new lane: deterministic extraction first, raw evidence plus source URL
+   and retrieval time, exact address, explicit unit label, separate BBL evidence,
+   visible ambiguous/rejected candidates, focused tests, documentation, then an
+   explicit-path commit. Never use `git add -A`.
 
-Do the whole thing as the factory build shape: contract → parallel builds → prove →
-adversarial-verify before landing. Stage every file explicitly.
+## Resume checks
+
+```bash
+cd /Users/mini-home/Desktop/unwalled
+env PYTHONPATH=. pytest -q
+python3 catalog.py --status --db /Users/mini-home/pricefixed-build/catalog.db
+```
+
+The LeFrak lane was last verified with the full repository suite at **219 passed,
+19 subtests passed**. Re-run the suite after any change. Keep the ignored local
+databases separate from committed source evidence and never touch `soannoying/`.
