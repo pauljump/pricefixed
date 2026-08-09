@@ -2,6 +2,7 @@
 One HTML availability page per portal (subdomain + property slug). Many separate
 landlords (Clipper, Rudin, Westminster, Goldfarb, ...) all ride the same template,
 so adding inventory is just appending a portal to PORTALS."""
+import json
 import re
 import time
 
@@ -70,6 +71,10 @@ class SecureCafeAdapter(SourceAdapter):
         # Oriana — Sutton Place / Midtown East (verified live 2026-07-11)
         {"label": "Oriana", "subdomain": "oriananyc", "slug": "oriana",
          "address": "420 East 54th Street", "hood": "Sutton Place", "boro": "Manhattan"},
+        # Bozzuto — official property page links to this public RentCafe portal
+        {"label": "The Capitol (Bozzuto)", "subdomain": "thecapitolchelsea", "slug": "the-capitol",
+         "address": "776 Sixth Avenue", "hood": "Chelsea", "boro": "Manhattan",
+         "source_url": "https://www.bozzuto.com/apartments-for-rent/ny/new-york/the-capitol"},
     ]
 
     def _fetch_portal(self, portal):
@@ -83,6 +88,14 @@ class SecureCafeAdapter(SourceAdapter):
         if len(html) < 500 or "404" in html[:200]:
             return [], "404 or empty"
 
+        return self._parse_portal_html(html, portal, url), None
+
+    def _parse_portal_html(self, html, portal, url=""):
+        """Parse current SecureCafe rows, including newer RentCafe markup.
+
+        Rows are scoped to ``AvailUnitRow`` so a table header's word
+        ``Apartment`` cannot be mistaken for a unit label.
+        """
         units = []
 
         # Parse floor plan sections
@@ -106,18 +119,29 @@ class SecureCafeAdapter(SourceAdapter):
                 if bath_m:
                     baths = float(bath_m.group(1))
 
-            # Find unit rows: <th data-label='Apartment'>#UNIT</th>
-            # <td data-label=Sq.Ft.>SQFT</td>
-            # <td data-label='Rent'>$PRICE</td>
-            for um in re.finditer(
-                r"data-label='Apartment'[^>]*>#?(\w+)</th>"
-                r".*?data-label=Sq\.Ft\.>(\d+)</td>"
-                r".*?data-label='Rent'>\$([\d,]+)</td>",
-                section, re.DOTALL
+            # Current rows use a mix of quoted/unquoted data-label attributes.
+            # Parse one row at a time so the header cannot satisfy the pattern.
+            for row in re.findall(
+                r"<tr[^>]*class=['\"][^'\"]*AvailUnitRow[^'\"]*['\"][^>]*>.*?</tr>",
+                section, re.I | re.DOTALL,
             ):
-                unit_num = um.group(1)
-                sqft = int(um.group(2))
-                price = int(um.group(3).replace(",", ""))
+                unit_m = re.search(
+                    r"data-label\s*=\s*['\"]Apartment['\"][^>]*>\s*#?([\w-]+)\s*</th>",
+                    row, re.I | re.DOTALL,
+                )
+                sqft_m = re.search(
+                    r"data-label\s*=\s*['\"]?Sq\.\s*Ft\.['\"]?[^>]*>\s*([\d,]+)",
+                    row, re.I | re.DOTALL,
+                )
+                rent_m = re.search(
+                    r"data-label\s*=\s*['\"]Rent['\"][^>]*>\s*\$([\d,]+)",
+                    row, re.I | re.DOTALL,
+                )
+                if not unit_m or not sqft_m or not rent_m:
+                    continue
+                unit_num = unit_m.group(1)
+                sqft = int(sqft_m.group(1).replace(",", ""))
+                price = int(rent_m.group(1).replace(",", ""))
 
                 # Extract move-in date from ApplyNowClick
                 avail = None
@@ -127,6 +151,13 @@ class SecureCafeAdapter(SourceAdapter):
                 )
                 if apply_m:
                     avail = apply_m.group(1)
+                else:
+                    date_m = re.search(
+                        r"data-label\s*=\s*['\"]Date Available['\"][^>]*>.*?>([^<]+)<",
+                        row, re.I | re.DOTALL,
+                    )
+                    if date_m:
+                        avail = date_m.group(1).strip()
 
                 units.append({
                     "source_id": f"sc-{portal['subdomain']}-{unit_num}",
@@ -151,10 +182,17 @@ class SecureCafeAdapter(SourceAdapter):
                     "is_flex": 0,
                     "is_rent_stabilized": 0,
                     "finish_level": None,
-                    "raw_json": None,
+                    "raw_json": json.dumps({
+                        "unit_number": unit_num,
+                        "sqft": sqft,
+                        "price": price,
+                        "available_date": avail,
+                        "source_url": portal.get("source_url") or url,
+                        "availability_url": url,
+                    }),
                 })
 
-        return units, None
+        return units
 
     def pull(self):
         all_units = []

@@ -38,6 +38,7 @@ Sources:
 | AppFolio operators already found | Public `{company}.appfolio.com/listings` pages | Public listing/map data embedded in the page | Shipped in `appfolio`; more NYC companies still need enumeration |
 | Durst and Ogden CAP | MRI ProspectConnect community pages | Public community availability after the site search flow | Shipped in `durst` and `ogdencap` |
 | Dermot Company | [`dermotcompany.com/state/new-york`](https://www.dermotcompany.com/state/new-york) → public `nestiolistings.com/api/v2/listings/all` calls | Current listings with exact unit labels, exact street address, price, and availability date for 17 confirmed NY communities | Shipped in `dermot`; this is not a complete roster |
+| Bozzuto — The Capitol | [Official property page](https://www.bozzuto.com/apartments-for-rent/ny/new-york/the-capitol) → [`thecapitolchelsea.securecafe.com`](https://thecapitolchelsea.securecafe.com/onlineleasing/the-capitol/availableunits.aspx) | Current SecureCafe rows with exact unit labels, rent, square feet, and availability date | Shipped as `securecafe`; one confirmed Bozzuto property, not the whole portfolio |
 
 ## Manager-Specific Paths To Test
 
@@ -45,7 +46,7 @@ Sources:
 |---|---|---|---|
 | Rockrose | [Linc LIC](https://rockrose.com/building/linc-lic/) | The official page links to a property-specific SecureCafe/RentCafe portal: [`linclicllc-rockrose.securecafe.com`](https://linclicllc-rockrose.securecafe.com/onlineleasing/linc-lic-l-l-c/guestlogin.aspx). Rockrose's public page also shows unit labels and asking rents. | Candidate: add the property after confirming the availability page survives a normal public fetch |
 | Brodsky Organization | [Brodsky rentals](https://www.brodsky.com/rentals) | Public listing page with building, unit, price, and availability information. The page is rendered by Brodsky's web application and exposes CMS content, but no separate public listing feed has been confirmed. | Public portal: build a small page adapter or find the listing request before adding a feed |
-| Bozzuto | [Bozzuto NYC rentals](https://www.bozzuto.com/apartments-for-rent/ny/new-york) | Public portfolio search. Individual community floor-plan pages expose actual unit labels, prices, and availability, for example [The Capitol](https://www.bozzuto.com/apartments-for-rent/ny/new-york/the-capitol/floor-plans/1052744). | Public portal: high-value next adapter; endpoint still needs bounded discovery |
+| Bozzuto | [Bozzuto NYC rentals](https://www.bozzuto.com/apartments-for-rent/ny/new-york) | The Capitol is confirmed through the official property page and its linked public SecureCafe availability page; other Bozzuto communities remain untested. | Confirmed for The Capitol; enumerate other properties |
 | RXR and Extell | Official property sites and their individual leasing pages | Likely mixed property-by-property vendor paths. Do not treat the RentCafe hypothesis as confirmed until an official property page links to a specific public portal. | Candidate: map one property per manager |
 | Two Trees and Moinian | Official property sites | Likely Funnel/Nestio-style or property-specific listing pages. No universal public endpoint has been confirmed. | Candidate: identify one live property path first |
 | Rose Associates | [NYBits manager profile](https://www.nybits.com/managers/rose.html) and Rose property sites | Many buildings, but no portfolio-wide public feed has been confirmed. | Candidate: sample the largest live property pages |
@@ -68,7 +69,7 @@ file NYBits receives.
 | Rockrose Development | Rockrose's official Linc LIC page links applicants to a property-specific SecureCafe portal. | Confirmed vendor handoff; feed endpoint still needs validation |
 | ABJ Properties, Patoma, A&N Management, Downtown | Each has a public AppFolio listings page with embedded unit/map data, collected by the `appfolio` adapter. | Confirmed public feed-shaped pages |
 | Dermot Company | Official building pages expose community IDs and call the public Nestio availability endpoint; 17 New York properties are configured. | Confirmed public feed |
-| Bozzuto Management | Bozzuto's public NYC search and community pages expose current availability and unit labels. | Confirmed public listings; feed endpoint unknown |
+| Bozzuto Management | The Capitol's official page links to a public SecureCafe availability page with current exact unit labels. | Confirmed public feed for The Capitol; portfolio incomplete |
 | Brodsky Organization | Brodsky's public rentals page exposes current building/unit listings. | Confirmed public listings; feed endpoint unknown |
 | Rose Associates, Greystar, Two Trees | NYBits identifies these managers and their building portfolios, but we have not yet confirmed a stable public feed endpoint for them. | Manager confirmed; feed unknown |
 

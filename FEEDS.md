@@ -52,7 +52,7 @@ highest-leverage work left.
 
 | Platform | Landlords on it (NYC) | Mechanism | Status |
 |---|---|---|---|
-| **Yardi RentCafe / SecureCafe** | Rockrose, Brodsky, RXR, Extell, + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals |
+| **Yardi RentCafe / SecureCafe** | Rockrose, Brodsky, RXR, Extell, Bozzuto/The Capitol, + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals |
 | **MRI ProspectConnect** | Durst, Ogden CAP, others | CSRF + POST search per community code | 🔨 shipped for 2; find more communities |
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |
