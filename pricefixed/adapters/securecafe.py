@@ -75,6 +75,18 @@ class SecureCafeAdapter(SourceAdapter):
         {"label": "The Capitol (Bozzuto)", "subdomain": "thecapitolchelsea", "slug": "the-capitol",
          "address": "776 Sixth Avenue", "hood": "Chelsea", "boro": "Manhattan",
          "source_url": "https://www.bozzuto.com/apartments-for-rent/ny/new-york/the-capitol"},
+        # Bozzuto NYC portfolio — browser-capture validated 2026-08-09. These
+        # public pages currently challenge plain HTTP clients; use the capture
+        # importer when the normal pull is blocked.
+        {"label": "19 Dutch (Bozzuto)", "subdomain": "19dutch", "slug": "19-dutch",
+         "address": "19 Dutch St", "hood": "Financial District", "boro": "Manhattan",
+         "source_url": "https://www.bozzuto.com/apartments-for-rent/ny/new-york/19-dutch"},
+        {"label": "Aalto57 (Bozzuto)", "subdomain": "aalto57", "slug": "aalto57",
+         "address": "1065 2nd Ave", "hood": "Midtown East", "boro": "Manhattan",
+         "source_url": "https://www.bozzuto.com/apartments-for-rent/ny/new-york/aalto57"},
+        {"label": "88 Leonard (Bozzuto)", "subdomain": "88leonard", "slug": "88leonard",
+         "address": "88 Leonard Street", "hood": "Tribeca", "boro": "Manhattan",
+         "source_url": "https://www.bozzuto.com/apartments-for-rent/ny/new-york/88-leonard"},
     ]
 
     def _fetch_portal(self, portal):

@@ -522,6 +522,88 @@ class Catalog:
             [(observation_id, "building", bbl, "exact_official_address", rationale) for bbl in bbls],
         )
 
+    def _explicit_listing_bbl(self, raw_json, address):
+        """Validate an explicit address-to-BBL crosswalk carried by a capture.
+
+        Browser-captured landlord pages can expose an exact unit/address while a
+        separate official DOB NOW query supplies the BBL.  Keep that join explicit:
+        the capture must carry the BBL, the official source URL, raw rows whose
+        addresses and BBL agree, and an already-imported official address on that
+        BBL.  A BBL string without this evidence is ignored and falls back to the
+        normal address resolver.
+        """
+        try:
+            payload = json.loads(raw_json or "{}")
+        except (TypeError, ValueError):
+            return None
+        bbl = _normalize_bbl(payload.get("bbl"))
+        evidence = payload.get("bbl_evidence") or {}
+        source_url = str(evidence.get("source_url") or "")
+        rows = evidence.get("rows") or []
+        source = str(evidence.get("source") or "")
+        if (not bbl or source != "dob_now_job_filings"
+                or not source_url.startswith("https://data.cityofnewyork.us/resource/w9ak-ipjd.json")
+                or not rows):
+            return None
+        normalized_address = normalize_address(address)
+        if not normalized_address:
+            return None
+        for row in rows:
+            if _normalize_bbl(row.get("bbl")) != bbl:
+                return None
+            row_address = normalize_address(" ".join(
+                str(value).strip() for value in (row.get("house_no"), row.get("street_name")) if value
+            ))
+            if row_address != normalized_address:
+                return None
+        official = self.conn.execute(
+            "SELECT 1 FROM addresses WHERE bbl=? AND normalized=? LIMIT 1",
+            (bbl, normalized_address),
+        ).fetchone()
+        if not official:
+            return None
+        return bbl, evidence
+
+    def _store_listing_bbl_evidence(self, source_ref, listing_address, retrieved_at, bbl, evidence):
+        """Store the official crosswalk as a separate observation for auditability."""
+        evidence_source = str(evidence.get("source") or "dob_now_job_filings")
+        evidence_ref = f"{source_ref}#address-bbl-crosswalk"
+        evidence_retrieved_at = str(evidence.get("retrieved_at") or retrieved_at)
+        document_id = _id("doc", evidence_source, evidence_ref, evidence_retrieved_at)
+        payload = json.dumps(evidence, default=str, sort_keys=True)
+        self._source(
+            evidence_source,
+            "public_record",
+            "Official DOB NOW job-filing rows used as an exact address-to-BBL crosswalk for a public listing capture",
+        )
+        self.conn.execute(
+            "INSERT OR IGNORE INTO source_documents "
+            "(document_id,source,source_ref,retrieved_at,payload,payload_kind) VALUES (?,?,?,?,?,?)",
+            (document_id, evidence_source, evidence_ref, evidence_retrieved_at,
+             payload, "official_address_bbl_crosswalk"),
+        )
+        observed_at = evidence_retrieved_at[:10]
+        observation_id = _id(
+            "obs", evidence_source, evidence_ref, observed_at, "official_address_bbl_crosswalk",
+        )
+        self.conn.execute(
+            "INSERT INTO observations "
+            "(observation_id,document_id,source,source_ref,observed_at,observation_kind,address,status,raw_fields,evidence_grade) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(source,source_ref,observed_at,observation_kind) DO UPDATE SET "
+            "document_id=excluded.document_id,address=excluded.address,status=excluded.status,"
+            "raw_fields=excluded.raw_fields,evidence_grade=excluded.evidence_grade",
+            (observation_id, document_id, evidence_source, evidence_ref, observed_at,
+             "official_address_bbl_crosswalk", listing_address, "resolved", payload, "source_document"),
+        )
+        self._ensure_building(bbl, evidence_source)
+        self._match(
+            observation_id, "building", bbl, "resolved", 1.0,
+            "official_address_and_bbl_crosswalk",
+            "DOB NOW rows supply the exact source address and the BBL used for the listing observation",
+        )
+        return observation_id
+
     def _match(self, observation_id, entity_type, entity_id, status, confidence, method, rationale):
         self.conn.execute(
             "INSERT INTO entity_matches "
@@ -2496,9 +2578,24 @@ class Catalog:
                 "(document_id,source,source_ref,retrieved_at,payload,payload_kind) VALUES (?,?,?,?,?,?)",
                 (document_id, source, source_ref, retrieved_at, listing["raw_json"], "upstream_listing_json"),
             )
-            bbl, match_status, confidence, method, rationale = self._resolve_bbl(
-                listing["address"], listing["zipcode"]
-            )
+            raw_payload = listing["raw_json"] or ""
+            explicit_bbl = self._explicit_listing_bbl(raw_payload, listing["address"])
+            if explicit_bbl:
+                bbl, bbl_evidence = explicit_bbl
+                match_status, confidence, method, rationale = (
+                    "resolved", 1.0, "official_address_and_bbl_crosswalk",
+                    "official DOB NOW rows resolve the exact listing address to one BBL",
+                )
+            else:
+                bbl, match_status, confidence, method, rationale = self._resolve_bbl(
+                    listing["address"], listing["zipcode"]
+                )
+                bbl_evidence = None
+            crosswalk_observation_id = None
+            if bbl_evidence:
+                crosswalk_observation_id = self._store_listing_bbl_evidence(
+                    source_ref, listing["address"], retrieved_at, bbl, bbl_evidence,
+                )
             normalized_unit = normalize_unit(listing["unit_number"])
             is_non_dwelling = str(listing["unit_number"] or "").strip().upper() in NON_DWELLING_UNIT_LABELS
             unit_id = None
@@ -2538,6 +2635,13 @@ class Catalog:
                      "source_document" if is_current else "legacy_snapshot"),
                 )
                 self._match(observation_id, "building", bbl, match_status, confidence, method, rationale)
+                if crosswalk_observation_id:
+                    self.conn.execute(
+                        "INSERT OR IGNORE INTO entity_match_evidence "
+                        "(observation_id,entity_type,evidence_observation_id,role) VALUES (?,?,?,?)",
+                        (observation_id, "building", crosswalk_observation_id,
+                         "official_address_bbl_crosswalk"),
+                    )
                 self._record_bbl_candidates(observation_id, listing["address"], listing["zipcode"])
                 if unit_id:
                     self._match(observation_id, "unit", unit_id, "resolved", 1.0,

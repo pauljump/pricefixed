@@ -2,7 +2,7 @@
 
 This is the plan for compiling every apartment in the city. Each row is a source and an adapter waiting to be written. The goal is not to hand-build all of them; it is to map them all so anyone, human or AI, can crank through them. See [`COMPILE.md`](COMPILE.md) for how to turn a row into a working adapter.
 
-For the manager-by-manager research queue, see [`docs/manager-feed-map.md`](docs/manager-feed-map.md), the generated [`data/manager_feed_registry.jsonl`](data/manager_feed_registry.jsonl), the flat [`data/public_leasing_paths.jsonl`](data/public_leasing_paths.jsonl), and its [runner documentation](docs/manager-feed-registry.md). The registry now records explicit property and leasing links exposed by official sites, while keeping confirmed public feeds separate from unverified vendor hypotheses.
+For the manager-by-manager research queue, see [`docs/manager-feed-map.md`](docs/manager-feed-map.md), the generated [`data/manager_feed_registry.jsonl`](data/manager_feed_registry.jsonl), the flat [`data/public_leasing_paths.jsonl`](data/public_leasing_paths.jsonl), the [`data/feed_provenance_queue.jsonl`](data/feed_provenance_queue.jsonl), and its [runner documentation](docs/manager-feed-registry.md). The registry now records explicit property and leasing links exposed by official sites, while keeping confirmed public feeds separate from unverified vendor hypotheses.
 
 **The strategy, in order of leverage:**
 
@@ -38,7 +38,7 @@ Ten live. Copy these when building new ones.
 | TF Cornerstone | one static JSON feed | easy | | ~9,000 | ✅ |
 | Nooklyn (broker marketplace) | JSON API | easy | | ~1,500 | ✅ |
 | AvalonBay | `apis.avalonbay.com/search/units` | easy | | ~5,000 | ✅ |
-| SecureCafe (Yardi/RentCafe portals) | per-portal HTML | medium | | ~250+ | ✅ |
+| SecureCafe (Yardi/RentCafe portals) | per-portal HTML; browser-visible capture fallback for Cloudflare-challenged public pages | medium | | ~250+ | ✅ |
 | Stonehenge | Salesforce apexrest | easy | | ~80 | ✅ |
 | Ogden CAP | MRI ProspectConnect | medium | | ~50 | ✅ |
 | Durst | MRI ProspectConnect | medium | ✅ | ~30 live | ✅ |
@@ -58,7 +58,7 @@ highest-leverage work left.
 
 | Platform | Landlords on it (NYC) | Mechanism | Status |
 |---|---|---|---|
-| **Yardi RentCafe / SecureCafe** | Rockrose, RXR, Extell, Bozzuto/The Capitol, + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals |
+| **Yardi RentCafe / SecureCafe** | Rockrose, RXR, Extell, Bozzuto (The Capitol, 19 Dutch, Aalto57, 88 Leonard), + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals; browser capture fallback documented |
 | **MRI ProspectConnect** | Durst, Ogden CAP, others | CSRF + POST search per community code | 🔨 shipped for 2; find more communities |
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |

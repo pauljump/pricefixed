@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,550 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,450** homes that are counted by the city
+Current local build: **3,044,561 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **660,439** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -69,6 +69,45 @@ python3 tools/merges/audit_nyc_open_data_fields.py \
   --out-dir /tmp/pricefixed-open-data-audit.nVQLKA \
   --page-size 1000
 ```
+
+### Bozzuto SecureCafe browser capture (2026-08-09)
+
+The official Bozzuto NYC rentals index was checked property by property. The
+official pages for 19 Dutch, Aalto57, and 88 Leonard link to public SecureCafe
+availability tables. Plain HTTP requests receive a Cloudflare challenge, but the
+browser-visible tables expose exact current unit labels. A bounded capture recorded
+24 rows, all with the exact source address, unit label, rent, square feet, and
+availability text:
+
+- 19 Dutch St: `30H`, `49H`, `48H`, `48F`, `59E`, `60F`, `29E`, `63F`,
+  `14I`, `40C`, `38D`, `25B`.
+- 1065 2nd Ave: `06F`, `09F`, `23C`, `08H`.
+- 88 Leonard Street: `0503`, `0712`, `PHB-5`, `2002`, `1507`, `1123`,
+  `1214`, `0516`.
+
+The importer is [`tools/merges/import_securecafe_browser_capture.py`](../tools/merges/import_securecafe_browser_capture.py).
+It accepts only explicit browser-visible rows and preserves the raw row, official
+property URL, availability URL, retrieval time, and capture metadata. It never
+expands floorplans or building counts. Official DOB NOW job-filing crosswalks
+resolved the three exact premises to BBLs `1000780047` (19 Dutch), `1013307502`
+(1065 2nd Ave), and `1001730027` (88 Leonard). The crosswalk is stored as separate
+evidence rather than silently treating a BBL-wide label as address-specific.
+
+The final import produced 24 resolved listing observations and **11 net-new
+canonical units**; 13 labels already existed through other source paths. The
+catalog therefore moved from 3,044,550 to **3,044,561** without changing the
+anonymous PLUTO capacity layer. The current vacancies are evidence of named units,
+not a complete building roster. Riverbank and The Ludlow exposed only counts or
+floorplans in this check and were not expanded.
+
+Raw HTML capture hashes for the reproducibility handoff:
+
+- 19 Dutch: `4e502046b1382c6d3a4b4565de8eb2a7d9608ac7e031324364034b1aa9039b49`
+- Aalto57: `eee415a3109e51f71154645b2d209e0446481c1a9dfe9e91e88d7aa093848417`
+- 88 Leonard: `ca1930a4e01dfca2a8b8aea7e82619dc34300aa4dbee955da4ab72ca034ecc0f`
+
+The capture manifest and raw HTML are staged under `/tmp` for this run; the
+catalog retains the row payload and official crosswalk evidence in `source_documents`.
 
 ## NYS voter file lane
 

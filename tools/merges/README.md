@@ -89,6 +89,27 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
   browser-assisted BIS workflow now extracts certificate form references and
   preserves the PDF URL, while keeping BBL conflicts and shared-BBL documents
   visible instead of importing them.
+- **Some public SecureCafe pages challenge plain HTTP clients.** If an official
+  landlord page links to a SecureCafe table that is readable in an interactive
+  browser, preserve the visible rows in the small capture shape and convert them
+  to the normal listings database without deriving units from floorplans or counts:
+
+  ```bash
+  python3 tools/merges/import_securecafe_browser_capture.py \
+    --capture /data/bozzuto-securecafe-capture.json \
+    --output-db /data/bozzuto-securecafe-listings.db \
+    --rejected /data/bozzuto-securecafe-rejected.json
+  python3 catalog.py --source listings \
+    --listings /data/bozzuto-securecafe-listings.db \
+    --db /data/catalog.db
+  ```
+
+  The capture must retain `retrieved_at`, the official property URL, the
+  availability URL, the exact source address, and each visible row's explicit
+  `unit`, `sqft`, `rent`, `available`, and `caption` values. The importer keeps
+  those values in `raw_json`, uses stable `securecafe` source IDs, and rejects
+  rows without a unit label. It never expands a floorplan name or an
+  availability count into apartment records.
 - **PAD address-count == PLUTO units_res is not a safe tiebreak for 2-family lots.**
   Tested against 62,347 candidates: only 4,585 (7.4%) were genuinely two dwellings on
   the same street ("28 JANE ST" / "30 JANE ST"). The other 57,762 were corner lots with
