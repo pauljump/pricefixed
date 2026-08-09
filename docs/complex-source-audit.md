@@ -165,6 +165,7 @@ The bounded passes on 2026-08-08 produced the following evidence summary:
 | BIS C/O certificates for BIN 1082885 / target 521 East 14 Street | 5 certificates; 2 exact section-level records, 3 identity/garage conflicts, 0 apartment identities |
 | BIS C/O certificate for BIN 1082858 / target 18 Stuyvesant Oval | 1 certificate; section-level apartment counts, 0 apartment identities |
 | BIS C/O certificate set for BIN 1082857 / target 12 Stuyvesant Oval | 28 of 49 files captured; all reviewed files have section-level counts and 0 apartment identities; remaining 21 blocked by BIS/Akamai access denial |
+| BIS targeted capture for BINs 1082871, 1082859, 1082872, and 1082726 | 26, 12, 0, and 5 visible C/O references respectively; premises are mismatched or shared-lot, and the scans expose counts/building sections rather than exact apartment labels |
 
 The DOB description API is therefore exhausted for the current unresolved
 footprint. Its positive rows remain useful dated observations, but they do not
@@ -172,6 +173,14 @@ fill the queue. The next source attempt must retrieve a unit-bearing occupancy
 document or equivalent address-specific primary record through BIS/DOB NOW
 manual review; building counts and the existing description candidates do not
 justify copying a floorplan or completing the roster by pattern.
+
+The follow-up ranked-BIN capture is recorded in
+[`docs/bis-stuytown-targeted-capture-2026-08-08.md`](bis-stuytown-targeted-capture-2026-08-08.md).
+It found no importable units and reduced duplicate risk by recording the BIS
+premise, exact queue target, visible document count, and representative PDF
+checksums. In particular, the historical `Building #35 Unit #1/#2/#3` strings
+are occupancy-section identifiers on multi-address certificates, not apartment
+labels for `251 AVE C`.
 
 ### Browser-captured BIS certificate check
 
