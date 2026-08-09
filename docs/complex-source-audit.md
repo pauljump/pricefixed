@@ -252,3 +252,9 @@ the third exposed five numbered building sections and no exact address in OCR.
 Those `UNIT` values are building-section identifiers, not apartment labels. No
 units were added. The PDFs, checksums, and parser regression are recorded in
 [`docs/bis-1082880-capture.md`](bis-1082880-capture.md).
+
+The following distinct BIN, `1082883` for `505 EAST 14 STREET`, returned three
+older certificates. Two explicitly identify 505–515 East 14th Street, block 972
+lot 1; all three describe numbered building sections and per-floor apartment
+counts rather than individual apartment labels. No units were added. Capture
+details and checksums are in [`docs/bis-1082883-capture.md`](bis-1082883-capture.md).
