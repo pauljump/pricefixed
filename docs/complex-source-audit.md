@@ -243,3 +243,12 @@ returned duplicate/legacy records and addresses outside the target footprint;
 they were retained as separate observations and not applied to the 228-address
 queue. No canonical units were added. The inventory and review are recorded in
 [`docs/hpd-icard-stuyvesant-bbl-1009720001-capture.md`](hpd-icard-stuyvesant-bbl-1009720001-capture.md).
+
+The next distinct Stuyvesant Town BIN, `1082880` for `447 EAST 14 STREET`,
+returned three older BIS certificates. One certificate was an identity conflict
+for an unrelated Manhattan premise; one exact certificate named the target
+premise and BBL but described `UNIT #2` with seven/eight apartments per story;
+the third exposed five numbered building sections and no exact address in OCR.
+Those `UNIT` values are building-section identifiers, not apartment labels. No
+units were added. The PDFs, checksums, and parser regression are recorded in
+[`docs/bis-1082880-capture.md`](bis-1082880-capture.md).

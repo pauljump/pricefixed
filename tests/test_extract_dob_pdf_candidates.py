@@ -72,6 +72,27 @@ class ExtractDOBPdfCandidatesTest(unittest.TestCase):
         self.assertEqual(result[0]["unit_label"], "")
         self.assertEqual(result[0]["status"], "no_explicit_unit_label")
 
+    def test_c_of_o_building_section_number_is_not_an_apartment_label(self):
+        row = {
+            "property": "Stuyvesant Town",
+            "target_address": "447 EAST 14 STREET",
+            "target_bbl": "1009720001",
+            "bis_premise": "447 EAST 14 STREET",
+            "bis_bbl": "1009720001",
+            "source_ref": "bis-co:1082880:M000035592.PDF",
+            "source_url": "index",
+            "document_url": "doc",
+            "identity_scope": "exact_premise",
+        }
+        text = (
+            "CERTIFICATE OF OCCUPANCY\n447 EAST 14 STREET\n447-455 EAST 14 STREET\n"
+            "UNIT #2\nSeven (7) apartments on each story\n"
+            "Eight (8) apartments on each story"
+        )
+        result = parse_pdf_text(row, text)
+        self.assertEqual(result[0]["unit_label"], "")
+        self.assertEqual(result[0]["status"], "no_explicit_unit_label")
+
 
 if __name__ == "__main__":
     unittest.main()
