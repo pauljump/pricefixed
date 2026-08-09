@@ -167,3 +167,29 @@ address-specific apartment identities. The fourth certificate also validates
 why document-level identity checks are required even after the BIS index has
 supplied a BIN and BBL. Capture details and the OCR sidecar workflow are in
 [`docs/dob-document-capture.md`](dob-document-capture.md).
+
+The next duplicate-controlled capture for target `348 1 AVENUE` queried BIN
+`1083680` on Peter Cooper Village BBL `1009780001`. Its C/O index named
+`350 FIRST AVENUE`; both listed certificates were older business-use scans
+whose faces identified different premises/block references and contained no
+apartment labels. This BBL-level pass also added no units. The durable source
+references and checksums are recorded in
+[`docs/bis-1083680-capture.md`](bis-1083680-capture.md).
+
+An additional queue-integrity check for `351 1 AVE` found a direct BBL
+conflict: BIS identifies BIN `1020541` as block 926 lot 38 (`1009260038`),
+while the unresolved queue assigned the address to the Peter Cooper Village
+anchor BBL `1009780001`. No document was queried under the incorrect BBL; the
+row is recorded as `bbl_mismatch` in
+[`docs/bis-1020541-profile-check.md`](bis-1020541-profile-check.md).
+
+For `352 1 AVE`, BIN `1083679` is on the queued BBL `1009780001`, but its C/O
+index names `350 1 AVENUE`. Four captured certificates, including a 2021
+temporary C/O, report 114 dwelling units and occupancy-use counts but no
+apartment labels. They remain shared-BBL capacity observations; the result is
+recorded in [`docs/bis-1083679-capture.md`](bis-1083679-capture.md).
+
+The next distinct BIN, `1083683` for `400 E 23 ST`, listed three older C/O
+scans. Their faces identified different business premises and block references
+and supplied no apartment labels. No units were added; the capture record and
+checksums are in [`docs/bis-1083683-capture.md`](bis-1083683-capture.md).
