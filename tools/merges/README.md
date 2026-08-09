@@ -207,6 +207,19 @@ capacity. The summary reports counts by status, borough, and building class.
     --out /data/dob-target-description-evidence.csv
   ```
 
+  The historical borough-office/eFiling corpus is separate from DOB NOW. Refresh
+  it with the same exact-address rule when a bounded target queue needs a current
+  duplicate-work check:
+
+  ```bash
+  python3 tools/merges/mine_legacy_dob_target_descriptions.py \
+    --targets /data/complex-unit-document-targets.csv \
+    --out /data/legacy-dob-target-description-evidence.csv
+  ```
+
+  This collector retains `no_exact_source_rows` targets and never promotes a
+  BBL-wide legacy row to an address or unit.
+
 - **Create the manual DOB document queue**: add exact-address BIS property-profile
   links and the DOB NOW public-portal entry point to each unresolved target. This
   is a review worksheet only; it does not fetch documents or create units. A

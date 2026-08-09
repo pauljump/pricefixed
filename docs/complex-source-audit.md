@@ -129,6 +129,25 @@ Rows marked `explicit_candidate` are review candidates, not automatically a
 complete roster. Rows marked `ambiguous_description` remain visible without a
 unit label and cannot create a canonical unit.
 
+The legacy borough-office/eFiling DOB corpus is a distinct historical source,
+so it was refreshed separately rather than counted as a duplicate of the DOB
+NOW pass:
+
+```bash
+python3 tools/merges/mine_legacy_dob_target_descriptions.py \
+  --targets /tmp/stuytown-unit-document-targets-all-sources.csv \
+  --out /tmp/stuytown-legacy-dob-description-evidence.csv
+```
+
+This refresh queried the legacy corpus by each target BBL and then required an
+exact normalized source address. It produced 400 observations for 36 of the
+228 unresolved addresses, plus 192 explicit `no_exact_source_rows` records for
+the remaining targets. None of the 400 observations contained an explicit
+apartment label: 205 were generic/ambiguous descriptions and 3 had no usable
+description. The source lane therefore adds dated negative/ambiguous evidence
+but no canonical units to this queue. The raw descriptions and query URL remain
+in the CSV for review.
+
 ## Targeted API results
 
 The bounded passes on 2026-08-08 produced the following evidence summary:
@@ -138,6 +157,9 @@ The bounded passes on 2026-08-08 produced the following evidence summary:
 | ACRIS exact-address unit rows over all 228 unresolved addresses | 228 `no_unit_rows`; 0 unit labels |
 | DOB job descriptions over the 228 unresolved addresses | 11 exact-address observations across 5 addresses; 0 explicit labels, all ambiguous construction/mechanical descriptions |
 | DOB job descriptions over the full 358-address footprint | 737 observations, including 681 explicit candidates across 115 addresses; no new explicit labels for the 228-address unresolved queue |
+| Legacy DOB descriptions over the 228 unresolved addresses | 400 observations across 36 addresses; 0 explicit labels; 192 targets had no exact source rows |
+| BIS C/O certificates for BIN 1082886 / target 627 East 14 Street | 11 certificates; certificate faces identify 629 East 14 Street / BIN 1082771 and expose no apartment labels |
+| BIS C/O certificates for BIN 1082869 / target 272 First Avenue | 23 certificates; section-level addresses and apartment counts, 0 apartment identities |
 
 The DOB description API is therefore exhausted for the current unresolved
 footprint. Its positive rows remain useful dated observations, but they do not
