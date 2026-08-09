@@ -30,7 +30,7 @@ For the manager-by-manager research queue, see [`docs/manager-feed-map.md`](docs
 
 ## Tier 0 — Shipped (the reference implementations)
 
-Ten live. Copy these when building new ones.
+Twenty live. Copy these when building new ones.
 
 | Source | Mechanism | Difficulty | Terms | Est. units | Status |
 |---|---|---|---|---|---|
@@ -50,6 +50,7 @@ Ten live. Copy these when building new ones.
 | Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
 | Olnick Rentals | official rentals index + explicit project availability pages | medium | | current listings with exact address and apartment label | ✅ |
 | Lisa Management | official Next.js residential page with paginated embedded apartment records | easy | | current listings with exact address and apartment label | ✅ |
+| Rockrose | official residential building pages with explicit selected-listing cards | easy | | 46 current selected listings across 13 NYC properties | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 

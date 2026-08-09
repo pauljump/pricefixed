@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,561 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,439** homes that are counted by the city
+Current local build: **3,044,597 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **660,403** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -108,6 +108,38 @@ Raw HTML capture hashes for the reproducibility handoff:
 
 The capture manifest and raw HTML are staged under `/tmp` for this run; the
 catalog retains the row payload and official crosswalk evidence in `source_documents`.
+
+### Rockrose official selected listings (2026-08-09)
+
+Rockrose's official residential index exposes 13 NYC building pages with a
+server-rendered `SELECT LISTINGS` section. The deterministic Rockrose adapter
+[`pricefixed/adapters/rockrose.py`](../pricefixed/adapters/rockrose.py) collected
+46 explicit unit cards; it did not expand the building descriptions, floorplans,
+or unit counts. The captured rows were:
+
+| Official premise | Explicit units | BBL evidence |
+|---|---:|---|
+| 41 River Terrace | 1 | `1000160210` |
+| 200 Water Street | 3 | `1000750001` |
+| 180 Ashland Place | 4 | `3020950026` |
+| 43-10 Crescent Street | 7 | `4004350013` |
+| 47-05 Center Blvd | 7 | `4000210060` |
+| 43-25 Hunter Street | 1 | `4004337501` |
+| 43-22 Queens Street | 7 | `4002660003` |
+| 43-12 Hunter St | 3 | `4004340016` |
+| 410 W 53rd Street | 1 | `1010620019` |
+| 555 W 38th St | 3 | `1007100001` |
+| 100 Jane Street | 1 | no matching DOB NOW filing; catalog address resolver retained |
+| 110 Horatio Street | 4 | `1006420004` |
+| 666 Greenwich Street | 4 | `1006040033` |
+
+The official page HTML was fetched with the source URL and page SHA-256 retained in
+each raw listing payload. DOB NOW exact-address queries supplied one BBL for 45 of
+the 46 premises; 42 of those crosswalks matched an already-imported official
+address and were stored as separate `official_address_bbl_crosswalk` observations.
+All 46 listing observations resolved, but only **36 were net-new canonical units**;
+10 labels already existed through other sources. These are current selected listings,
+not a complete Rockrose roster.
 
 ## NYS voter file lane
 
