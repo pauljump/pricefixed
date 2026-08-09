@@ -233,3 +233,13 @@ classification and apartment totals, while their visible `UNIT` fields are
 blank form fields. No individual apartment labels were found and no units were
 added. The full mapping and checksums are in
 [`docs/hpd-icard-pcv-bbl-1009780001-capture.md`](hpd-icard-pcv-bbl-1009780001-capture.md).
+
+The independent Stuyvesant Town BBL `1009720001` was then queried separately.
+HPD returned 46 building records, 28 records with 29 cards (177 pages), and 18
+records without a card. Several captured cards contain `Unit #1`, `Unit #2`,
+`Unit #3`, or unit ranges, but these are building/occupancy-section identifiers
+paired with apartment totals, not individual apartment labels. The API also
+returned duplicate/legacy records and addresses outside the target footprint;
+they were retained as separate observations and not applied to the 228-address
+queue. No canonical units were added. The inventory and review are recorded in
+[`docs/hpd-icard-stuyvesant-bbl-1009720001-capture.md`](hpd-icard-stuyvesant-bbl-1009720001-capture.md).
