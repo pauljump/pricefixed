@@ -84,10 +84,11 @@ merge is idempotent and preserves the upstream record ID, dataset, date, and URL
   `BKLYN` identify the DOB office or processing unit. It must never create homes.
 - **Asbestos Control's `ACM_UNIT` is a measurement field.** Live values are units such
   as `Square Feet` and `Linear Feet`, not apartment identifiers.
-- **DOB NOW occupancy documents are not available to the unattended CLI.** The public
-  portal's Akamai layer returned HTTP 403 for scripted document retrieval. Keep the
-  ranked target queue, but do not report those documents as mined until an accessible
-  public endpoint exists.
+- **DOB occupancy documents are not available to the unattended CLI.** The public
+  portal's Akamai layer returned HTTP 403 for scripted document retrieval. A
+  browser-assisted BIS workflow now extracts certificate form references and
+  preserves the PDF URL, while keeping BBL conflicts and shared-BBL documents
+  visible instead of importing them.
 - **PAD address-count == PLUTO units_res is not a safe tiebreak for 2-family lots.**
   Tested against 62,347 candidates: only 4,585 (7.4%) were genuinely two dwellings on
   the same street ("28 JANE ST" / "30 JANE ST"). The other 57,762 were corner lots with
@@ -223,6 +224,25 @@ capacity. The summary reports counts by status, borough, and building class.
   when one tax lot contains multiple BINs and premises. If a target cannot be
   parsed into a house number and street, it remains visible as
   `unparseable_address` instead of receiving a guessed URL.
+
+- **Capture and review BIS documents**: save the browser-visible C/O index HTML
+  and downloaded PDFs, then build a manifest and deterministic review candidates:
+
+  ```bash
+  python3 tools/merges/prepare_dob_document_manifest.py \
+    --index-html /data/bis-co-index.html \
+    --index-url 'https://a810-bisweb.nyc.gov/bisweb/COsByLocationServlet?...' \
+    --targets /data/dob-document-review-queue.csv \
+    --pdf-dir /data/dob-pdfs \
+    --out /data/dob-document-manifest.csv
+
+  python3 tools/merges/extract_dob_pdf_candidates.py \
+    --manifest /data/dob-document-manifest.csv \
+    --out /data/dob-pdf-candidates.csv
+  ```
+
+  See [`docs/dob-document-capture.md`](../../docs/dob-document-capture.md). These
+  commands produce review candidates only; they never create canonical units.
 
 Validate the completed DOF address evidence before any catalog import:
 

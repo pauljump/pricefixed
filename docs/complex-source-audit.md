@@ -89,6 +89,15 @@ worksheet deliberately leaves `unit_label`, `document_url`, and
 `exact_address_match` blank for human review; no document is treated as
 evidence until those fields are filled from the source itself.
 
+The browser-assisted capture pass found an important identity check. The BIS
+profile for `342 1 AVENUE` displays BIN `1082865`, block `972`, lot `1`, which
+corresponds to BBL `1009720001`. The queue also contains a Peter Cooper Village
+row for the same normalized address assigned to BBL `1009780001`. The capture
+manifest marks that relationship `bbl_mismatch`; matching address text is not
+allowed to override the BIS tax-lot identity. See
+[`docs/dob-document-capture.md`](dob-document-capture.md) for the reproducible
+workflow.
+
 The importer rejects BBL-only rows and rows whose document address is not an
 exact official catalog address on that BBL. It writes those rejected rows to
 `<input>.rejected.csv` and creates both the BBL-wide source observation and the
