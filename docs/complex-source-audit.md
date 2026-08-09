@@ -199,3 +199,37 @@ exposed one approved Schedule of Occupancy request with 21 floor/use rows, but
 no apartment labels in the public grid; the schedule detail remained in a
 loading state during capture. This is a second occupancy/count lane, not a new
 unit source. See [`docs/dob-now-schedule-1083679.md`](dob-now-schedule-1083679.md).
+
+### HPD historical image-card capture
+
+The HPD Online historical-card API was then exercised for the same Peter Cooper
+Village anchor. Building ID `576` corresponds to `350 1 Avenue`, block 978 lot
+1, BBL `1009780001`, and exposes one public card: `Icard_606251.pdf`, dated
+`02/15/2008`. The card was retrieved through the public document endpoint and
+OCR-reviewed locally. It is a nine-page historical classification/occupancy
+record: it contains the exact premise and BBL plus dated apartment totals
+(`114`, `116`, and `119` appear on different cards), but no apartment labels
+tied to individual premises. It therefore adds traceable building history and
+capacity evidence, not canonical units. The capture, checksum, and reproducible
+retrieval command are in [`docs/hpd-icard-606251-capture.md`](hpd-icard-606251-capture.md).
+
+The reusable capture command is:
+
+```bash
+python3 tools/merges/capture_hpd_historic_images.py \
+  --building-id 576 \
+  --out-dir /tmp/pricefixed-hpd-capture/576 \
+  --doc-id 3594781
+```
+
+This opens a distinct HPD document lane for ranked targets. It preserves the
+raw card list, original PDF bytes, source identifiers, retrieval time, and
+checksum; it deliberately does not parse or import apartment labels.
+
+The first BBL-wide HPD inventory for `1009780001` returned 21 building IDs and
+18 historical cards. All 18 PDFs (93 pages) were captured and OCR-reviewed;
+three buildings had no card available. The cards repeat building-level
+classification and apartment totals, while their visible `UNIT` fields are
+blank form fields. No individual apartment labels were found and no units were
+added. The full mapping and checksums are in
+[`docs/hpd-icard-pcv-bbl-1009780001-capture.md`](hpd-icard-pcv-bbl-1009780001-capture.md).
