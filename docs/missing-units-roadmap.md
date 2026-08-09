@@ -16,7 +16,10 @@ This is the source order for the remaining gap:
    patterns to decide what can be inferred as a hypothesis, and what still needs a
    primary source before it can become canonical.
 3. **ACRIS property legals and staged evidence**: useful for condos, co-ops, sales,
-   mortgages, and specific buildings with legal unit references.
+   mortgages, and specific buildings with legal unit references. The `FT_` document
+   namespace was separately refreshed and duplicate-checked on 2026-08-08; it was
+   already fully staged/resolved and added no new units. Remaining ACRIS work is
+   targeted gap resolution, not another blind citywide replay.
 4. **DOB occupancy documents**: Certificates of Occupancy, Schedules of Occupancy,
    I-cards, and plans for ranked high-capacity gaps. This is targeted document
    retrieval, not a clean citywide API.
