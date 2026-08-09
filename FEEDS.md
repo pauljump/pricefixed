@@ -47,6 +47,7 @@ Ten live. Copy these when building new ones.
 | Spherexx / AdKast (Marquis, Kings & Queens) | official page + public paginated AJAX | medium | | current listings across 2 confirmed portals | ✅ |
 | C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
 | Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
+| Manhattan Skyline Management | public `/api/units` feed + linked official unit detail pages | medium | | current listings with exact address on detail pages | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
@@ -55,7 +56,7 @@ highest-leverage work left.
 
 | Platform | Landlords on it (NYC) | Mechanism | Status |
 |---|---|---|---|
-| **Yardi RentCafe / SecureCafe** | Rockrose, Brodsky, RXR, Extell, Bozzuto/The Capitol, + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals |
+| **Yardi RentCafe / SecureCafe** | Rockrose, RXR, Extell, Bozzuto/The Capitol, + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals |
 | **MRI ProspectConnect** | Durst, Ogden CAP, others | CSRF + POST search per community code | 🔨 shipped for 2; find more communities |
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |

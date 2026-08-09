@@ -42,6 +42,7 @@ Sources:
 | Marquis Apartments and Kings & Queens Apartments | Official availability pages → public `/ajax/getunitlist.asp` responses | Current rows with exact street addresses, apartment labels, prices, and availability | Shipped in `spherexx`; 2 confirmed portals, not a complete roster |
 | C+C Apartment Management | [`ccmanagers.com/availability`](https://ccmanagers.com/availability/) | Public table with exact street address, apartment label, rent, and availability date | Shipped in `ccmanagers`; current table is not a complete roster |
 | Brodsky Organization | [`brodsky.com/rentals`](https://www.brodsky.com/rentals) → explicit apartment detail pages with JSON-LD | Current listings with exact street address, apartment label, price, and availability | Shipped in `brodsky`; current index had 6 listings, not a complete roster |
+| Manhattan Skyline Management | [`manhattanskyline.com/rentals`](https://manhattanskyline.com/rentals) → public `/api/units` rows → linked unit detail pages | Current API rows with explicit unit labels; official detail pages supply exact street address for accepted rows | Shipped in `manhattanskyline`; current feed had 27 accepted listings and 1 rejected row whose page supplied only “Manhattan East” |
 
 ## Manager-Specific Paths To Test
 
@@ -69,7 +70,7 @@ file NYBits receives.
 | Durst Management | Durst availability is exposed through MRI ProspectConnect, collected by the `durst` adapter. | Confirmed public portal |
 | Ogden CAP Properties | Ogden CAP availability is exposed through MRI ProspectConnect, collected by the `ogdencap` adapter. | Confirmed public portal |
 | 9300 Realty | The existing SecureCafe configuration includes a 9300 Realty portfolio portal. | Confirmed vendor portal |
-| Rockrose Development | Rockrose's official Linc LIC page links applicants to a property-specific SecureCafe portal. | Confirmed vendor handoff; feed endpoint still needs validation |
+| Rockrose Development | Rockrose's official property pages link applicants to property-specific SecureCafe portals. The checked availability paths currently return no ingestible unit rows or access-denied responses. | Confirmed vendor handoff; public unit feed blocked |
 | ABJ Properties, Patoma, A&N Management, Downtown | Each has a public AppFolio listings page with embedded unit/map data, collected by the `appfolio` adapter. | Confirmed public feed-shaped pages |
 | Dermot Company | Official building pages expose community IDs and call the public Nestio availability endpoint; 17 New York properties are configured. | Confirmed public feed |
 | Bozzuto Management | The Capitol's official page links to a public SecureCafe availability page with current exact unit labels. | Confirmed public feed for The Capitol; portfolio incomplete |
