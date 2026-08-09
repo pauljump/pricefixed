@@ -163,6 +163,8 @@ The bounded passes on 2026-08-08 produced the following evidence summary:
 | BIS C/O certificates for BIN 1082884 / target 535 East 14 Street | 2 certificates; section-level apartment counts, 0 apartment identities |
 | BIS C/O index for BIN 1082864 / target 312 First Avenue | No certificates on file |
 | BIS C/O certificates for BIN 1082885 / target 521 East 14 Street | 5 certificates; 2 exact section-level records, 3 identity/garage conflicts, 0 apartment identities |
+| BIS C/O certificate for BIN 1082858 / target 18 Stuyvesant Oval | 1 certificate; section-level apartment counts, 0 apartment identities |
+| BIS C/O certificate set for BIN 1082857 / target 12 Stuyvesant Oval | 28 of 49 files captured; all reviewed files have section-level counts and 0 apartment identities; remaining 21 blocked by BIS/Akamai access denial |
 
 The DOB description API is therefore exhausted for the current unresolved
 footprint. Its positive rows remain useful dated observations, but they do not
