@@ -46,6 +46,7 @@ Ten live. Copy these when building new ones.
 | Dermot Company | public Nestio API called by official building pages | easy | | current listings across 17 confirmed NY properties | ✅ |
 | Spherexx / AdKast (Marquis, Kings & Queens) | official page + public paginated AJAX | medium | | current listings across 2 confirmed portals | ✅ |
 | C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
+| Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
