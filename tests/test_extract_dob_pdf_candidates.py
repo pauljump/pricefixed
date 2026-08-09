@@ -1,6 +1,8 @@
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from tools.merges.extract_dob_pdf_candidates import parse_pdf_text
+from tools.merges.extract_dob_pdf_candidates import load_text, parse_pdf_text, sidecar_path
 
 
 class ExtractDOBPdfCandidatesTest(unittest.TestCase):
@@ -33,6 +35,20 @@ class ExtractDOBPdfCandidatesTest(unittest.TestCase):
         result = parse_pdf_text(row, "APARTMENT 5D")
         self.assertEqual(result[0]["status"], "shared_bbl_candidate")
         self.assertEqual(result[0]["identity_scope"], "shared_bbl")
+
+    def test_ocr_sidecar_is_preferred_for_image_only_pdf(self):
+        with TemporaryDirectory() as directory:
+            pdf = Path(directory) / "M000034595.PDF"
+            pdf.write_bytes(b"not a real PDF")
+            text_dir = Path(directory) / "ocr"
+            text_dir.mkdir()
+            sidecar = text_dir / "M000034595.txt"
+            sidecar.write_text("OCR CERTIFICATE", encoding="utf-8")
+
+            self.assertEqual(sidecar_path(pdf, text_dir), sidecar)
+            text, used = load_text(pdf, text_dir, pdftotext="missing-pdftotext")
+            self.assertEqual(text, "OCR CERTIFICATE")
+            self.assertEqual(used, sidecar)
 
 
 if __name__ == "__main__":

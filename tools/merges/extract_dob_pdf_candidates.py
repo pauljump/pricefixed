@@ -93,11 +93,31 @@ def extract_text(pdf_path, pdftotext="pdftotext"):
     return result.stdout
 
 
+def sidecar_path(pdf_path, text_dir):
+    """Return a same-stem OCR/text sidecar, if one exists."""
+    if not text_dir:
+        return None
+    candidate = Path(text_dir) / f"{Path(pdf_path).stem}.txt"
+    return candidate if candidate.is_file() else None
+
+
+def load_text(pdf_path, text_dir="", pdftotext="pdftotext"):
+    """Prefer a contributor-created OCR sidecar, then fall back to pdftotext."""
+    sidecar = sidecar_path(pdf_path, text_dir)
+    if sidecar:
+        return sidecar.read_text(encoding="utf-8"), sidecar
+    return extract_text(pdf_path, pdftotext), None
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", required=True)
     parser.add_argument("--out", required=True)
     parser.add_argument("--pdftotext", default="pdftotext")
+    parser.add_argument(
+        "--text-dir", default="",
+        help="Optional directory of same-stem OCR/text sidecars for image-only PDFs",
+    )
     args = parser.parse_args()
     rows = []
     with Path(args.manifest).open(encoding="utf-8", newline="") as handle:
@@ -108,7 +128,7 @@ def main():
                              "unit_label": "", "status": "missing_pdf", "evidence": ""})
                 continue
             try:
-                text = extract_text(pdf_path, args.pdftotext)
+                text, _ = load_text(pdf_path, args.text_dir, args.pdftotext)
                 rows.extend(parse_pdf_text(manifest_row, text))
             except Exception as exc:  # noqa: BLE001 — preserve one failed document for review
                 rows.append({**{field: manifest_row.get(field, "") for field in FIELDS},

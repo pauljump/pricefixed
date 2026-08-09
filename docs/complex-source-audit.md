@@ -145,3 +145,25 @@ fill the queue. The next source attempt must retrieve a unit-bearing occupancy
 document or equivalent address-specific primary record through BIS/DOB NOW
 manual review; building counts and the existing description candidates do not
 justify copying a floorplan or completing the roster by pattern.
+
+### Browser-captured BIS certificate check
+
+On 2026-08-08, the browser-assisted workflow captured the four public
+certificates listed for BIN `1082865` from the BIS C/O index. All four are
+two-page image-only scans. The local Apple Vision OCR pass was used only to
+locate identity and unit-bearing language; the original PDFs remain the source
+evidence.
+
+| Certificate | Finding | Catalog result |
+| :--- | :--- | :--- |
+| `M000034595.PDF` | `330 First Avenue`, block 972 lot 1; building/unit categories and apartment counts, no apartment labels | shared-BBL capacity evidence only |
+| `M000035795.PDF` | `330 First Avenue` / `400-410 East 20th Street`, block 972; counts and `Units 1, 2, & 3`, no apartment labels | shared-BBL capacity evidence only |
+| `M000040059.PDF` | `400-410 East 20th Street` / `320-45 First Avenue`, block 972 lot 1; counts and `Units 1, 2, & 3`, no apartment labels | shared-BBL capacity evidence only |
+| `M000028093.PDF` | scanned face says `332 First Avenue`, block 951 lot 3, conflicting with the BIS header for BIN 1082865 (`330 1 Avenue`, block 972 lot 1) | identity conflict; rejected |
+
+No canonical units were added. The 228-address unresolved queue is unchanged:
+these documents contain building-level occupancy information, not
+address-specific apartment identities. The fourth certificate also validates
+why document-level identity checks are required even after the BIS index has
+supplied a BIN and BBL. Capture details and the OCR sidecar workflow are in
+[`docs/dob-document-capture.md`](dob-document-capture.md).

@@ -44,6 +44,29 @@ text contains the target address and an explicit apartment/unit marker. A
 that the label belongs to the target address. `bbl_mismatch` rows are identity
 conflicts and cannot be imported.
 
+Many older certificates are image-only scans, so `pdftotext` may return no
+useful text. On macOS, create a same-stem OCR sidecar with the checked-in local
+Apple Vision helper:
+
+```bash
+swift tools/merges/ocr_dob_pdf_macos.swift \
+  /path/to/dob-pdfs/M000034595.PDF \
+  /path/to/dob-ocr/M000034595.txt
+
+python3 tools/merges/extract_dob_pdf_candidates.py \
+  --manifest /tmp/stuytown-dob-document-manifest.csv \
+  --text-dir /path/to/dob-ocr \
+  --out /tmp/stuytown-dob-pdf-candidates.csv
+```
+
+The extractor prefers a same-stem sidecar and falls back to `pdftotext` when
+one is absent. OCR is discovery/review text only. Do not create a canonical
+unit from an OCR count, a floorplan pattern, or an uncertain OCR label; review
+the original PDF and preserve its exact address, BBL, source reference, URL,
+retrieval date, and checksum. Browser downloads may use a generic filename,
+so retain the original downloaded file as well as the source filename recorded
+in the BIS index manifest.
+
 The final reviewed CSV must still contain the strict importer fields:
 `address`, `bbl`, `unit_label`, `source_ref`, `source_url`, and `observed_at`.
 Only then may it be passed to `import_unit_labels.py`.
