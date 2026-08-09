@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,617 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,383** homes that are counted by the city
+Current local build: **3,044,628 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **660,372** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -174,6 +174,21 @@ crosswalk to BBL `1018527501`. The catalog import produced 23 resolved
 observations and **19 net-new canonical units**; four labels already existed from
 other sources. The adapter rejects JSON-LD entries that lack an explicit apartment
 label and never turns a floorplan or count into a unit.
+
+### Rudin public property/listing JSON (2026-08-09)
+
+Rudin's official availability page loads the public
+[`/api/properties-json`](https://www.rudinresidential.com/api/properties-json)
+endpoint. The response keeps property records separate from explicit `Listing`
+records. The adapter joins a listing only to its parent property's exact
+`field_address`, and requires an active listing record with an apartment label;
+property records, floorplans, and missing-address records are rejected.
+
+The bounded pull returned 29 current rows across the Rudin portfolio. Each raw
+payload preserves the complete official property and listing records, the page
+URL, API URL, and retrieval time. Importing these rows produced **2 net-new
+canonical units**; the remaining labels were already present through other
+source paths. This is current vacancy evidence, not a complete Rudin roster.
 
 ## NYS voter file lane
 

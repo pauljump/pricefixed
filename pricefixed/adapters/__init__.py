@@ -16,6 +16,7 @@ from .nooklyn import NooklynAdapter
 from .ogdencap import OgdenCapAdapter
 from .olnick import OlnickAdapter
 from .rockrose import RockroseAdapter
+from .rudin import RudinAdapter
 from .securecafe import SecureCafeAdapter
 from .spherexx import SpherexxAdapter
 from .stonehenge import StonehengeAdapter
@@ -42,6 +43,7 @@ ADAPTERS = {
         OgdenCapAdapter,
         OlnickAdapter,
         RockroseAdapter,
+        RudinAdapter,
         SecureCafeAdapter,
         SpherexxAdapter,
         StonehengeAdapter,
