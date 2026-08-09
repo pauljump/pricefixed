@@ -4,8 +4,8 @@ This is the handoff point before location-based inference. The broad, easy sourc
 passes are complete for the current build; the items below are the remaining source
 and coverage work, not claims that inferred homes have already been added.
 
-Current local build: **3,044,597 canonical units** against NYC's **3,705,000**
-housing-stock benchmark, leaving about **660,403** homes that are counted by the city
+Current local build: **3,044,617 canonical units** against NYC's **3,705,000**
+housing-stock benchmark, leaving about **660,383** homes that are counted by the city
 but not yet named in the catalog.
 
 This is the source order for the remaining gap:
@@ -140,6 +140,40 @@ address and were stored as separate `official_address_bbl_crosswalk` observation
 All 46 listing observations resolved, but only **36 were net-new canonical units**;
 10 labels already existed through other sources. These are current selected listings,
 not a complete Rockrose roster.
+
+### Greystar public property JSON (2026-08-09)
+
+Greystar's official public search was queried through the Coveo-backed endpoint
+used by its website, then each returned property was checked through the official
+`/api/property/<id>` JSON endpoint. Five-borough filtering retained only properties
+whose API location city is New York, Brooklyn, Queens, Bronx, or Staten Island.
+The run checked 22 public NYC property records. Only property `21037` (345 East
+94th Street, BBL `1015570025`) exposed explicit `availableUnits` rows: `12F`,
+`25D`, `15F`, `PHG`, `19F`, `11F`, `06D`, and `21G`. The other checked properties
+exposed no unit-bearing rows and were not expanded from floorplans.
+
+The reproducible adapter is [`pricefixed/adapters/greystar.py`](../pricefixed/adapters/greystar.py).
+Each row preserves the official property JSON, the public search URL, the property
+API URL, retrieval time, exact address, and explicit `availableUnits` record. The
+catalog import produced 8 resolved observations and **1 net-new canonical unit**;
+the remainder were already represented by prior source paths. This is current
+vacancy evidence, not a complete Greystar roster.
+
+### UDR official apartment JSON-LD (2026-08-09)
+
+UDR's official New York City apartments index links five public
+`apartments-pricing` pages. Their JSON-LD `itemListElement` records contain
+explicit apartment labels, pricing, bedrooms, bathrooms, square feet, and
+unit-specific URLs. The bounded run found 23 rows at 808 Columbus Avenue. The
+reproducible adapter is [`pricefixed/adapters/udr.py`](../pricefixed/adapters/udr.py).
+
+The source address is retained in each raw payload while the street premise is
+used for resolution. PAD has multiple BBL rows for this normalized address, so
+the adapter queries official DOB NOW filings and carries the unique exact-address
+crosswalk to BBL `1018527501`. The catalog import produced 23 resolved
+observations and **19 net-new canonical units**; four labels already existed from
+other sources. The adapter rejects JSON-LD entries that lack an explicit apartment
+label and never turns a floorplan or count into a unit.
 
 ## NYS voter file lane
 

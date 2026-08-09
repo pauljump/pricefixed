@@ -96,11 +96,11 @@ highest-leverage work left.
 | Related Rentals | ~5,000 | Drupal/React hybrid, paginated DOM | 🔬 (rebuilt recently; will rot) |
 | LeFrak | ~4,600 | Spherexx server-rendered HTML | 🔨 |
 | Rudin | ~2,400 | server-rendered building pages | 🔨 |
-| UDR | ~2,600 | counts server-side; unit detail needs headless | 🔬 |
+| UDR | ~2,600 | official `apartments-pricing` pages with apartment-specific JSON-LD | ✅ |
 | Rose Associates | ~3,000 | own portal | 🔬 |
 | Bozzuto | ~2,000 | Algolia index | 🔨 |
 | Two Trees | ~2,000 | Nestio (see platform) | 🔬 |
-| Rockrose / RXR / Extell | via RentCafe | (see platform) | 🔨 |
+| Rockrose / RXR / Extell | official property pages plus RentCafe where linked | Rockrose selected listing cards are collected; linked RentCafe remains property-specific | 🔨 |
 | Pan Am Equities | ~1,000 | WordPress DOM | 🔬 |
 
 ## Tier 3 — Broker marketplaces (the small-landlord tail)

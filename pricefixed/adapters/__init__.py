@@ -9,6 +9,7 @@ from .dermot import DermotAdapter
 from .durst import DurstAdapter
 from .elliman import EllimanSource
 from .glenwood import GlenwoodAdapter
+from .greystar import GreystarAdapter
 from .lisamgmt import LisaManagementAdapter
 from .manhattanskyline import ManhattanSkylineAdapter
 from .nooklyn import NooklynAdapter
@@ -20,6 +21,7 @@ from .spherexx import SpherexxAdapter
 from .stonehenge import StonehengeAdapter
 from .stuytown import StuyTownAdapter
 from .tfcornerstone import TFCornerstoneAdapter
+from .udr import UDRAdapter
 
 ADAPTERS = {
     a.name: a
@@ -33,6 +35,7 @@ ADAPTERS = {
         DurstAdapter,
         EllimanSource,
         GlenwoodAdapter,
+        GreystarAdapter,
         LisaManagementAdapter,
         ManhattanSkylineAdapter,
         NooklynAdapter,
@@ -44,5 +47,6 @@ ADAPTERS = {
         StonehengeAdapter,
         StuyTownAdapter,
         TFCornerstoneAdapter,
+        UDRAdapter,
     )
 }
