@@ -24,9 +24,9 @@ canonical apartments.
 The current citywide build has **3,753,223 anonymous capacity slots** across the
 city. This is the complete count layer currently supported by the imported primary
 PLUTO records, and exceeds the 3,705,000 reporting benchmark because the two sources
-measure housing stock differently. It has **2,750,889 canonical units** with a
-source-supplied label and resolved BBL: **74.3% of the 3,705,000 housing-stock
-reporting denominator** and 73.3% of the imported PLUTO capacity. These numbers are
+measure housing stock differently. It has **3,052,376 canonical units** with a
+source-supplied label and resolved BBL: **82.4% of the 3,705,000 housing-stock
+reporting denominator** and 81.3% of the imported PLUTO capacity. These numbers are
 intentionally reported separately: a capacity slot answers "how many units does this
 source say the building has?"; a canonical unit answers "which apartment did a
 source identify?"
@@ -241,7 +241,9 @@ python3 catalog.py --source vayo_corcoran_archive --vayo-db /path/to/corcoran.db
 Additional direct public unit-observation imports:
 
 ```bash
-# DOF sales: BBL, sale date/price, and apartment number when reported.
+# DOF sales: BBL, sale date/price, and apartment number when reported. The
+# importer also accepts a narrow, explicit apartment suffix after the final
+# comma in the official address field, which DOF uses for some co-op sales.
 python3 catalog.py --source annualized_sales --boro MN --limit 1000 --db catalog.db
 
 # Current DOF rolling sales: derives BBL from official borough/block/lot fields.
@@ -255,6 +257,10 @@ python3 catalog.py --source dob_now_jobs --boro MN --limit 1000 --db catalog.db
 
 # DOB NOW approved permits: a separate dated permit record with apartment/condo labels.
 python3 catalog.py --source dob_now_permits --boro MN --limit 1000 --db catalog.db
+
+# DOB NOW Certificates of Occupancy: building-level certificate and dwelling-count evidence.
+# This source never creates apartment rows because it has no apartment-label field.
+python3 catalog.py --source dob_now_certificates --boro MN --limit 1000 --db catalog.db
 
 # OSE's dated short-term-rental registration/listing spreadsheet.
 python3 catalog.py --source ose_str_snapshot --snapshot /path/to/STR.xlsx --snapshot-date 2026-01-07 --db catalog.db
@@ -335,6 +341,33 @@ when an independent primary source confirms a BBL plus unit label.
 `units`, `observations`, `entity_matches`, candidate BBLs, and audit links from a
 resolution to its corroborating evidence. The source databases remain intact.
 
+## Coverage-growth passes
+
+The August 7, 2026 local build reached **3,044,550 canonical units**. Subsequent
+2026-08-09 SecureCafe and Rockrose captures added 47 net-new source-backed units;
+a Greystar and UDR capture added 20 more, Rudin and Spherexx imports added 11 more,
+and Related Rentals added 45 more. The Mirador public availability feed added 5
+net-new units, bringing the current build to **3,044,678 canonical units**. A direct
+pass over DOF's official condo unit-lot registry then added **7,698** source-backed
+unit labels, bringing the current build to **3,052,376 canonical units**. It skipped
+11 non-unit designations and preserved 34,113 prior direct observations rather than
+replaying them. The last local
+Qwen mining run added **21,121 net-new units** from public official-description
+queues and parser-delta checks, then passed the repo's test suite (`150 tests`).
+The largest additions were:
+
+- LAA official descriptions: **13,612** net-new units.
+- HPD violation descriptions where the apartment field was blank: **6,420** net-new units.
+- Description parser deltas across already-mined public records: **1,087** net-new units.
+- Landmark complaint descriptions: **2** net-new units.
+- NYCHA blank and elevator-application queues: **0** net-new units in this run.
+
+The local model output was accepted only after deterministic candidate checks:
+source row IDs had to match the packet, model output had to carry the current
+fingerprint/status shape, evidence had to appear verbatim in the source text, and
+the proposed unit label had to be one of the deterministic candidates. Partial
+Antigravity/Gemini sidecar output was not merged into the trusted catalog.
+
 ## Coverage-growth pass (2026-07-30/31)
 
 A working citywide build (not committed here — see
@@ -352,14 +385,78 @@ address-count is not a safe proxy for unit count on 2-family lots), and what's l
 
 This establishes the method, not complete inventory coverage. The next additions are:
 
-1. Add direct unit observations from property-specific DOB occupancy documents and
+1. Use the NYS voter file only if a current file is already lawfully downloadable;
+   do not spend project time on a formal request unless that decision changes. See
+   [`docs/missing-units-roadmap.md`](docs/missing-units-roadmap.md).
+2. Add direct unit observations from property-specific DOB occupancy documents and
    other public document series that contain an apartment label plus a resolvable BBL.
-2. Capture raw source documents on every scrape going forward, including price-history
+3. Capture raw source documents on every scrape going forward, including price-history
    snapshots, so all new history receives `source_document` evidence grade.
-3. Record neighboring-unit patterns only as hypotheses with supporting evidence; do
+4. Record neighboring-unit patterns only as hypotheses with supporting evidence; do
    not upgrade them to canonical units until a primary source confirms BBL + label.
-4. Publish catalog coverage as counts and freshness by source, never as an invented
+5. Publish catalog coverage as counts and freshness by source, never as an invented
    completeness percentage.
+
+## Checkpoint before location logic
+
+The broad, easy public-record mining pass is closed at the August 7, 2026 build. The
+trusted catalog contains only source-backed unit labels; no neighboring-unit or
+building-count inference was used to inflate the 3,052,376 total. The next location
+logic phase should start from this committed state, produce hypotheses separately,
+and merge a new unit only when an independent source confirms its BBL and label.
+
+For a specific building, use the read-only source audit before changing the catalog:
+
+```bash
+python3 tools/merges/audit_building_unit_sources.py \
+  --bbl 1009780001 \
+  --address "3 PETER COOPER ROAD" \
+  --packets /path/to/packets.jsonl \
+  --packets /path/to/approved-permit-all.json \
+  --output /tmp/building-audit.json
+```
+
+The audit reparses raw descriptions, repairs the known legacy BBL shape, and keeps
+exact-address evidence separate from records that share a BBL across several
+addresses. It does not infer a complete roster or write any catalog rows.
+
+For a managed complex with a public availability feed, first build an address-level
+inventory. The inventory keeps ambiguous address-to-BBL matches visible and reports
+exact premise evidence separately from tax-lot unit coverage:
+
+```bash
+python3 tools/merges/build_complex_inventory.py \
+  --listings-db /path/to/listings.db \
+  --catalog-db /path/to/catalog.db \
+  --output /tmp/stuytown-inventory.json \
+  --csv /tmp/stuytown-inventory.csv \
+  --include-anchor-bbl-addresses
+```
+
+The inventory keeps ambiguous address-to-BBL matches visible and reports exact
+premise evidence separately from tax-lot unit coverage. Addresses added only from
+the resolved property BBL are marked as `anchor_bbl_catalog`; they are footprint
+addresses, not proof that every apartment in them has been observed.
+
+Once the footprint exists, build the deterministic unit-evidence matrix with the
+raw packet files. Exact-address labels and shared-BBL labels are emitted separately:
+
+```bash
+python3 tools/merges/build_complex_unit_evidence.py \
+  --inventory /tmp/stuytown-full-inventory.json \
+  --catalog-db /path/to/catalog.db \
+  --packets /path/to/dob-description-qwen-packets.jsonl \
+  --packets /path/to/dob-electrical-description-packets.jsonl \
+  --output /tmp/stuytown-unit-evidence.json
+```
+
+Export the addresses that still need an exact unit-bearing document:
+
+```bash
+python3 tools/merges/export_complex_unit_document_targets.py \
+  --evidence /tmp/stuytown-unit-evidence.json \
+  --out /tmp/stuytown-unit-document-targets.csv
+```
 
 ## Exhaustion map
 
@@ -372,6 +469,8 @@ The public-source frontier currently falls into three lanes:
 - **Bulk building/count context:** PLUTO and HPD Multiple Dwelling Registrations can
   measure the residential tax-lot and registered-rental-building universe. Their
   `unitsres`/registration fields are denominators and diagnostics, never unit rosters.
+  DOB NOW Certificates of Occupancy add another official building-level count and
+  certificate history, but still do not identify individual apartments.
   `hpd_registration_coverage` stores an immutable run with `partial` status when
   capped and joins its BBLs to PLUTO context already imported into the catalog.
 - **Targeted public document retrieval:** BIS/DOB NOW Certificates of Occupancy,
