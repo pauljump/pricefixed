@@ -2665,17 +2665,46 @@ class Catalog:
 
     def status(self):
         units = self.conn.execute("SELECT COUNT(*) FROM units").fetchone()[0]
+        residential_units = self.conn.execute(
+            "SELECT COUNT(*) FROM units u JOIN buildings b ON b.bbl=u.bbl "
+            "WHERE b.units_res>0"
+        ).fetchone()[0]
         pluto_units = self.conn.execute("SELECT COALESCE(SUM(units_res), 0) FROM buildings").fetchone()[0]
         capacity_slots = self.conn.execute("SELECT COUNT(*) FROM housing_capacity_slots").fetchone()[0]
+        loose_addressable_units = self.conn.execute(
+            "SELECT COUNT(*) FROM addressable_units"
+        ).fetchone()[0]
+        pad_exact_addressable_units = self.conn.execute(
+            "SELECT COUNT(*) FROM addressable_units au "
+            "JOIN premises p ON p.premise_id=au.premise_id "
+            "JOIN addresses a ON a.bbl=p.bbl AND a.normalized=p.normalized "
+            "AND a.source='nyc_pad'"
+        ).fetchone()[0]
+        residential_pad_exact_addressable_units = self.conn.execute(
+            "SELECT COUNT(*) FROM addressable_units au "
+            "JOIN premises p ON p.premise_id=au.premise_id "
+            "JOIN addresses a ON a.bbl=p.bbl AND a.normalized=p.normalized "
+            "AND a.source='nyc_pad' JOIN buildings b ON b.bbl=p.bbl "
+            "WHERE b.units_res>0"
+        ).fetchone()[0]
         return {
             "buildings": self.conn.execute("SELECT COUNT(*) FROM buildings").fetchone()[0],
             "addresses": self.conn.execute("SELECT COUNT(*) FROM addresses").fetchone()[0],
             "units": units,
-            "addressable_units": self.conn.execute("SELECT COUNT(*) FROM addressable_units").fetchone()[0],
+            "residential_units_in_pluto_buildings": residential_units,
+            "nonresidential_or_unclassified_units": units - residential_units,
+            # Keep the historical loose count available for audit, but expose the
+            # contract-compliant exact-PAD count as the resident-facing metric.
+            "addressable_units": pad_exact_addressable_units,
+            "pad_exact_addressable_units": pad_exact_addressable_units,
+            "residential_pad_exact_addressable_units": residential_pad_exact_addressable_units,
+            "addressable_unit_candidates": loose_addressable_units,
             "nyc_housing_stock_target": NYC_HOUSING_STOCK_TARGET,
             "evidenced_unit_coverage": units / NYC_HOUSING_STOCK_TARGET,
             "pluto_residential_unit_capacity": pluto_units,
             "evidenced_unit_coverage_against_pluto": units / pluto_units if pluto_units else 0,
+            "residential_evidenced_unit_coverage": residential_units / NYC_HOUSING_STOCK_TARGET,
+            "residential_evidenced_unit_coverage_against_pluto": residential_units / pluto_units if pluto_units else 0,
             "anonymous_capacity_slots": capacity_slots,
             "official_unit_lots": self.conn.execute("SELECT COUNT(*) FROM official_unit_lots").fetchone()[0],
             "observations": self.conn.execute("SELECT COUNT(*) FROM observations").fetchone()[0],
@@ -2735,6 +2764,13 @@ class Catalog:
                     "VALUES (?,?,?,?,?,?,?,?) ON CONFLICT(bbl,normalized) DO UPDATE SET last_seen=excluded.last_seen",
                     (premise_id, bbl, official[0], normalized_address, official[1], "nyc_pad", now, now),
                 )
+                # A premise with the same BBL/address may already exist with a
+                # different primary key. Resolve the actual row after the upsert
+                # before creating the addressable-unit identity.
+                premise_id = self.conn.execute(
+                    "SELECT premise_id FROM premises WHERE bbl=? AND normalized=?",
+                    (bbl, normalized_address),
+                ).fetchone()[0]
                 addressable_unit_id = _id("addressable_unit", premise_id, normalized_unit)
                 self.conn.execute(
                     "INSERT INTO addressable_units "

@@ -21,19 +21,38 @@ canonical apartments.
 
 ## Current citywide build
 
-The current citywide build has **3,753,223 anonymous capacity slots** across the
-city. This is the complete count layer currently supported by the imported primary
-PLUTO records, and exceeds the 3,705,000 reporting benchmark because the two sources
-measure housing stock differently. It has **3,052,376 canonical units** with a
-source-supplied label and resolved BBL: **82.4% of the 3,705,000 housing-stock
-reporting denominator** and 81.3% of the imported PLUTO capacity. These numbers are
-intentionally reported separately: a capacity slot answers "how many units does this
-source say the building has?"; a canonical unit answers "which apartment did a
-source identify?"
+As of the 2026-08-10 working build, the catalog has **3,753,223 anonymous capacity
+slots** across the city. This is the complete count layer currently supported by the
+imported primary PLUTO records, and exceeds the 3,705,000 reporting benchmark because
+the two sources measure housing stock differently. It has **3,144,930 total canonical
+unit identities** with a source-supplied label and resolved BBL. Of those, **2,781,523
+are in buildings with positive PLUTO residential capacity**—the denominator-aligned
+apartment count, or **75.1% of the 3,705,000 housing-stock benchmark** and 74.1% of
+PLUTO capacity. The remaining **363,407** identities are retained separately because
+their buildings have zero or unclassified PLUTO residential capacity; they may include
+valid condo or other source-specific identities, but should not be used to claim
+coverage of the PLUTO housing-stock denominator. The status report also exposes
+**1,360,683 exact-PAD addressable units** (**1,099,862** in PLUTO-residential buildings)
+and retains **1,838,028 loose addressable candidates** for audit. A stricter label audit
+validates **1,359,525** exact-PAD rows overall. The OSE lane contributed **2,193 new residential unit identities** from
+the NYC Office of Special Enforcement registration file: 1,902 from direct address
+crosswalking and 291 recovered through the official PAD BIN-to-BBL crosswalk. Floor-only,
+common-area, and unresolved conflicting records remain excluded from the strict layer. A
+separate DOF condo-group/PAD crosswalk added **222,672 exact premise/unit keys** while
+preserving the original unit-lot BBL; 21,116 ambiguous group-address cases remain
+outside that layer. These numbers
+are intentionally reported
+separately: a capacity slot answers "how many units does this source say the building
+has?"; a canonical unit answers "which apartment did a source identify?"; and an
+addressable unit answers "which identified apartment is tied to an exact official
+premise address?"
 
 This is a working build, not yet a published data release. Its counts are reported so
 the methodology can be audited; downstream consumers should use a versioned release
 asset and manifest once one is published. [`DATA.md`](DATA.md) defines that interface.
+
+The running coverage, evidence-lane, backlog, and storage-maintenance record is kept in
+[`COVERAGE_PROGRESS.md`](../../pricefixed-build/COVERAGE_PROGRESS.md).
 
 To build or resume the count layer after importing PLUTO:
 
