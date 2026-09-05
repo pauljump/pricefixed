@@ -5,6 +5,13 @@ All notable changes to pricefixed are recorded here. This project follows
 
 ## [Unreleased]
 
+### Changed
+- Document the August 7, 2026 local citywide catalog build: 3,044,550 canonical
+  units, 3,753,223 PLUTO capacity slots, and the completed local-model mining pass
+  that added 21,121 net-new units from official descriptions and parser deltas.
+- Add the missing-units roadmap, NYCDB source audit, and a clear checkpoint before
+  location-based inference.
+
 Roadmap, in order (see the README for the full thesis):
 
 - **More feeds.** Grow the NYC landlord-direct source set toward broad coverage. Platform

@@ -1,0 +1,126 @@
+# Manager Feed Map
+
+This is the working map of where NYC rental managers publish availability.
+It is not a claim that NYBits has a master feed. NYBits says managers can
+provide a website, a weekly spreadsheet, or an XML feed, and that NYBits can
+also accept listings posted by hand. The public manager directory is therefore
+useful for finding who manages a building, but it is not the source of truth
+for every apartment.
+
+For the separate investigation of NYBits's public code fingerprints, feed
+instructions, and public GitHub evidence, see [`nybits-deep-dive.md`](nybits-deep-dive.md).
+
+Sources:
+
+- [NYBits manager directory](https://www.nybits.com/managers/residential_property_managers.html)
+- [NYBits feed instructions](https://www.nybits.com/add.html)
+
+## How To Read This
+
+- **Confirmed feed** means Pricefixed has a public endpoint or page shape that
+  an adapter can collect without an account.
+- **Public portal** means the manager exposes current availability, but we have
+  not yet confirmed a stable machine-readable endpoint.
+- **Candidate** means the public site identifies a likely vendor or path, but
+  it still needs a bounded test before we add it to a collector.
+- A manager may use more than one path across its portfolio. Record the
+  property, vendor, URL, and date separately instead of assuming one feed covers
+  every building.
+
+## Confirmed Feeds
+
+| Manager or portfolio | Public source | What it gives us | Pricefixed status |
+|---|---|---|---|
+| Beam Living / StuyTown | [`units.stuytown.com/api/units`](https://units.stuytown.com/api/units?itemsOnPage=500&Order=low-price) | JSON availability with unit-level asking rents and lease terms | Shipped in `stuytown` |
+| TF Cornerstone | [`cdn.tfc.com/tfc-com/initial-data.json`](https://cdn.tfc.com/tfc-com/initial-data.json) | Portfolio JSON with properties and available units | Shipped in `tfcornerstone` |
+| AvalonBay | `apis.avalonbay.com/search/units` | Public unit search response | Shipped in `avalonbay` |
+| RentCafe / SecureCafe properties already found | Per-property `securecafe.com/onlineleasing/.../availableunits.aspx` pages | Public HTML tables with unit, square feet, rent, and availability | Shipped in `securecafe`; more portals still need enumeration |
+| AppFolio operators already found | Public `{company}.appfolio.com/listings` pages | Public listing/map data embedded in the page | Shipped in `appfolio`; more NYC companies still need enumeration |
+| Durst and Ogden CAP | MRI ProspectConnect community pages | Public community availability after the site search flow | Shipped in `durst` and `ogdencap` |
+| Dermot Company | [`dermotcompany.com/state/new-york`](https://www.dermotcompany.com/state/new-york) → public `nestiolistings.com/api/v2/listings/all` calls | Current listings with exact unit labels, exact street address, price, and availability date for 17 confirmed NY communities | Shipped in `dermot`; this is not a complete roster |
+| Bozzuto — NYC portfolio | Official Bozzuto property pages link to public SecureCafe pages for [The Capitol](https://thecapitolchelsea.securecafe.com/onlineleasing/the-capitol/availableunits.aspx), [19 Dutch](https://19dutch.securecafe.com/onlineleasing/19-dutch/availableunits.aspx), [Aalto57](https://aalto57.securecafe.com/onlineleasing/aalto57/availableunits.aspx), and [88 Leonard](https://88leonard.securecafe.com/onlineleasing/88leonard/availableunits.aspx) | Browser-visible tables expose exact unit labels, rent, square feet, and availability; the 2026-08-09 capture found 24 rows across the three newly checked properties | The Capitol is collected by the normal adapter; the three new pages are captured with `import_securecafe_browser_capture.py` when plain HTTP is challenged |
+| Rockrose Development | [Official NYC residential index](https://rockrose.com/residential/) → 13 official building pages with server-rendered `SELECT LISTINGS` cards | 46 current selected listings with exact premise, unit label, rent, and bedroom/bath text; 42 accepted DOB NOW address-to-BBL crosswalks | Shipped in `rockrose`; selected listings only, not a complete roster |
+| Marquis Apartments, Kings & Queens Apartments, and LeFrak City | Official availability pages → public Spherexx AJAX responses | Marquis and Kings & Queens use `/ajax/getunitlist.asp`; LeFrak exposes building and unit options through `getpropertybuildinglist.asp` and `getpropertyunitlist.asp`. The current LeFrak pull had 2 explicit available units, with exact premises from the official building directory and separate DOB NOW crosswalk evidence. | Shipped in `spherexx`; 3 confirmed portals, current vacancies only |
+| Rudin Residential | [Official availability page](https://www.rudinresidential.com/properties/availability) → public [`/api/properties-json`](https://www.rudinresidential.com/api/properties-json) | Current listing records with parent property address, apartment label, rent, bedroom/bath, and availability date | Shipped in `rudin`; 29 current rows in the bounded 2026-08-09 pull, not a complete roster |
+| Related Rentals | [Official NYC search](https://www.relatedrentals.com/search) → explicit unit detail pages | 94 current NYC cards; each detail page supplies an explicit unit ID, exact property address, price, and availability. 55 rows also carry a unique official DOB NOW address→BBL crosswalk. | Shipped in `relatedrentals`; current vacancies only, not a complete roster |
+| Mirador Real Estate / Pan Am availability | [Pan Am official availability link](https://www.panamequities.com/listing-page/) → [Mirador properties](https://miradorrealestate.com/properties) → public [`/api-gw/graphql`](https://miradorrealestate.com/api-gw/graphql) | 41 current NYC records with stable API IDs, exact listed street text, apartment labels, rent, and source detail slugs. 15 premises resolve to unique DOB NOW BBLs, covering 35 rows. | Shipped in `mirador`; current vacancies only, not a complete Pan Am roster |
+| C+C Apartment Management | [`ccmanagers.com/availability`](https://ccmanagers.com/availability/) | Public table with exact street address, apartment label, rent, and availability date | Shipped in `ccmanagers`; current table is not a complete roster |
+| Brodsky Organization | [`brodsky.com/rentals`](https://www.brodsky.com/rentals) → explicit apartment detail pages with JSON-LD | Current listings with exact street address, apartment label, price, and availability | Shipped in `brodsky`; current index had 6 listings, not a complete roster |
+| Manhattan Skyline Management | [`manhattanskyline.com/api/units`](https://manhattanskyline.com/api/units) → official unit detail pages | Current unit API rows joined to exact street addresses from each official detail page; rows without exact addresses are rejected | Shipped in `manhattanskyline`; 27 accepted from the current 28-row API response |
+| Olnick Rentals | [`olnickrentals.com`](https://olnickrentals.com/) → explicit project availability pages | Current rows with exact street address, apartment label, bedroom/bath, square feet, and asking rent | Shipped in `olnick`; current public pages had 11 accepted listings across five project pages, not a complete roster |
+| Lisa Management | [`lisamgmt.com/residential`](https://www.lisamgmt.com/residential) → paginated public Next.js page data | Current rows with exact street address, apartment label, rent, bedroom/bath, ZIP, and property metadata | Shipped in `lisamgmt`; current feed had 20 accepted listings across two pages, not a complete roster |
+| Moinian Group | Official residential pages expose a Nestio-powered `/data/listings/` search handoff | The official site page loads, but the public listings request returned HTTP 403 and the browser page produced no listing rows during the 2026-08-09 check | Candidate: public API handoff confirmed; access blocked |
+
+## Manager-Specific Paths To Test
+
+| Manager | Official public entry point | Observed path | Status |
+|---|---|---|---|
+| Rockrose | [Rockrose residential properties](https://rockrose.com/residential/) | The official building pages themselves expose 46 selected listing cards across 13 NYC properties. The linked SecureCafe handoffs remain mixed, but the official HTML cards are a usable current-unit source. | Confirmed public feed in `rockrose`; selected listings only; SecureCafe handoffs remain candidates |
+| Brodsky Organization | [Brodsky rentals](https://www.brodsky.com/rentals) → explicit apartment detail JSON-LD pages | The official index exposes current apartment URLs; detail pages carry exact unit/address, price, and availability fields. | Confirmed public feed in `brodsky`; current vacancies only |
+| Bozzuto | [Bozzuto NYC rentals](https://www.bozzuto.com/apartments-for-rent/ny/new-york) | Six NYC communities are listed. The Capitol, 19 Dutch, Aalto57, and 88 Leonard link to public SecureCafe availability pages; Riverbank and The Ludlow currently expose only floorplans/counts in the bounded check. | Four exact-unit public feeds confirmed; Riverbank and The Ludlow remain count/floorplan-only |
+| RXR and Extell | Official property sites and their individual leasing pages | Likely mixed property-by-property vendor paths. Do not treat the RentCafe hypothesis as confirmed until an official property page links to a specific public portal. | Candidate: map one property per manager |
+| Two Trees and Moinian | Official property sites | Likely Funnel/Nestio-style or property-specific listing pages. No universal public endpoint has been confirmed. | Candidate: identify one live property path first |
+| Rose Associates | [NYBits manager profile](https://www.nybits.com/managers/rose.html) and Rose property sites | Many buildings, but no portfolio-wide public feed has been confirmed. | Candidate: sample the largest live property pages |
+| Greystar | [Greystar NYC search](https://www.greystar.com/homes-to-rent/us/ny/new-york-city) → public property JSON | Property `21037` exposes 8 explicit `availableUnits` rows at 345 East 94th Street; other checked five-borough properties exposed no unit-bearing rows. | Confirmed public unit JSON for one property; current vacancies only |
+| UDR | [UDR NYC apartments](https://www.udr.com/new-york-city-apartments/) → official `apartments-pricing` JSON-LD pages | 23 explicit unit rows at 808 Columbus Avenue; DOB NOW crosswalk resolves the exact premise to one BBL | Confirmed public JSON-LD feed; current vacancies only |
+| Rudin Residential | [Official availability page](https://www.rudinresidential.com/properties/availability) → public `/api/properties-json` | The API returns separate property and listing records. The adapter joins only an explicit `Listing` record to its parent property's exact `field_address`; property and floor-plan records are not expanded. | Confirmed public JSON feed; 29 current rows in the bounded pull, portfolio incomplete |
+| Algin Management | [Official Algin site](https://alginny.com/availabilities) → [`alginny.appfolio.com/listings`](https://alginny.appfolio.com/listings) | The public AppFolio page was checked and returned an empty `markers` array; no current exact unit rows were available to ingest. | Public AppFolio handoff checked; no current rows |
+| UES Management | [Yorkshire available apartments](https://www.uesmgmt.com/yorkshire-floorplans) and [Lexington available apartments](https://www.uesmgmt.com/lexington-floorplans) | Official pages publish floorplan categories and inquiry links, but no apartment labels or exact unit rows. | Page checked; do not expand floorplans into units |
+| Monarch Realty Holdings | [Official availability page](https://www.monarchrealtyholdings.com/availability) | The official page is a static availability/contact page with no apartment rows, unit labels, or public feed endpoint. | Page checked; no current rows |
+| Rose Associates | [Official Rose site](http://www.rentrose.com/) | The public home page exposes community navigation but no current unit-bearing availability feed. HTTPS host validation also failed during the registry crawl; the HTTP page remained readable for this bounded check. | Public site checked; unit feed still missing |
+
+## Who We Can Name Today
+
+These are the managers and operators for which we have a public feed or a
+public feed-shaped leasing system. This is stronger than a guess about a
+manager's software, but it still does **not** prove that the same source is the
+file NYBits receives.
+
+| Manager or operator | Evidence we can reproduce | Confidence |
+|---|---|---|
+| Beam Living | The StuyTown availability site exposes a unit JSON endpoint, and the `stuytown` adapter collects it. | Confirmed public feed |
+| TF Cornerstone | TFC exposes a portfolio-wide JSON file, and the `tfcornerstone` adapter collects it. | Confirmed public feed |
+| Durst Management | Durst availability is exposed through MRI ProspectConnect, collected by the `durst` adapter. | Confirmed public portal |
+| Ogden CAP Properties | Ogden CAP availability is exposed through MRI ProspectConnect, collected by the `ogdencap` adapter. | Confirmed public portal |
+| 9300 Realty | The existing SecureCafe configuration includes a 9300 Realty portfolio portal. | Confirmed vendor portal |
+| Rockrose Development | Rockrose's official property pages link applicants to property-specific SecureCafe portals. The checked availability paths currently return no ingestible unit rows or access-denied responses. | Confirmed vendor handoff; public unit feed blocked |
+| ABJ Properties, Patoma, A&N Management, Downtown | Each has a public AppFolio listings page with embedded unit/map data, collected by the `appfolio` adapter. | Confirmed public feed-shaped pages |
+| Dermot Company | Official building pages expose community IDs and call the public Nestio availability endpoint; 17 New York properties are configured. | Confirmed public feed |
+| Bozzuto Management | Official Bozzuto pages link The Capitol, 19 Dutch, Aalto57, and 88 Leonard to public SecureCafe availability pages. | Confirmed public feeds for four NYC properties; current vacancies only and portfolio incomplete |
+| Rockrose Development | Official Rockrose building pages expose explicit selected listing cards; the `rockrose` adapter collects the current rows and preserves page hashes plus DOB NOW crosswalk evidence. | Confirmed public feed for 13 NYC properties; selected listings only |
+| Brodsky Organization | Brodsky's public rentals page exposes current building/unit listings. | Confirmed public listings; feed endpoint unknown |
+| Manhattan Skyline Management | The public unit API exposes unit labels and current asking terms; official detail pages supply exact street addresses. | Confirmed public feed with address validation; current vacancies only |
+| Rose Associates, Two Trees | NYBits identifies these managers and their building portfolios, but we have not yet confirmed a stable public feed endpoint for them. | Manager confirmed; feed unknown |
+| Greystar | Greystar's public search and property JSON expose explicit `availableUnits` for 345 East 94th Street. | Confirmed public unit JSON for one property; portfolio incomplete |
+| UDR | Official pricing pages expose apartment-specific JSON-LD records; the adapter preserves the full source address and DOB NOW crosswalk. | Confirmed public feed for one NYC property; portfolio incomplete |
+| Rudin Residential | The official availability page loads `/api/properties-json`; current `Listing` records include apartment labels and join to exact parent property addresses. | Confirmed public unit JSON; current vacancies only and portfolio incomplete |
+| Related Rentals | The official NYC search paginates 94 current cards. Linked detail pages expose exact unit IDs and address text; the adapter rejects search-only floorplan records and retains official DOB NOW crosswalks where unique. | Confirmed public unit-detail feed; current vacancies only and portfolio incomplete |
+| Mirador Real Estate / Pan Am availability | Pan Am's official availability navigation points to Mirador's public properties page. The public GraphQL response returns active records with stable IDs and exact listed addresses; the adapter accepts only unambiguous apartment labels and retains DOB NOW crosswalk evidence where unique. | Confirmed public unit feed; current vacancies only and Pan Am portfolio incomplete |
+
+The missing column is **NYBits transport**. NYBits does not publish that
+column. The only reliable way to fill it is to observe the same manager's
+source over time, or obtain confirmation from NYBits or the manager. We should
+not turn a public availability page into a claim that the manager sends NYBits
+an XML feed.
+
+## What We Should Do Next
+
+1. Use the [NYBits manager directory](https://www.nybits.com/managers/residential_property_managers.html)
+   to create a manager-to-building queue. The directory tells us who to
+   investigate, not how many units actually exist.
+2. For each manager, start with one live building and record the exact public
+   URL, vendor, fields, and fetch date.
+3. If several buildings share the same vendor and URL shape, promote that shape
+   into an adapter and keep the buildings as configuration rows.
+4. Keep page-only sources in the map until a stable endpoint is verified. Do not
+   invent a feed URL or label a manager as covered because one property works.
+5. Run the same listings through the existing dedupe and provenance layers so a
+   broker copy and a manager-direct copy remain separately auditable.
+
+## The Important Limitation
+
+A public manager page usually shows **current vacancies**, not every apartment
+in the building. A manager feed can therefore add source-backed unit
+observations and asking rents, but it cannot prove that an unlisted apartment
+does not exist. The base catalog still has to come from public records and
+building-level sources.
