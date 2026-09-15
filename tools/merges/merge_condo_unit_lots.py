@@ -27,6 +27,29 @@ def _now():
 def _id(*parts):
     return uuid.uuid5(uuid.NAMESPACE_URL, "|".join(str(p) for p in parts)).hex[:20]
 
+
+def target_rows(catalog):
+    """Return zero-named rows and the subset without a prior direct observation."""
+    all_targets = catalog.execute("""
+        WITH named AS (SELECT bbl, COUNT(*) n FROM units GROUP BY bbl)
+        SELECT ol.unit_lot_bbl, ol.unit_designation, ol.source_ref, ol.document_id, ol.condo_base_bbl
+        FROM official_unit_lots ol LEFT JOIN named n ON n.bbl = ol.unit_lot_bbl
+        WHERE ol.unit_designation IS NOT NULL AND n.n IS NULL
+    """).fetchall()
+    targets = catalog.execute("""
+        WITH named AS (SELECT bbl, COUNT(*) n FROM units GROUP BY bbl)
+        SELECT ol.unit_lot_bbl, ol.unit_designation, ol.source_ref, ol.document_id, ol.condo_base_bbl
+        FROM official_unit_lots ol LEFT JOIN named n ON n.bbl = ol.unit_lot_bbl
+        WHERE ol.unit_designation IS NOT NULL AND n.n IS NULL
+          AND NOT EXISTS (
+              SELECT 1 FROM observations o
+              WHERE o.source = 'dof_condo_unit_lots_direct'
+                AND o.source_ref = ol.source_ref
+                AND o.observation_kind = 'dof_condo_unit_lot_registration'
+          )
+    """).fetchall()
+    return all_targets, targets
+
 def main():
     global DB
     parser = argparse.ArgumentParser(description="Merge direct DOF condo unit-lot identities into a catalog.")
@@ -47,17 +70,16 @@ def main():
          now, now),
     )
 
-    targets = c.execute("""
-        WITH named AS (SELECT bbl, COUNT(*) n FROM units GROUP BY bbl)
-        SELECT ol.unit_lot_bbl, ol.unit_designation, ol.source_ref, ol.document_id, ol.condo_base_bbl
-        FROM official_unit_lots ol LEFT JOIN named n ON n.bbl = ol.unit_lot_bbl
-        WHERE ol.unit_designation IS NOT NULL AND n.n IS NULL
-    """).fetchall()
-    print(f"target unit-lot rows: {len(targets)}", flush=True)
+    all_targets, targets = target_rows(c)
+    print(f"zero-named unit-lot rows: {len(all_targets)}", flush=True)
+    print(f"new direct-identity targets: {len(targets)}", flush=True)
+    print(f"preserved prior direct observations: {len(all_targets) - len(targets)}", flush=True)
 
     unit_buf, obs_buf, match_buf = [], [], []
     BATCH = 20000
     n = 0
+    created = 0
+    skipped_no_label = 0
 
     def flush():
         nonlocal unit_buf, obs_buf, match_buf
@@ -65,7 +87,7 @@ def main():
             "INSERT INTO units (unit_id,bbl,unit_label,normalized_unit,first_seen,last_seen) VALUES (?,?,?,?,?,?) "
             "ON CONFLICT(bbl,normalized_unit) DO NOTHING", unit_buf)
         c.executemany(
-            "INSERT INTO observations (observation_id,document_id,source,source_ref,observed_at,observation_kind,"
+            "INSERT OR IGNORE INTO observations (observation_id,document_id,source,source_ref,observed_at,observation_kind,"
             "address,unit_label,evidence_grade) VALUES (?,?,?,?,?,?,?,?,?) "
             "ON CONFLICT(source,source_ref,observed_at,observation_kind) DO NOTHING", obs_buf)
         c.executemany(
@@ -78,9 +100,11 @@ def main():
         n += 1
         unit_norm = normalize_unit(designation)
         if not unit_norm:
+            skipped_no_label += 1
             continue
         unit_id = _id("unit", unit_lot_bbl, unit_norm)
         unit_buf.append((unit_id, unit_lot_bbl, designation, unit_norm, now, now))
+        created += 1
 
         observation_id = _id("obs", SOURCE, source_ref, "dof_condo_unit_lot_registration")
         obs_buf.append((observation_id, document_id, SOURCE, str(source_ref), now,
@@ -97,7 +121,7 @@ def main():
             print(f"...{n}", flush=True)
 
     flush()
-    print(f"DONE. created units for {n} unit-lot rows")
+    print(f"DONE. created units for {created} unit-lot rows; skipped {skipped_no_label} non-unit designations")
     print("total units now:", c.execute("SELECT COUNT(*) FROM units").fetchone()[0])
 
 if __name__ == "__main__":
