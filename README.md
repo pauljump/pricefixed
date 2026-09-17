@@ -150,20 +150,20 @@ maintenance is part of the work. Every feed is health-checked; when one breaks i
 shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 11/12 live, checked 2026-09-16
+**Feed status** — 11/12 live, checked 2026-09-17
 
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 14 |  |
-| `avalonbay` | 🟢 live | 186 |  |
-| `corcoran` | 🟢 live | 1293 |  |
+| `avalonbay` | 🟢 live | 191 |  |
+| `corcoran` | 🟢 live | 1364 |  |
 | `durst` | 🟢 live | 26 |  |
-| `elliman` | 🟢 live | 2180 |  |
-| `glenwood` | 🟢 live | 58 |  |
-| `nooklyn` | 🟢 live | 1097 |  |
-| `ogdencap` | 🟢 live | 51 |  |
-| `stonehenge` | 🟢 live | 64 |  |
-| `stuytown` | 🟢 live | 245 |  |
+| `elliman` | 🟢 live | 2162 |  |
+| `glenwood` | 🟢 live | 54 |  |
+| `nooklyn` | 🟢 live | 1089 |  |
+| `ogdencap` | 🟢 live | 50 |  |
+| `stonehenge` | 🟢 live | 65 |  |
+| `stuytown` | 🟢 live | 244 |  |
 | `tfcornerstone` | 🟢 live | 132 |  |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
