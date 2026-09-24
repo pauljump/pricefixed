@@ -38,10 +38,10 @@ who can check the work, add sources, and build useful things on top of it.
 | Listing collectors | maintained | Run `python3 scrape.py` to create your own `listings.db` and preserve future price history. |
 | Building public record | maintained | Run `python3 build_record.py` against NYC public sources. |
 | Housing registry builder | maintained | Run `catalog.py` to turn listings and public records into building/unit records. |
-| Citywide build | built, not yet published | The July 31, 2026 local build contains 2,750,889 unit records. It still needs a public download before anyone else can use it directly. |
+| Citywide build | built, not yet published | The August 7, 2026 local build contains 3,044,550 unit records. It still needs a public download before anyone else can use it directly. |
 
-That 2.75M number is not a claim that we found every NYC home. NYC has about 3.7M
-housing units, so this is close to 75% by the count we are using. Every row keeps the
+That 3.04M number is not a claim that we found every NYC home. NYC has about 3.7M
+housing units, so this is about 82% by the count we are using. Every row keeps the
 source that got it there, and the known gaps are written down in [`CATALOG.md`](CATALOG.md).
 
 ## The idea
@@ -105,7 +105,7 @@ Run it on a cron and `price_history` becomes something no listing site will sell
 ## Public download
 
 The repo does **not** currently include the citywide database. There is no GitHub
-download for the 2.75M-unit build yet.
+download for the 3.04M-unit build yet.
 
 When the first snapshot is published, it will be a normal release download with:
 
@@ -203,7 +203,11 @@ cleanly to an official NYC building ID. If the match is messy, it stays unresolv
 instead of getting guessed into the data. See [`CATALOG.md`](CATALOG.md) for the full
 rules.
 
-The current citywide build reached **2,750,889 unit records** on July 31, 2026. That is
+The NYC Finance sales import also keeps some apartment labels that the agency puts
+after a comma in the official address field, especially for co-op sales. Those labels
+are marked in the catalog as address-suffix evidence so they can be checked separately.
+
+The current citywide build reached **3,044,550 unit records** on August 7, 2026. That is
 a useful milestone, not a guarantee that every NYC home has been found. The biggest
 gap is buildings where public records say how many homes exist but do not name the
 units. The build steps and limits are documented in

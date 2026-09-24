@@ -1,0 +1,153 @@
+{
+  "reviewed_at": "2026-08-03",
+  "datasets": {
+    "3h2n-5cm9": {
+      "decision": "collect",
+      "handling": "DOB violation description collector; explicit apartment markers only"
+    },
+    "5zyy-y8am": {
+      "decision": "exclude",
+      "handling": "Energy-report notes use apartment words around counts and property descriptions, not unit labels"
+    },
+    "6bgk-3dad": {
+      "decision": "collect",
+      "handling": "DOB ECB violation description collector; explicit apartment markers only"
+    },
+    "76ig-c548": {
+      "decision": "exclude",
+      "handling": "311 records are building events and do not expose a public apartment field"
+    },
+    "7x5e-2fxh": {
+      "decision": "exclude",
+      "handling": "Energy-report notes use apartment words around counts and property descriptions, not unit labels"
+    },
+    "9umc-3b2y": {
+      "decision": "exclude",
+      "handling": "Grant project descriptions do not name homes"
+    },
+    "bdjm-n7q4": {
+      "decision": "exclude",
+      "handling": "Forestry locations describe work sites, not apartment rosters"
+    },
+    "bquu-z2ht": {
+      "decision": "exclude",
+      "handling": "Volunteer listings contain service or mailing locations, not target-building homes"
+    },
+    "br6q-ssj3": {
+      "decision": "collect",
+      "handling": "DCP housing-project description collector; explicit apartment markers only"
+    },
+    "bsin-59hv": {
+      "decision": "exclude",
+      "handling": "Elevation and subgrade notes produced no valid apartment labels after parser review"
+    },
+    "ci93-uc8s": {
+      "decision": "exclude",
+      "handling": "Business descriptions and job examples do not name homes in the target building"
+    },
+    "ck4n-5h6x": {
+      "decision": "collect",
+      "handling": "Landmarks complaint description collector; explicit apartment markers only"
+    },
+    "dm9a-ab7w": {
+      "decision": "collect",
+      "handling": "DOB electrical description collector; explicit apartment markers only"
+    },
+    "erm2-nwe9": {
+      "decision": "exclude",
+      "handling": "311 records are building events and do not expose a public apartment field"
+    },
+    "gpmc-yuvp": {
+      "decision": "exclude",
+      "handling": "Landmark building notes produced no valid apartment labels after parser review"
+    },
+    "ic3t-wcy2": {
+      "decision": "collect",
+      "handling": "Legacy DOB job-description collector; explicit apartment markers only"
+    },
+    "im9z-53hg": {
+      "decision": "collect",
+      "handling": "Structured NYCHA unit field plus review of blank-field descriptions"
+    },
+    "kfp4-dz4h": {
+      "decision": "collect",
+      "handling": "DOB elevator-permit description collector; explicit apartment markers only"
+    },
+    "kwss-yksz": {
+      "decision": "exclude",
+      "handling": "DCWP inspection text concerns licensed businesses and business locations"
+    },
+    "mdbu-nrqn": {
+      "decision": "collect",
+      "handling": "Structured HPD work-order apartment field plus blank-field description collector"
+    },
+    "mu46-p9is": {
+      "decision": "exclude",
+      "handling": "Forestry requests contain caller or work-site directions, not verified homes"
+    },
+    "n8q6-i44s": {
+      "decision": "exclude",
+      "handling": "Park structure descriptions do not name residential units"
+    },
+    "pqg4-dm6b": {
+      "decision": "exclude",
+      "handling": "Resource-directory text contains service and mailing locations, not target-building homes"
+    },
+    "r9ca-6t4q": {
+      "decision": "exclude",
+      "handling": "Historic land-use comments produced no valid apartment labels after parser review"
+    },
+    "rbx6-tga4": {
+      "decision": "collect",
+      "handling": "Structured DOB permit unit field plus approved-permit description collector"
+    },
+    "rsnd-bbih": {
+      "decision": "exclude",
+      "handling": "Grant program description does not name a home"
+    },
+    "sbnd-xujn": {
+      "decision": "collect",
+      "handling": "HPD handyman work-order description collector; explicit apartment markers only"
+    },
+    "vnz6-h2k4": {
+      "decision": "exclude",
+      "handling": "License-application notes concern businesses and business locations"
+    },
+    "w9ak-ipjd": {
+      "decision": "collect",
+      "handling": "Structured DOB job unit field plus job-description collector"
+    },
+    "wvxf-dwi5": {
+      "decision": "collect",
+      "handling": "Structured HPD violation apartment field plus blank-field description collector"
+    },
+    "wyj6-frpa": {
+      "decision": "exclude",
+      "handling": "DCWP charge text concerns licensed businesses and business locations"
+    },
+    "xxbr-ypig": {
+      "decision": "collect",
+      "handling": "DOB limited-alteration description collector; explicit apartment markers only"
+    },
+    "xubg-57si": {
+      "decision": "exclude",
+      "handling": "Facade comments sampled were owner or applicant mailing addresses"
+    },
+    "y9si-s7ab": {
+      "decision": "exclude",
+      "handling": "Social-service site notes do not name homes"
+    },
+    "ygpa-z7cr": {
+      "decision": "collect",
+      "handling": "Structured HPD problem apartment field; blank-field status text yielded no added labels"
+    },
+    "yr5p-wjer": {
+      "decision": "exclude",
+      "handling": "Energy-report alerts use apartment words around counts, not unit labels"
+    },
+    "yvxd-uipr": {
+      "decision": "exclude",
+      "handling": "BSA project descriptions produced no valid apartment labels after parser review"
+    }
+  }
+}
