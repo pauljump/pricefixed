@@ -16,7 +16,7 @@ class CatalogReportTests(unittest.TestCase):
             connection = init_catalog_db(database)
             connection.execute(
                 "INSERT INTO sources VALUES (?,?,?,?,?)",
-                ("example", "public_record", "test source", "2026-08-01T00:00:00Z", "2026-08-01T00:00:00Z"),
+                ("hpd_violations", "public_record", "test source", "2026-08-01T00:00:00Z", "2026-08-01T00:00:00Z"),
             )
             connection.execute(
                 "INSERT INTO buildings VALUES (?,?,?,?,?,?,?,?,?,?)",
@@ -28,12 +28,12 @@ class CatalogReportTests(unittest.TestCase):
             )
             connection.execute(
                 "INSERT INTO observations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                ("obs-1", None, "example", "ref-1", "2026-08-01", "listing",
+                ("obs-1", None, "hpd_violations", "ref-1", "2026-08-01", "listing",
                  "4 Example St", "4B", 1, 1, 2500, "active", "{}", "source_document"),
             )
             connection.execute(
                 "INSERT INTO observations VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-                ("obs-2", None, "example", "ref-2", "2026-08-01", "listing",
+                ("obs-2", None, "hpd_violations", "ref-2", "2026-08-01", "listing",
                  "Bad Address", "4B", None, None, None, None, "{}", "legacy_snapshot"),
             )
             connection.execute(
@@ -72,11 +72,12 @@ class CatalogReportTests(unittest.TestCase):
             self.assertEqual(report["counts"]["resolved_unit_observations"], 1)
             self.assertEqual(report["counts"]["unresolved_unit_observations"], 1)
             self.assertEqual(report["counts"]["anonymous_capacity_slots"], 1)
-            self.assertEqual(report["sources"], [{"value": "example", "rows": 2}])
+            self.assertEqual(report["sources"], [{"value": "hpd_violations", "rows": 1}])
             self.assertEqual(
                 report["evidence_grades"],
-                [{"value": "legacy_snapshot", "rows": 1}, {"value": "source_document", "rows": 1}],
+                [{"value": "source_document", "rows": 1}],
             )
+            self.assertEqual(report["source_policy"]["policy_id"], "nyc-public-records-v1")
             self.assertEqual(report["warnings"], [])
             self.assertEqual({gap["name"] for gap in report["open_gaps"]}, {
                 "anonymous_capacity_slots", "unresolved_unit_observations",

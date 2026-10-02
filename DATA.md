@@ -7,7 +7,7 @@ Pricefixed has two public surfaces:
    catalog snapshot.
 
 The repository does not currently distribute a citywide snapshot. In particular,
-the local `catalog.db` used for the July 31, 2026 build is a 14.7 GB working database
+the local `catalog.db` used for the August 7, 2026 build is a 17 GB working database
 and is intentionally not committed to Git. Do not treat a count in project
 documentation as a downloadable dataset.
 
@@ -17,10 +17,14 @@ The current working build contains:
 
 | measure | count |
 |---|---:|
-| canonical units | 2,750,889 |
-| buildings | 948,147 |
-| observations | 7,181,360 |
-| official condo unit lots | 306,603 |
+| canonical units | 3,044,550 |
+| addressable units | 578,978 |
+| buildings | 1,147,182 |
+| addresses | 2,193,923 |
+| observations | 7,977,231 |
+| resolved unit observations | 5,418,176 |
+| unresolved unit observations | 2,172,515 |
+| official condo unit lots | 306,607 |
 | anonymous PLUTO capacity slots | 3,753,223 |
 
 "Canonical unit" means the project has retained a source-supplied unit label and
@@ -40,7 +44,18 @@ the repository. Its asset bundle should include:
 | `units.csv` | one canonical unit record per `(BBL, normalized unit label)` |
 | `unit_observations.csv` | source-attributed observations resolved to those units, with resolution method and confidence |
 | `sources.csv` | source name, source kind, and collection methodology |
+| `source-policy.json` | exact source allowlist and review scope used for the release |
 | `catalog.db` (optional) | full SQLite database for provenance and advanced analysis |
+
+The exporter defaults to [`release_sources.json`](release_sources.json). It exports a
+unit only when at least one resolved observation comes from a source in that policy,
+and exports only those supporting observations. Archive-only and listing-feed-only
+identities stay in the local research catalog unless their sources are reviewed and
+deliberately added to the policy.
+
+[`SOURCE_AUDIT.md`](SOURCE_AUDIT.md) explains how NYC Open Data fields were reviewed,
+which kinds of records can name a home, and why tempting count or mailing fields are
+left out.
 
 CSV files are UTF-8 with a header row and RFC 4180-compatible quoting. The exporter
 does not publish `source_documents.payload` or `observations.raw_fields`; those fields
@@ -80,9 +95,10 @@ python3 catalog_export.py --db /path/to/catalog.db --out pricefixed-catalog-YYYY
   --release-id YYYY-MM-DD --commit "$(git rev-parse HEAD)"
 python3 catalog_report.py --db /path/to/catalog.db --out pricefixed-catalog-YYYY-MM-DD/quality-report.json \
   --release-id YYYY-MM-DD --commit "$(git rev-parse HEAD)"
+python3 catalog_verify_release.py pricefixed-catalog-YYYY-MM-DD
 ```
 
-These commands create the three CSV files, `manifest.json`, and
+These commands create the three CSV files, `source-policy.json`, `manifest.json`, and
 `quality-report.json`. Review the manifest and quality report, compress the directory,
 publish it as a GitHub Release asset, and link that release from the README. Do not
 publish a snapshot until its source licenses, freshness, and checksums have been

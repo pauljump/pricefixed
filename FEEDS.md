@@ -2,6 +2,8 @@
 
 This is the plan for compiling every apartment in the city. Each row is a source and an adapter waiting to be written. The goal is not to hand-build all of them; it is to map them all so anyone, human or AI, can crank through them. See [`COMPILE.md`](COMPILE.md) for how to turn a row into a working adapter.
 
+For the manager-by-manager research queue, see [`docs/manager-feed-map.md`](docs/manager-feed-map.md), the generated [`data/manager_feed_registry.jsonl`](data/manager_feed_registry.jsonl), the flat [`data/public_leasing_paths.jsonl`](data/public_leasing_paths.jsonl), the [`data/feed_provenance_queue.jsonl`](data/feed_provenance_queue.jsonl), and its [runner documentation](docs/manager-feed-registry.md). The registry now records explicit property and leasing links exposed by official sites, while keeping confirmed public feeds separate from unverified vendor hypotheses.
+
 **The strategy, in order of leverage:**
 
 1. **Brokerages, for IDX/RLS-syndicated public listings.** A brokerage's own public
@@ -28,7 +30,7 @@ This is the plan for compiling every apartment in the city. Each row is a source
 
 ## Tier 0 — Shipped (the reference implementations)
 
-Nine live. Copy these when building new ones.
+Twenty live. Copy these when building new ones.
 
 | Source | Mechanism | Difficulty | Terms | Est. units | Status |
 |---|---|---|---|---|---|
@@ -36,11 +38,22 @@ Nine live. Copy these when building new ones.
 | TF Cornerstone | one static JSON feed | easy | | ~9,000 | ✅ |
 | Nooklyn (broker marketplace) | JSON API | easy | | ~1,500 | ✅ |
 | AvalonBay | `apis.avalonbay.com/search/units` | easy | | ~5,000 | ✅ |
-| SecureCafe (Yardi/RentCafe portals) | per-portal HTML | medium | | ~250+ | ✅ |
+| SecureCafe (Yardi/RentCafe portals) | per-portal HTML; browser-visible capture fallback for Cloudflare-challenged public pages | medium | | ~250+ | ✅ |
 | Stonehenge | Salesforce apexrest | easy | | ~80 | ✅ |
 | Ogden CAP | MRI ProspectConnect | medium | | ~50 | ✅ |
 | Durst | MRI ProspectConnect | medium | ✅ | ~30 live | ✅ |
 | Glenwood | two-hop HTML scrape | medium | | ~30 | ✅ |
+| Manhattan Skyline | public unit API + official detail pages | medium | | current listings from 28 API rows | ✅ |
+| Dermot Company | public Nestio API called by official building pages | easy | | current listings across 17 confirmed NY properties | ✅ |
+| Spherexx / AdKast (Marquis, Kings & Queens, LeFrak City) | official page + public paginated or building/unit AJAX | medium | | current listings across 3 confirmed portals | ✅ |
+| C+C Apartment Management | official public availability table | easy | | current listings on the public table | ✅ |
+| Brodsky Organization | official rentals index + explicit apartment JSON-LD pages | easy | | current listings on official rentals page | ✅ |
+| Olnick Rentals | official rentals index + explicit project availability pages | medium | | current listings with exact address and apartment label | ✅ |
+| Lisa Management | official Next.js residential page with paginated embedded apartment records | easy | | current listings with exact address and apartment label | ✅ |
+| Rockrose | official residential building pages with explicit selected-listing cards | easy | | 46 current selected listings across 13 NYC properties | ✅ |
+| Rudin Residential | official availability page + public `/api/properties-json` | easy | | current listings with exact property address and apartment label | ✅ |
+| Related Rentals | official paginated NYC search + explicit unit detail pages | easy | | current listings with exact address and apartment label | ✅ |
+| Mirador Real Estate (Pan Am availability link) | public Luxury Presence GraphQL availability feed | easy | | 41 current NYC listings with exact listed address and apartment label | ✅ |
 
 ## Tier 1 — Platforms (the multipliers)
 
@@ -49,11 +62,12 @@ highest-leverage work left.
 
 | Platform | Landlords on it (NYC) | Mechanism | Status |
 |---|---|---|---|
-| **Yardi RentCafe / SecureCafe** | Rockrose, Brodsky, RXR, Extell, + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals |
+| **Yardi RentCafe / SecureCafe** | Rockrose, RXR, Extell, Bozzuto (The Capitol, 19 Dutch, Aalto57, 88 Leonard), + many more (~10,000 units) | `securecafe.com` per-portal, or `api.rentcafe.com` per company code + token | 🔨 base shipped; enumerate more portals; browser capture fallback documented |
 | **MRI ProspectConnect** | Durst, Ogden CAP, others | CSRF + POST search per community code | 🔨 shipped for 2; find more communities |
 | **AppFolio** | dozens of small/mid operators | `{company}.appfolio.com/listings` — one shape, many subdomains | 🔨 enumerate NYC operators |
 | **Entrata** | mid-size operators | `{company}.entrata.com` availability API | 🔬 |
-| **Funnel / Nestio** | Two Trees, Moinian, others | `nestiolistings.com/api/v2/` | 🔬 |
+| **Funnel / Nestio** | Dermot, Two Trees, Moinian, others | `nestiolistings.com/api/v2/` | 🔨 Dermot shipped; enumerate others |
+| **Spherexx / AdKast** | Marquis, Kings & Queens, LeFrak City | public `/ajax/getunitlist.asp` plus LeFrak's building/unit option endpoints | ✅ three confirmed portals; current vacancies only |
 | **RealPage / On-Site** | large operators | On-Site availability API | 🔬 |
 | **Rent Manager / Buildium** | long tail of small operators | per-vendor API | 🔬 |
 
@@ -82,15 +96,15 @@ highest-leverage work left.
 
 | Source | Est. units | Mechanism | Status |
 |---|---|---|---|
-| Related Rentals | ~5,000 | Drupal/React hybrid, paginated DOM | 🔬 (rebuilt recently; will rot) |
-| LeFrak | ~4,600 | Spherexx server-rendered HTML | 🔨 |
-| Rudin | ~2,400 | server-rendered building pages | 🔨 |
-| UDR | ~2,600 | counts server-side; unit detail needs headless | 🔬 |
+| Related Rentals | ~5,000 | official paginated search + unit detail pages | ✅ |
+| LeFrak / LeFrak City | ~4,600 | official building directory + public Spherexx AJAX unit options | ✅ current LeFrak City portal; portfolio incomplete |
+| Rudin | ~2,400 | official `/api/properties-json` availability feed | ✅ |
+| UDR | ~2,600 | official `apartments-pricing` pages with apartment-specific JSON-LD | ✅ |
 | Rose Associates | ~3,000 | own portal | 🔬 |
 | Bozzuto | ~2,000 | Algolia index | 🔨 |
 | Two Trees | ~2,000 | Nestio (see platform) | 🔬 |
-| Rockrose / RXR / Extell | via RentCafe | (see platform) | 🔨 |
-| Pan Am Equities | ~1,000 | WordPress DOM | 🔬 |
+| Rockrose / RXR / Extell | official property pages plus RentCafe where linked | Rockrose selected listing cards are collected; linked RentCafe remains property-specific | 🔨 |
+| Pan Am Equities / Mirador Real Estate | ~1,000 | Pan Am's official `AVAILABILITIES` link → Mirador public GraphQL feed | ✅ current Mirador feed; not a complete Pan Am roster |
 
 ## Tier 3 — Broker marketplaces (the small-landlord tail)
 

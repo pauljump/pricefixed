@@ -42,6 +42,31 @@ class AcrisStageTest(unittest.TestCase):
             self.assertEqual(stats["acris_stage_rows_remaining"], 0)
             self.assertEqual(catalog.conn.execute("SELECT COUNT(*) FROM units").fetchone()[0], 1)
 
+    def test_document_prefix_uses_a_separate_cursor_namespace(self):
+        rows = [
+            {"document_id": "FT_000000000002", "borough": "1", "unit": "2A"},
+            {"document_id": "FT_000000000001", "borough": "1", "unit": "1A"},
+        ]
+        calls = []
+
+        def fetch(cursor, page_size, document_prefix=None):
+            calls.append((cursor, page_size, document_prefix))
+            return rows
+
+        with tempfile.TemporaryDirectory() as directory:
+            conn = acris_stage.init_stage_db(os.path.join(directory, "stage.db"))
+            with patch("acris_stage.fetch_page", side_effect=fetch):
+                first = acris_stage.stage_page(conn, 2, document_prefix="FT_")
+                second = acris_stage.stage_page(conn, 2, document_prefix="FT_")
+            self.assertEqual(first["inserted"], 2)
+            self.assertEqual(second["inserted"], 0)
+            self.assertEqual(calls, [(None, 2, "FT_"), ("FT_000000000001", 2, "FT_")])
+            self.assertEqual(
+                conn.execute("SELECT source,cursor_ref FROM stage_keysets").fetchall(),
+                [("acris_unit_legals:prefix=FT_", "FT_000000000001")],
+            )
+            conn.close()
+
 
 if __name__ == "__main__":
     unittest.main()

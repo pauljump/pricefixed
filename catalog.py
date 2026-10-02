@@ -40,7 +40,7 @@ def main():
     ap.add_argument("--db", default="catalog.db", help="catalog SQLite path (default: ./catalog.db)")
     ap.add_argument("--record", default="record.db", help="building-record SQLite path")
     ap.add_argument("--listings", default="listings.db", help="listing-source SQLite path")
-    ap.add_argument("--source", choices=("base", "listings", "derive_addressable_units", "hpd_violations", "hpd_problems", "nycha_hmc_violations", "ose_str_snapshot", "hpd_omo_work_orders", "acris_property_legals", "acris_unit_legals", "acris_stage", "vayo_all_nyc_units", "vayo_streeteasy_unit_summary", "vayo_elliman_mls_archive", "vayo_corcoran_archive", "annualized_sales", "rolling_sales", "evictions", "dob_now_jobs", "dob_now_permits", "hpd_registration_coverage", "condo_units", "pad_addresses", "pad_listing_zips", "all"), default="base",
+    ap.add_argument("--source", choices=("base", "listings", "derive_addressable_units", "hpd_violations", "hpd_problems", "nycha_hmc_violations", "ose_str_snapshot", "hpd_omo_work_orders", "acris_property_legals", "acris_unit_legals", "acris_stage", "vayo_all_nyc_units", "vayo_streeteasy_unit_summary", "vayo_elliman_mls_archive", "vayo_corcoran_archive", "annualized_sales", "rolling_sales", "evictions", "dob_now_jobs", "dob_now_permits", "dob_now_certificates", "hpd_registration_coverage", "condo_units", "pad_addresses", "pad_listing_zips", "all"), default="base",
                     help="base imports record/listings dbs; listings refreshes source snapshots only")
     ap.add_argument("--limit", type=int, default=None,
                     help="cap rows from a direct source; use for a sample import")
@@ -233,6 +233,13 @@ def main():
         except ValueError as exc:
             sys.exit(f"  {exc}")
         _print_status(catalog.import_dob_now_permits(limit=args.limit, boro=boro, offset=args.offset))
+    if args.source == "dob_now_certificates":
+        from pricefixed.record.core import parse_boro
+        try:
+            boro = parse_boro(args.boro)
+        except ValueError as exc:
+            sys.exit(f"  {exc}")
+        _print_status(catalog.import_dob_now_certificates(limit=args.limit, boro=boro, offset=args.offset))
     if args.source == "hpd_registration_coverage":
         from pricefixed.record.core import parse_boro
         try:

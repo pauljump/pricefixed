@@ -442,6 +442,29 @@ class HpdViolationsImportTest(unittest.TestCase):
         finally:
             catalog_core.socrata = original
 
+    def test_imports_annualized_sale_unit_embedded_in_address(self):
+        rows = [{
+            "borough": "1", "block": "172", "lot": "1490", "bbl": "1001727504",
+            "address": "50 FRANKLIN STREET, S9B", "apartment_number": None, "zip_code": "10013",
+            "sale_price": "1590000", "sale_date": "2019-06-21T00:00:00.000",
+            "building_class_category": "10 COOPS - ELEVATOR APARTMENTS",
+        }]
+        original = catalog_core.socrata
+        catalog_core.socrata = lambda *args, **kwargs: rows
+        try:
+            with tempfile.TemporaryDirectory() as directory:
+                catalog = Catalog(init_catalog_db(os.path.join(directory, "catalog.db")))
+                stats = catalog.import_annualized_sales(limit=10, boro=1)
+                self.assertEqual(stats["annualized_sale_units"], 1)
+                self.assertEqual(catalog.conn.execute(
+                    "SELECT address, unit_label FROM observations"
+                ).fetchone(), ("50 FRANKLIN STREET", "S9B"))
+                self.assertEqual(catalog.conn.execute(
+                    "SELECT method FROM entity_matches WHERE entity_type='unit'"
+                ).fetchone()[0], "official_bbl_and_address_unit_label")
+        finally:
+            catalog_core.socrata = original
+
     def test_imports_rolling_sale_with_constructed_bbl(self):
         rows = [{
             "borough": "2", "block": "172", "lot": "1490",
