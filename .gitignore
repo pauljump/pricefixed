@@ -9,3 +9,9 @@ venv/
 
 # internal launch notes, not for publication
 NEXT.md
+
+# Generated local files; source and retained evidence remain explicit.
+*.tsbuildinfo
+.next/
+.next-*/
+.build/
