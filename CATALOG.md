@@ -496,6 +496,9 @@ The public-source frontier currently falls into three lanes:
   Schedules of Occupancy, I-cards, and plans can resolve individual high-value gaps,
   but the portal does not provide a citywide bulk apartment-label API. Queue these by
   BBL/job only where catalog evidence conflicts or a count gap warrants review.
+  The Schedule A floor tables themselves were released in bulk under FOIL
+  (2026-10-20): per-floor dwelling counts for about 61,000 buildings, no apartment
+  labels. See [`docs/dob-foil-schedule-a.md`](docs/dob-foil-schedule-a.md).
 
 NYS HCR apartment rent-registration histories are not an eligible general source:
 they are confidential to the tenant, owner, or authorized representative. Historical

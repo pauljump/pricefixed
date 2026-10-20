@@ -22,7 +22,9 @@ This is the source order for the remaining gap:
    targeted gap resolution, not another blind citywide replay.
 4. **DOB occupancy documents**: Certificates of Occupancy, Schedules of Occupancy,
    I-cards, and plans for ranked high-capacity gaps. This is targeted document
-   retrieval, not a clean citywide API.
+   retrieval, not a clean citywide API. Schedule A (the CO floor table) is now held
+   in bulk from a FOIL release; it gives units per floor, not labels, so it feeds
+   capacity checks and hypotheses only. See [`dob-foil-schedule-a.md`](dob-foil-schedule-a.md).
 5. **DOF unit-address bridges**: Statements of Account and tax-bill evidence for
    official unit lots where the address/unit link is still ambiguous.
 6. **Listing and history archives**: landlord feeds, broker archives, and public
