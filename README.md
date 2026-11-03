@@ -150,32 +150,32 @@ maintenance is part of the work. Every feed is health-checked; when one breaks i
 shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 24/25 live, checked 2026-11-02
+**Feed status** — 24/25 live, checked 2026-11-03
 
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 12 |  |
-| `avalonbay` | 🟢 live | 192 |  |
+| `avalonbay` | 🟢 live | 191 |  |
 | `brodsky` | 🟢 live | 6 |  |
 | `ccmanagers` | 🟢 live | 1 |  |
-| `corcoran` | 🟢 live | 2186 |  |
-| `dermot` | 🟢 live | 59 |  |
+| `corcoran` | 🟢 live | 2182 |  |
+| `dermot` | 🟢 live | 60 |  |
 | `durst` | 🟢 live | 25 |  |
-| `elliman` | 🟢 live | 2304 |  |
-| `glenwood` | 🟢 live | 37 |  |
-| `greystar` | 🟢 live | 4 |  |
-| `lisamgmt` | 🟢 live | 23 |  |
-| `manhattanskyline` | 🟢 live | 20 |  |
-| `mirador` | 🟢 live | 2 |  |
-| `nooklyn` | 🟢 live | 962 |  |
+| `elliman` | 🟢 live | 2300 |  |
+| `glenwood` | 🟢 live | 35 |  |
+| `greystar` | 🟢 live | 13 |  |
+| `lisamgmt` | 🟢 live | 25 |  |
+| `manhattanskyline` | 🟢 live | 23 |  |
+| `mirador` | 🟢 live | 1 |  |
+| `nooklyn` | 🟢 live | 966 |  |
 | `ogdencap` | 🟢 live | 37 |  |
 | `olnick` | 🟢 live | 14 |  |
-| `relatedrentals` | 🟢 live | 74 |  |
+| `relatedrentals` | 🟢 live | 79 |  |
 | `rockrose` | 🟢 live | 48 |  |
-| `rudin` | 🟢 live | 14 |  |
-| `spherexx` | 🟢 live | 46 |  |
-| `stonehenge` | 🟢 live | 48 |  |
-| `stuytown` | 🟢 live | 228 |  |
+| `rudin` | 🟢 live | 13 |  |
+| `spherexx` | 🟢 live | 50 |  |
+| `stonehenge` | 🟢 live | 50 |  |
+| `stuytown` | 🟢 live | 233 |  |
 | `tfcornerstone` | 🟢 live | 129 |  |
 | `udr` | 🟢 live | 34 |  |
 | `securecafe` | 🔴 down | — | returned 0 listings |
