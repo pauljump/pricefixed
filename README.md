@@ -150,34 +150,34 @@ maintenance is part of the work. Every feed is health-checked; when one breaks i
 shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 24/25 live, checked 2026-11-17
+**Feed status** — 23/25 live, checked 2026-11-18
 
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 14 |  |
-| `avalonbay` | 🟢 live | 194 |  |
+| `avalonbay` | 🟢 live | 202 |  |
 | `brodsky` | 🟢 live | 6 |  |
 | `ccmanagers` | 🟢 live | 1 |  |
-| `corcoran` | 🟢 live | 2228 |  |
-| `dermot` | 🟢 live | 57 |  |
+| `corcoran` | 🟢 live | 2188 |  |
+| `dermot` | 🟢 live | 56 |  |
 | `durst` | 🟢 live | 20 |  |
-| `elliman` | 🟢 live | 2438 |  |
+| `elliman` | 🟢 live | 2409 |  |
 | `glenwood` | 🟢 live | 40 |  |
-| `greystar` | 🟢 live | 12 |  |
-| `lisamgmt` | 🟢 live | 23 |  |
+| `lisamgmt` | 🟢 live | 18 |  |
 | `manhattanskyline` | 🟢 live | 17 |  |
 | `mirador` | 🟢 live | 3 |  |
-| `nooklyn` | 🟢 live | 961 |  |
-| `ogdencap` | 🟢 live | 38 |  |
+| `nooklyn` | 🟢 live | 949 |  |
+| `ogdencap` | 🟢 live | 37 |  |
 | `olnick` | 🟢 live | 15 |  |
 | `relatedrentals` | 🟢 live | 81 |  |
 | `rockrose` | 🟢 live | 44 |  |
 | `rudin` | 🟢 live | 8 |  |
-| `spherexx` | 🟢 live | 42 |  |
-| `stonehenge` | 🟢 live | 54 |  |
+| `spherexx` | 🟢 live | 39 |  |
+| `stonehenge` | 🟢 live | 53 |  |
 | `stuytown` | 🟢 live | 239 |  |
 | `tfcornerstone` | 🟢 live | 141 |  |
-| `udr` | 🟢 live | 41 |  |
+| `udr` | 🟢 live | 43 |  |
+| `greystar` | 🔴 down | — | returned 0 listings |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
 
