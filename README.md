@@ -150,19 +150,20 @@ maintenance is part of the work. Every feed is health-checked; when one breaks i
 shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 23/25 live, checked 2026-11-21
+**Feed status** — 24/25 live, checked 2026-11-22
 
 | source | status | listings | note |
 |---|---|---|---|
 | `appfolio` | 🟢 live | 13 |  |
-| `avalonbay` | 🟢 live | 211 |  |
+| `avalonbay` | 🟢 live | 208 |  |
 | `brodsky` | 🟢 live | 6 |  |
 | `ccmanagers` | 🟢 live | 1 |  |
-| `corcoran` | 🟢 live | 2180 |  |
+| `corcoran` | 🟢 live | 2175 |  |
 | `dermot` | 🟢 live | 58 |  |
 | `durst` | 🟢 live | 21 |  |
-| `elliman` | 🟢 live | 2413 |  |
-| `glenwood` | 🟢 live | 38 |  |
+| `elliman` | 🟢 live | 2405 |  |
+| `glenwood` | 🟢 live | 37 |  |
+| `greystar` | 🟢 live | 24 |  |
 | `lisamgmt` | 🟢 live | 18 |  |
 | `manhattanskyline` | 🟢 live | 15 |  |
 | `mirador` | 🟢 live | 2 |  |
@@ -174,10 +175,9 @@ shows up as broken, not as silence.
 | `rudin` | 🟢 live | 10 |  |
 | `spherexx` | 🟢 live | 39 |  |
 | `stonehenge` | 🟢 live | 51 |  |
-| `stuytown` | 🟢 live | 232 |  |
+| `stuytown` | 🟢 live | 229 |  |
 | `tfcornerstone` | 🟢 live | 125 |  |
 | `udr` | 🟢 live | 47 |  |
-| `greystar` | 🔴 down | — | returned 0 listings |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
 
