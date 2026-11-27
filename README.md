@@ -150,7 +150,7 @@ maintenance is part of the work. Every feed is health-checked; when one breaks i
 shows up as broken, not as silence.
 
 <!-- FEED-STATUS:START -->
-**Feed status** — 24/25 live, checked 2026-11-26
+**Feed status** — 24/25 live, checked 2026-11-27
 
 | source | status | listings | note |
 |---|---|---|---|
@@ -158,26 +158,26 @@ shows up as broken, not as silence.
 | `avalonbay` | 🟢 live | 213 |  |
 | `brodsky` | 🟢 live | 6 |  |
 | `ccmanagers` | 🟢 live | 1 |  |
-| `corcoran` | 🟢 live | 2120 |  |
+| `corcoran` | 🟢 live | 2117 |  |
 | `dermot` | 🟢 live | 55 |  |
 | `durst` | 🟢 live | 22 |  |
-| `elliman` | 🟢 live | 2410 |  |
+| `elliman` | 🟢 live | 2415 |  |
 | `glenwood` | 🟢 live | 35 |  |
 | `greystar` | 🟢 live | 3 |  |
 | `lisamgmt` | 🟢 live | 17 |  |
 | `manhattanskyline` | 🟢 live | 15 |  |
 | `mirador` | 🟢 live | 2 |  |
-| `nooklyn` | 🟢 live | 833 |  |
+| `nooklyn` | 🟢 live | 826 |  |
 | `ogdencap` | 🟢 live | 36 |  |
 | `olnick` | 🟢 live | 14 |  |
 | `relatedrentals` | 🟢 live | 74 |  |
-| `rockrose` | 🟢 live | 46 |  |
-| `rudin` | 🟢 live | 10 |  |
+| `rockrose` | 🟢 live | 47 |  |
+| `rudin` | 🟢 live | 11 |  |
 | `spherexx` | 🟢 live | 36 |  |
 | `stonehenge` | 🟢 live | 49 |  |
 | `stuytown` | 🟢 live | 234 |  |
-| `tfcornerstone` | 🟢 live | 123 |  |
-| `udr` | 🟢 live | 48 |  |
+| `tfcornerstone` | 🟢 live | 122 |  |
+| `udr` | 🟢 live | 49 |  |
 | `securecafe` | 🔴 down | — | returned 0 listings |
 <!-- FEED-STATUS:END -->
 
